@@ -28,4 +28,6 @@ Pod::Spec.new do |s|
                           ]
   # s.dependency "React/Core"
   # s.dependency "Protobuf"
+s.dependency 'JSONPreview'
+#pod 'JSONPreview'
 end

@@ -21,7 +21,16 @@ struct NetworkDetailModel {
     var requestData: Data?
     var responseData: Data?
     var httpModel: _HttpModel?
+    var heigth:Double = 0
     
+    
+    
+    func calculateTextHeight(text: String) -> CGFloat {
+        let constraintRect = CGSize(width: (UIScreen.main.bounds.size.width - 30) , height: .greatestFiniteMagnitude)
+        let boundingBox = text.boundingRect(with: constraintRect, options: .usesLineFragmentOrigin, attributes: [.font: UIFont.systemFont(ofSize: 13) as Any], context: nil)
+        
+        return boundingBox.height
+    }
     
     init(title: String? = nil, content: String? = "", url: String? = "", image: UIImage? = nil, httpModel: _HttpModel? = nil) {
         self.title = title?.replacingOccurrences(of: "\\/", with: "/")
@@ -30,8 +39,15 @@ struct NetworkDetailModel {
         self.image = image
         self.httpModel = httpModel
         
-        
-        
+       // self.heigth = Double(self.content?.height(with: UIFont.systemFont(ofSize: 13), constraintToWidth: (UIScreen.main.bounds.size.width - 30)) ?? 0.0)
+        // Usage example
+        let labelFont = UIFont.systemFont(ofSize: 16) // Example font
+        let maxWidth = CGFloat((UIScreen.main.bounds.size.width - 30)) // Max width for the label
+      
+
+      //  let estimatedSize = estimatedSizeOfLabel(text:  self.content ?? "", font: labelFont, maxWidth: maxWidth)
+        self.heigth = (content?.count ?? 0 > 3000) ? 300 : calculateTextHeight(text: self.content ?? "")
+        print("Estimated size of label: \(heigth)")
         
 //        if title == "REQUEST" {
 //            self.requestData = httpModel?.requestData

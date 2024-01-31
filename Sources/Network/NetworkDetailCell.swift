@@ -25,13 +25,31 @@ class NetworkDetailCell: UITableViewCell {
     
     
     var tapEditViewCallback:((NetworkDetailModel?) -> Void)?
-    
+    func configureCellWithText(_ text: String) {
+         // Offload heavy text layout to a background thread
+         DispatchQueue.global(qos: .userInitiated).async {
+             // Perform heavy text layout processing here
+
+             let processedText = self.processLargeText(text)
+
+             // Switch back to the main thread to update the UI
+             DispatchQueue.main.async {
+                 self.contentTextView.text = processedText
+             }
+         }
+     }
+
+     private func processLargeText(_ text: String) -> String {
+         // Process the text as needed, e.g., truncating, adding styles
+         // For simplicity, let's just return the original text
+         return text
+     }
     var detailModel: NetworkDetailModel? {
         didSet {
             
             titleLabel.text = detailModel?.title
-            contentTextView.text = detailModel?.content
-            
+          //  contentTextView.text = detailModel?.content
+            configureCellWithText(detailModel?.content ?? "")
             //image
             if detailModel?.image == nil {
                 imgView.isHidden = true
@@ -67,7 +85,8 @@ class NetworkDetailCell: UITableViewCell {
         super.awakeFromNib()
         
         editView.addGestureRecognizer(UITapGestureRecognizer.init(target: self, action: #selector(tapEditView)))
-        
+      editView.backgroundColor = .blue
+        editView.isHidden = false
         contentTextView.textContainer.lineFragmentPadding = 0
         contentTextView.textContainerInset = .zero
     }

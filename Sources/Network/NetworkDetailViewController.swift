@@ -108,16 +108,41 @@ class NetworkDetailViewController: UITableViewController, MFMailComposeViewContr
             }
             let model_0 = NetworkDetailModel.init(title: "RESPONSE SIZE", content: httpModel?.size, url: httpModel?.url.absoluteString, httpModel: httpModel)
             //3.
-            detailModels.append(model_1)
-            detailModels.append(model_2)
-            detailModels.append(model_3)
-            detailModels.append(model_4)
-            detailModels.append(model_5)
-            detailModels.append(model_6)
-            detailModels.append(model_7)
-            detailModels.append(model_0)
-            detailModels.append(model_8)
-            detailModels.append(model_9)
+            
+            DispatchQueue.main.async {[weak self] in
+                guard let self else {return}
+                detailModels.append(model_1)
+                detailModels.append(model_2)
+                detailModels.append(model_3)
+                detailModels.append(model_4)
+                detailModels.append(model_5)
+                detailModels.append(model_6)
+                detailModels.append(model_7)
+                detailModels.append(model_0)
+                detailModels.append(model_8)
+                detailModels.append(model_9)
+                
+                
+                if var lastModel = detailModels.last {
+                    lastModel.isLast = true
+                    detailModels.removeLast()
+                    detailModels.append(lastModel)
+                }
+                
+                //Use a separate xib-cell file, must be registered, otherwise it will crash
+                let bundle = Bundle(for: type(of: self))
+                let nib = UINib(nibName: "NetworkCell", bundle: bundle)
+                tableView.register(nib, forCellReuseIdentifier: "NetworkCell")
+                
+                //header
+                headerCell = bundle.loadNibNamed(String(describing: NetworkCell.self), owner: nil, options: nil)?.first as? NetworkCell
+                headerCell?.httpModel = httpModel
+                
+                
+                
+                tableView.reloadData()
+            }
+
         }
         else {
             //not image:
@@ -148,16 +173,39 @@ class NetworkDetailViewController: UITableViewController, MFMailComposeViewContr
             }
             let model_0 = NetworkDetailModel.init(title: "RESPONSE SIZE", content: httpModel?.size, url: httpModel?.url.absoluteString, httpModel: httpModel)
             //3.
-            detailModels.append(model_1)
-            detailModels.append(model_2)
-            detailModels.append(model_3)
-            detailModels.append(model_4)
-            detailModels.append(model_5)
-            detailModels.append(model_6)
-            detailModels.append(model_7)
-            detailModels.append(model_0)
-            detailModels.append(model_8)
-            detailModels.append(model_9)
+            DispatchQueue.main.async {[weak self] in
+                guard let self else {return}
+                detailModels.append(model_1)
+                detailModels.append(model_2)
+                detailModels.append(model_3)
+                detailModels.append(model_4)
+                detailModels.append(model_5)
+                detailModels.append(model_6)
+                detailModels.append(model_7)
+                detailModels.append(model_0)
+                detailModels.append(model_8)
+                detailModels.append(model_9)
+                
+                
+                if var lastModel = detailModels.last {
+                    lastModel.isLast = true
+                    detailModels.removeLast()
+                    detailModels.append(lastModel)
+                }
+                
+                //Use a separate xib-cell file, must be registered, otherwise it will crash
+                let bundle = Bundle(for: type(of: self))
+                let nib = UINib(nibName: "NetworkCell", bundle: bundle)
+                tableView.register(nib, forCellReuseIdentifier: "NetworkCell")
+                
+                //header
+                headerCell = bundle.loadNibNamed(String(describing: NetworkCell.self), owner: nil, options: nil)?.first as? NetworkCell
+                headerCell?.httpModel = httpModel
+                
+                
+                
+                tableView.reloadData()
+            }
         }
     }
     
@@ -316,23 +364,11 @@ class NetworkDetailViewController: UITableViewController, MFMailComposeViewContr
         
         //detect the request format (JSON/Form)
         detectRequestSerializer()
-        
-        setupModels()
-        
-        if var lastModel = detailModels.last {
-            lastModel.isLast = true
-            detailModels.removeLast()
-            detailModels.append(lastModel)
+        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+            guard let self else{return}
+            self.setupModels()
         }
-        
-        //Use a separate xib-cell file, must be registered, otherwise it will crash
-        let bundle = Bundle(for: type(of: self))
-        let nib = UINib(nibName: "NetworkCell", bundle: bundle)
-        tableView.register(nib, forCellReuseIdentifier: "NetworkCell")
-        
-        //header
-        headerCell = bundle.loadNibNamed(String(describing: NetworkCell.self), owner: nil, options: nil)?.first as? NetworkCell
-        headerCell?.httpModel = httpModel
+
     }
     
     override func viewWillDisappear(_ animated: Bool) {
@@ -459,7 +495,7 @@ extension NetworkDetailViewController {
                     return 0
                 }
                 //Calculate NSString height
-                let height = content.height(with: UIFont.systemFont(ofSize: 13), constraintToWidth: (UIScreen.main.bounds.size.width - 30))
+                let height = detailModel.heigth
                 return height + 70
             }
             return 0
