@@ -33,8 +33,15 @@ class NetworkDetailCell: UITableViewCell {
              let processedText = self.processLargeText(text)
 
              // Switch back to the main thread to update the UI
-             DispatchQueue.main.async {
-                 self.contentTextView.text = detailModel?.mustInPreview ? "large Json .. tab 'Preview Json' to view full json format":processedText
+             DispatchQueue.main.async { [weak self] in
+                 guard let self else{return}
+                 let mustInPreview = (detailModel?.mustInPreview ?? false)
+                 self.contentTextView.text = mustInPreview ? "large Json .. tab 'Preview Json' to view full json format":processedText
+                  
+                 if mustInPreview {
+                     self.contentTextView.font = UIFont.systemFont(ofSize: 20)
+                     self.contentTextView.textAlignment = .center
+                 }
              }
          }
      }

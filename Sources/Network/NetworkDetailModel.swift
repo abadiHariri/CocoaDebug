@@ -47,7 +47,7 @@ struct NetworkDetailModel {
 
       //  let estimatedSize = estimatedSizeOfLabel(text:  self.content ?? "", font: labelFont, maxWidth: maxWidth)
         mustInPreview = (content?.count ?? 0 > 10000)
-        self.heigth = mustInPreview ? 300 : calculateTextHeight(text: self.content ?? "")
+        self.heigth = mustInPreview ? 100 : calculateTextHeight(text: self.content ?? "")
         print("Estimated size of label: \(heigth)")
         
 //        if title == "REQUEST" {
