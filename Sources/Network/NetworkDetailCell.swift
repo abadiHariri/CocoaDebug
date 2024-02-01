@@ -30,7 +30,17 @@ class NetworkDetailCell: UITableViewCell {
         didSet {
             
             titleLabel.text = detailModel?.title
-            contentTextView.text = detailModel?.content
+            
+            let mustInPreview = (detailModel?.mustInPreview ?? false)
+            self.contentTextView.text = mustInPreview ? "large Json .. tab 'Preview Json' to view full json format":processedText
+             
+            if mustInPreview {
+                self.contentTextView.font = UIFont.systemFont(ofSize: 20)
+                self.contentTextView.textAlignment = .center
+            }
+            
+            
+           // contentTextView.text = detailModel?.content
             
             //image
             if detailModel?.image == nil {
@@ -67,7 +77,8 @@ class NetworkDetailCell: UITableViewCell {
         super.awakeFromNib()
         
         editView.addGestureRecognizer(UITapGestureRecognizer.init(target: self, action: #selector(tapEditView)))
-        
+        editView.backgroundColor = .blue
+        editView.isHidden = false
         contentTextView.textContainer.lineFragmentPadding = 0
         contentTextView.textContainerInset = .zero
     }
