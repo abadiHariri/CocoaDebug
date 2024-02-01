@@ -32,7 +32,7 @@ class NetworkDetailCell: UITableViewCell {
             titleLabel.text = detailModel?.title
             
             let mustInPreview = (detailModel?.mustInPreview ?? false)
-            self.contentTextView.text = mustInPreview ? "large Json .. tab 'Preview Json' to view full json format":processedText
+            self.contentTextView.text = mustInPreview ? "large Json .. tab 'Preview Json' to view full json format":(detailModel?.content ?? "")
              
             if mustInPreview {
                 self.contentTextView.font = UIFont.systemFont(ofSize: 20)
