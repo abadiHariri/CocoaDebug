@@ -9,6 +9,7 @@
 import Foundation
 import UIKit
 import MessageUI
+import JSONPreview
 
 class NetworkDetailViewController: UITableViewController, MFMailComposeViewControllerDelegate {
     
@@ -462,8 +463,12 @@ extension NetworkDetailViewController {
         
         //2.click edit view
         cell.tapEditViewCallback = { [weak self] detailModel in
-            let vc = JsonViewController.instanceFromStoryBoard()
-            vc.detailModel = detailModel
+            let vc = BasicExampleViewController()
+            let previewView = JSONPreview()
+            previewView.preview(detailModel?.content ?? "")
+            vc.json = detailModel?.content ?? ""
+            //let vc = JsonViewController.instanceFromStoryBoard()
+           // vc.detailModel = detailModel
             self?.navigationController?.pushViewController(vc, animated: true)
         }
         
@@ -562,5 +567,71 @@ extension NetworkDetailViewController {
                 self.present(alert, animated: true, completion: nil)
             }
         }
+    }
+}
+import UIKit
+
+import SafariServices
+
+import JSONPreview
+
+class BaseJSONPreviewController: UIViewController {
+    lazy var previewView = JSONPreview()
+    
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        
+        view.backgroundColor = .white
+        
+        previewView.delegate = self
+        
+        view.addSubview(previewView)
+    }
+}
+
+// MARK: - UITextViewDelegate
+
+extension BaseJSONPreviewController: JSONPreviewDelegate {
+    func jsonPreview(_ view: JSONPreview, didClickURL url: URL, on textView: UITextView) -> Bool {
+        print(url)
+        
+        let safari = SFSafariViewController(url: url)
+        safari.modalPresentationStyle = .overFullScreen
+        present(safari, animated: true, completion: nil)
+        
+        return false
+    }
+}
+class BasicExampleViewController: BaseJSONPreviewController {
+    var json:String? //= ""
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        
+        title = "Json Preview"
+        
+        addPreviewViewLayout()
+        
+        preview()
+    }
+}
+
+// MARK: -
+
+private extension BasicExampleViewController {
+    func addPreviewViewLayout() {
+        previewView.translatesAutoresizingMaskIntoConstraints = false
+        
+        NSLayoutConstraint.activate([
+            previewView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
+            previewView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor),
+            previewView.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor),
+            previewView.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor)
+        ])
+    }
+    
+    func preview() {
+        let json = json ?? ""
+        
+        previewView.preview(json, initialState: .folded)
     }
 }

@@ -34,7 +34,7 @@ class NetworkDetailCell: UITableViewCell {
 
              // Switch back to the main thread to update the UI
              DispatchQueue.main.async {
-                 self.contentTextView.text = processedText
+                 self.contentTextView.text = detailModel?.mustInPreview ? "large Json .. tab 'Preview Json' to view full json format":processedText
              }
          }
      }

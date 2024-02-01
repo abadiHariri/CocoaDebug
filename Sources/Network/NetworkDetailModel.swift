@@ -22,7 +22,7 @@ struct NetworkDetailModel {
     var responseData: Data?
     var httpModel: _HttpModel?
     var heigth:Double = 0
-    
+    var mustInPreview:Bool = false
     
     
     func calculateTextHeight(text: String) -> CGFloat {
@@ -46,7 +46,8 @@ struct NetworkDetailModel {
       
 
       //  let estimatedSize = estimatedSizeOfLabel(text:  self.content ?? "", font: labelFont, maxWidth: maxWidth)
-        self.heigth = (content?.count ?? 0 > 3000) ? 300 : calculateTextHeight(text: self.content ?? "")
+        mustInPreview = (content?.count ?? 0 > 10000)
+        self.heigth = mustInPreview ? 300 : calculateTextHeight(text: self.content ?? "")
         print("Estimated size of label: \(heigth)")
         
 //        if title == "REQUEST" {
