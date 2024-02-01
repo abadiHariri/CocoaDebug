@@ -427,8 +427,10 @@ extension NetworkDetailViewController {
         
         //2.click edit view
         cell.tapEditViewCallback = { [weak self] detailModel in
-             let previewView = JSONPreview()
-            previewView.preview(detailModel?.content ?? "")
+            let vc = BasicExampleViewController()
+//
+//             let previewView = JSONPreview()
+//            previewView.preview(detailModel?.content ?? "")
             vc.json = detailModel?.content ?? ""
             //let vc = JsonViewController.instanceFromStoryBoard()
            // vc.detailModel = detailModel
