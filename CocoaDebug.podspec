@@ -29,7 +29,7 @@ Pod::Spec.new do |s|
   # s.dependency "React/Core"
   # s.dependency "Protobuf"
  s.static_framework = true
-  s.dependency 'JSONPreview',  '~> 2.2.3'
+  s.dependency 'JSONPreview',  '~> 2.3.1'
 
 
  
