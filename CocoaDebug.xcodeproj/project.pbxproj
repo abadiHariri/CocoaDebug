@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 52;
+	objectVersion = 54;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -576,6 +576,7 @@
 		38F69F8826A6FAFB0010953F /* GPBMessage+CocoaDebug.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "GPBMessage+CocoaDebug.h"; sourceTree = "<group>"; };
 		38F69F8926A6FAFB0010953F /* GPBMessage+CocoaDebug.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "GPBMessage+CocoaDebug.m"; sourceTree = "<group>"; };
 		F93A16012A35F4F400F76A99 /* _HTTPModel+cURL.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "_HTTPModel+cURL.swift"; sourceTree = "<group>"; };
+		FABC630A2BCC051600258711 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -627,6 +628,7 @@
 		3826D9CD24EE5BF4003DE040 /* Sources */ = {
 			isa = PBXGroup;
 			children = (
+				FABC630A2BCC051600258711 /* PrivacyInfo.xcprivacy */,
 				3828BA25259E223B00ABF650 /* Monitor */,
 				3882D67F25676EA200379E0C /* fishhook */,
 				3826D9CE24EE5BF4003DE040 /* Core */,
