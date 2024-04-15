@@ -26,7 +26,7 @@ Pod::Spec.new do |s|
                           'Sources/Window/**/*.m',
                           'Sources/fishhook/**/*.c',
                           ]
-s.resource_bundles = {"Kingfisher" => ["Sources/PrivacyInfo.xcprivacy"]}
+
   # s.dependency "React/Core"
   # s.dependency "Protobuf"
  s.static_framework = true
