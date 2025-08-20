@@ -136,7 +136,15 @@ class NetworkDetailViewController: UITableViewController, MFMailComposeViewContr
                 if !requestHeaderFields.isEmpty {
                     model_2 = NetworkDetailModel.init(title: "REQUEST HEADER", content: requestHeaderFields.description, url: httpModel?.url.absoluteString, httpModel: httpModel)
                     model_2.requestHeaderFields = requestHeaderFields
-                    model_2.content = String(requestHeaderFields.dictionaryToString()?.dropFirst().dropLast().dropFirst().dropLast().dropFirst().dropFirst() ?? "").replacingOccurrences(of: "\",\n  \"", with: "\",\n\"").replacingOccurrences(of: "\\/", with: "/")
+                    if let data = try? JSONSerialization.data(withJSONObject: requestHeaderFields, options: [.prettyPrinted]),
+                       let jsonString = String(data: data, encoding: .utf8) {
+                        model_2.content = jsonString
+                    } else {
+                        // fallback to original transformation if serialization fails
+                        model_2.content = String(requestHeaderFields.dictionaryToString()?.dropFirst().dropLast().dropFirst().dropLast().dropFirst().dropFirst() ?? "")
+                            .replacingOccurrences(of: "\",\n  \"", with: "\",\n\"")
+                            .replacingOccurrences(of: "\\/", with: "/")
+                    }
                 }
             }
             var model_4 = NetworkDetailModel.init(title: "RESPONSE HEADER", content: nil, url: httpModel?.url.absoluteString, httpModel: httpModel)
@@ -144,7 +152,18 @@ class NetworkDetailViewController: UITableViewController, MFMailComposeViewContr
                 if !responseHeaderFields.isEmpty {
                     model_4 = NetworkDetailModel.init(title: "RESPONSE HEADER", content: responseHeaderFields.description, url: httpModel?.url.absoluteString, httpModel: httpModel)
                     model_4.responseHeaderFields = responseHeaderFields
-                    model_4.content = String(responseHeaderFields.dictionaryToString()?.dropFirst().dropLast().dropFirst().dropLast().dropFirst().dropFirst() ?? "").replacingOccurrences(of: "\",\n  \"", with: "\",\n\"").replacingOccurrences(of: "\\/", with: "/")
+                    
+                    if let data = try? JSONSerialization.data(withJSONObject: responseHeaderFields, options: [.prettyPrinted]),
+                       let jsonString = String(data: data, encoding: .utf8) {
+                        model_4.content = jsonString
+                    } else {
+                        // fallback to original transformation if serialization fails
+                        model_4.content = String(responseHeaderFields.dictionaryToString()?.dropFirst().dropLast().dropFirst().dropLast().dropFirst().dropFirst() ?? "").replacingOccurrences(of: "\",\n  \"", with: "\",\n\"").replacingOccurrences(of: "\\/", with: "/")
+                    }
+                    
+                    
+                    
+               
                 }
             }
             let model_0 = NetworkDetailModel.init(title: "RESPONSE SIZE", content: httpModel?.size, url: httpModel?.url.absoluteString, httpModel: httpModel)
@@ -427,14 +446,17 @@ extension NetworkDetailViewController {
         
         //2.click edit view
         cell.tapEditViewCallback = { [weak self] detailModel in
-            let vc = JSONPreviewViewController()
+            
+//            let fallback = BasicExampleViewController()
+//            fallback.json = detailModel?.content ?? ""
+//            self?.navigationController?.pushViewController(fallback, animated: true)
 //
-//             let previewView = JSONPreview()
-//            previewView.preview(detailModel?.content ?? "")
-            vc.json = detailModel?.content ?? ""
-            //let vc = JsonViewController.instanceFromStoryBoard()
-           // vc.detailModel = detailModel
-            self?.navigationController?.pushViewController(vc, animated: true)
+//            let vc = DemoJSONViewerHostController()
+//            vc.jsonString = detailModel?.content ?? ""
+//            self?.navigationController?.pushViewController(vc, animated: true)
+            
+            self?.pushJSONViewerOrFallback(with: detailModel?.content ?? "")
+            
         }
         
         return cell
@@ -534,6 +556,37 @@ extension NetworkDetailViewController {
         }
     }
 }
+
+
+// MARK: - JSON validity check
+@inline(__always)
+private func isValidJSON(_ text: String) -> Bool {
+    guard let data = text.data(using: .utf8), !data.isEmpty else { return false }
+    do {
+        _ = try JSONSerialization.jsonObject(with: data, options: [])
+        return true
+    } catch {
+        return false
+    }
+}
+
+// MARK: - Push logic
+extension UIViewController {
+    func pushJSONViewerOrFallback(with jsonString: String) {
+        let controller: UIViewController
+        if isValidJSON(jsonString) {
+            let vc = DemoJSONViewerHostController()
+            vc.jsonString = jsonString
+            controller = vc
+        } else {
+            let fallback = BasicExampleViewController()
+            fallback.json = jsonString
+            controller = fallback
+        }
+        navigationController?.pushViewController(controller, animated: true)
+    }
+}
+
 import UIKit
 
 import SafariServices
@@ -601,142 +654,208 @@ private extension BasicExampleViewController {
         
     }
 }
-//MARK: - JSON Preview View Controller
+
+
 import UIKit
+import WebKit
 
-extension JSONPreviewViewController: JSONPreviewDelegate {
-    func jsonPreview(_ view: JSONPreview, didClickURL url: URL, on textView: UITextView) -> Bool {
-        print(url)
-        
-        let safari = SFSafariViewController(url: url)
-        safari.modalPresentationStyle = .overFullScreen
-        present(safari, animated: true, completion: nil)
-        
-        return false
-    }
-}
+// JSON Viewer using https://github.com/andypf/json-viewer (web component)
+final class JSONViewerViewController: UIViewController, WKNavigationDelegate {
+    private var webView: WKWebView!
+    private var isLoaded = false
+    private var pendingJSON: String?
 
-class JSONPreviewViewController: BaseJSONPreviewController {
-    
-    private var previewView = JSONPreview()
-    private var searchBar: UISearchBar!
-    private var expandCollapseButton: UIButton!
-    private var json: String = ""
-    private var isExpanded = false
-    
+    private let initialHTML: String = """
+    <!doctype html>
+    <html lang="ar" dir="auto">
+    <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+      <style>
+        html, body { height:100%; margin:0; background:#0f1115; color:#e6e6e6;
+          font-family:-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial,
+          "Apple Color Emoji", "Segoe UI Emoji", "Noto Sans Arabic", "Geeza Pro", "PingFang SC",
+          "Noto Sans", sans-serif; }
+        #root { height:100%; display:grid; }
+        andypf-json-viewer { height:100%; width:100%; }
+        :root { unicode-bidi: plaintext; }
+      </style>
+      <script defer src="https://pfau-software.de/json-viewer/dist/iife/index.js"></script>
+    </head>
+    <body>
+      <div id="root">
+        <andypf-json-viewer
+          id="viewer"
+          indent="2"
+          expanded="2"
+          theme="onedark"
+          show-data-types="true"
+          show-toolbar="true"
+          expand-icon-type="arrow"
+          show-copy="true"
+          show-size="true"
+        >{}</andypf-json-viewer>
+      </div>
+
+      <script>
+        function getViewer(){ return document.getElementById("viewer"); }
+
+        function b64ToUtf8(b64) {
+          const bin = atob(b64);
+          const bytes = Uint8Array.from(bin, c => c.charCodeAt(0));
+          if (window.TextDecoder) {
+            return new TextDecoder("utf-8").decode(bytes);
+          }
+          let out = "", i = 0;
+          while (i < bytes.length) out += String.fromCharCode(bytes[i++]);
+          return decodeURIComponent(escape(out));
+        }
+
+        window.renderBase64 = (b64) => {
+          try {
+            const jsonText = b64ToUtf8(b64);
+            const obj = JSON.parse(jsonText);
+            getViewer().data = obj;
+          } catch (e) { console.error("renderBase64 error", e); }
+        };
+
+        window.configureViewer = (opts = {}) => {
+          const el = getViewer();
+          if (typeof opts.indent === "number") el.indent = opts.indent;
+          if (typeof opts.expanded !== "undefined") el.expanded = opts.expanded;
+          if (typeof opts.theme === "string") el.theme = opts.theme;
+          if (typeof opts.showDataTypes === "boolean") el.showDataTypes = opts.showDataTypes;
+          if (typeof opts.showToolbar === "boolean") el.showToolbar = opts.showToolbar;
+          if (typeof opts.expandIconType === "string") el.expandIconType = opts.expandIconType;
+          if (typeof opts.showCopy === "boolean") el.showCopy = opts.showCopy;
+          if (typeof opts.showSize === "boolean") el.showSize = opts.showSize;
+          if (typeof opts.direction === "string") document.documentElement.setAttribute("dir", opts.direction);
+        };
+      </script>
+    </body>
+    </html>
+    """
+
+
     override func viewDidLoad() {
         super.viewDidLoad()
-        setupUI()
-        setupConstraints()
-    }
-    
-    private func setupUI() {
-        view.backgroundColor = UIColor(red: 0.1, green: 0.1, blue: 0.15, alpha: 1.0)
-        
-        // Force LTR
-        view.semanticContentAttribute = .forceLeftToRight
-        previewView.semanticContentAttribute = .forceLeftToRight
-        previewView.jsonTextView.semanticContentAttribute = .forceLeftToRight
-        
-        // Setup JSONPreview
-        previewView.translatesAutoresizingMaskIntoConstraints = false
-        previewView.backgroundColor = UIColor(red: 0.1, green: 0.1, blue: 0.15, alpha: 1.0)
-        view.addSubview(previewView)
-        
-        // Setup Search Bar
-        searchBar = UISearchBar()
-        searchBar.translatesAutoresizingMaskIntoConstraints = false
-        searchBar.placeholder = "Search JSON..."
-        searchBar.searchBarStyle = .minimal
-        searchBar.delegate = self
-        searchBar.backgroundColor = UIColor(red: 0.15, green: 0.15, blue: 0.2, alpha: 1.0)
-        searchBar.searchTextField.backgroundColor = UIColor(red: 0.2, green: 0.2, blue: 0.25, alpha: 1.0)
-        searchBar.searchTextField.textColor = .white
-        searchBar.searchTextField.attributedPlaceholder = NSAttributedString(
-            string: "Search JSON...",
-            attributes: [NSAttributedString.Key.foregroundColor: UIColor.lightGray]
-        )
-        view.addSubview(searchBar)
-        
-        // Setup Expand/Collapse Button
-        expandCollapseButton = UIButton(type: .system)
-        expandCollapseButton.translatesAutoresizingMaskIntoConstraints = false
-        expandCollapseButton.setTitle("Expand All", for: .normal)
-        expandCollapseButton.setTitleColor(.white, for: .normal)
-        expandCollapseButton.backgroundColor = UIColor(red: 0.3, green: 0.3, blue: 0.4, alpha: 1.0)
-        expandCollapseButton.layer.cornerRadius = 8
-        expandCollapseButton.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .medium)
-        expandCollapseButton.addTarget(self, action: #selector(expandCollapseTapped), for: .touchUpInside)
-        view.addSubview(expandCollapseButton)
-    }
-    
-    private func setupConstraints() {
+        view.backgroundColor = .black
+
+        let config = WKWebViewConfiguration()
+        config.preferences.javaScriptEnabled = true
+        config.defaultWebpagePreferences.allowsContentJavaScript = true
+
+        webView = WKWebView(frame: .zero, configuration: config)
+        webView.navigationDelegate = self
+        webView.scrollView.contentInsetAdjustmentBehavior = .never
+        webView.translatesAutoresizingMaskIntoConstraints = false
+
+        view.addSubview(webView)
         NSLayoutConstraint.activate([
-            // Search Bar
-            searchBar.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 16),
-            searchBar.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
-            searchBar.trailingAnchor.constraint(equalTo: expandCollapseButton.leadingAnchor, constant: -16),
-            
-            // Expand/Collapse Button
-            expandCollapseButton.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 16),
-            expandCollapseButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
-            expandCollapseButton.widthAnchor.constraint(equalToConstant: 100),
-            expandCollapseButton.heightAnchor.constraint(equalToConstant: 44),
-            
-            // JSONPreview
-            
-            previewView.topAnchor.constraint(equalTo: searchBar.bottomAnchor, constant: 16),
-            previewView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor),
-            previewView.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor),
-            previewView.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor)
-            
-            
+            webView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            webView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            webView.topAnchor.constraint(equalTo: view.topAnchor),
+            webView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
         ])
+
+        webView.loadHTMLString(initialHTML, baseURL: nil)
     }
-    
-    
-    @objc private func expandCollapseTapped() {
-        if !isExpanded {
-            expandAllJSON()
-            expandCollapseButton.setTitle("Collapse All", for: .normal)
-            isExpanded = true
-        } else {
-            collapseAllJSON()
-            expandCollapseButton.setTitle("Expand All", for: .normal)
-            isExpanded = false
+
+    // MARK: - Public API
+
+    /// Pass a JSON string (UTF-8). Arabic is fully supported.
+    func render(jsonString: String) {
+        guard isLoaded else {
+            pendingJSON = jsonString
+            return
+        }
+        evaluateRender(jsonString: jsonString)
+    }
+
+    /// Optionally force RTL/LTR or tweak viewer.
+    func configure(indent: Int? = nil,
+                   expanded: Any? = nil,          // Int or Bool
+                   theme: String? = nil,
+                   showDataTypes: Bool? = nil,
+                   showToolbar: Bool? = nil,
+                   expandIconType: String? = nil, // "square" | "circle" | "arrow"
+                   showCopy: Bool? = nil,
+                   showSize: Bool? = nil,
+                   direction: String? = nil       // "rtl" | "ltr" | "auto"
+    ) {
+        var dict: [String: Any] = [:]
+        if let indent { dict["indent"] = indent }
+        if let expanded {
+            if let b = expanded as? Bool { dict["expanded"] = b }
+            else if let i = expanded as? Int { dict["expanded"] = i }
+        }
+        if let theme { dict["theme"] = theme }
+        if let showDataTypes { dict["showDataTypes"] = showDataTypes }
+        if let showToolbar { dict["showToolbar"] = showToolbar }
+        if let expandIconType { dict["expandIconType"] = expandIconType }
+        if let showCopy { dict["showCopy"] = showCopy }
+        if let showSize { dict["showSize"] = showSize }
+        if let direction { dict["direction"] = direction }
+
+        guard
+            let data = try? JSONSerialization.data(withJSONObject: dict, options: []),
+            let json = String(data: data, encoding: .utf8)
+        else { return }
+
+        webView.evaluateJavaScript("window.configureViewer(\(json));", completionHandler: nil)
+    }
+
+    // MARK: - WKNavigationDelegate
+
+    func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
+        isLoaded = true
+        if let text = pendingJSON {
+            evaluateRender(jsonString: text)
+            pendingJSON = nil
         }
     }
-    
-    private func expandAllJSON() {
-        previewView.preview(json, initialState: .expand)
+
+    // MARK: - Internal
+
+    private func evaluateRender(jsonString: String) {
+        let b64 = Data(jsonString.utf8).base64EncodedString()
+        let js = "window.renderBase64('\(b64)');"
+        webView.evaluateJavaScript(js, completionHandler: nil)
     }
-    
-    private func collapseAllJSON() {
-        previewView.preview(json, initialState: .folded)
-    }
-    
-    func loadJSON(_ jsonString: String) {
-        self.json = jsonString
-        previewView.preview(jsonString, initialState: .folded)
-        // Reset expand/collapse state when new JSON is loaded
-        isExpanded = false
-        expandCollapseButton.setTitle("Expand All", for: .normal)
-    }
-    
- 
 }
 
-// MARK: - UISearchBarDelegate
-extension JSONPreviewViewController: UISearchBarDelegate {
-    func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
-        previewView.search(searchText)
+// MARK: - Example Usage
+
+final class DemoJSONViewerHostController: UIViewController {
+    private let viewer = JSONViewerViewController()
+    var jsonString: String = ""
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        addChild(viewer)
+        viewer.view.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(viewer.view)
+        viewer.didMove(toParent: self)
+        NSLayoutConstraint.activate([
+            viewer.view.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            viewer.view.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            viewer.view.topAnchor.constraint(equalTo: view.topAnchor),
+            viewer.view.bottomAnchor.constraint(equalTo: view.bottomAnchor)
+        ])
+
+        // Optional configuration
+        viewer.configure(indent: 2,
+                         expanded: 2,
+                         theme: "onedark",
+                         showDataTypes: true,
+                         showToolbar: true,
+                         expandIconType: "arrow",
+                         showCopy: true,
+                         showSize: true)
+
+        // Render JSON passed as STRING
+ 
+        viewer.render(jsonString: jsonString)
     }
-    
-    func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
-        searchBar.resignFirstResponder()
-    }
-    
- }
-
-
-
+}
+ 
+ 
