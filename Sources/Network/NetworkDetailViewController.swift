@@ -427,7 +427,7 @@ extension NetworkDetailViewController {
         
         //2.click edit view
         cell.tapEditViewCallback = { [weak self] detailModel in
-            let vc = BasicExampleViewController()
+            let vc = JSONPreviewViewController()
 //
 //             let previewView = JSONPreview()
 //            previewView.preview(detailModel?.content ?? "")
@@ -598,5 +598,145 @@ private extension BasicExampleViewController {
         let json = json ?? ""
         
         previewView.preview(json, initialState: .folded)
+        
     }
 }
+//MARK: - JSON Preview View Controller
+import UIKit
+
+extension JSONPreviewViewController: JSONPreviewDelegate {
+    func jsonPreview(_ view: JSONPreview, didClickURL url: URL, on textView: UITextView) -> Bool {
+        print(url)
+        
+        let safari = SFSafariViewController(url: url)
+        safari.modalPresentationStyle = .overFullScreen
+        present(safari, animated: true, completion: nil)
+        
+        return false
+    }
+}
+
+class JSONPreviewViewController: BaseJSONPreviewController {
+    
+    private var previewView = JSONPreview()
+    private var searchBar: UISearchBar!
+    private var expandCollapseButton: UIButton!
+    private var json: String = ""
+    private var isExpanded = false
+    
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        setupUI()
+        setupConstraints()
+    }
+    
+    private func setupUI() {
+        view.backgroundColor = UIColor(red: 0.1, green: 0.1, blue: 0.15, alpha: 1.0)
+        
+        // Force LTR
+        view.semanticContentAttribute = .forceLeftToRight
+        previewView.semanticContentAttribute = .forceLeftToRight
+        previewView.jsonTextView.semanticContentAttribute = .forceLeftToRight
+        
+        // Setup JSONPreview
+        previewView.translatesAutoresizingMaskIntoConstraints = false
+        previewView.backgroundColor = UIColor(red: 0.1, green: 0.1, blue: 0.15, alpha: 1.0)
+        view.addSubview(previewView)
+        
+        // Setup Search Bar
+        searchBar = UISearchBar()
+        searchBar.translatesAutoresizingMaskIntoConstraints = false
+        searchBar.placeholder = "Search JSON..."
+        searchBar.searchBarStyle = .minimal
+        searchBar.delegate = self
+        searchBar.backgroundColor = UIColor(red: 0.15, green: 0.15, blue: 0.2, alpha: 1.0)
+        searchBar.searchTextField.backgroundColor = UIColor(red: 0.2, green: 0.2, blue: 0.25, alpha: 1.0)
+        searchBar.searchTextField.textColor = .white
+        searchBar.searchTextField.attributedPlaceholder = NSAttributedString(
+            string: "Search JSON...",
+            attributes: [NSAttributedString.Key.foregroundColor: UIColor.lightGray]
+        )
+        view.addSubview(searchBar)
+        
+        // Setup Expand/Collapse Button
+        expandCollapseButton = UIButton(type: .system)
+        expandCollapseButton.translatesAutoresizingMaskIntoConstraints = false
+        expandCollapseButton.setTitle("Expand All", for: .normal)
+        expandCollapseButton.setTitleColor(.white, for: .normal)
+        expandCollapseButton.backgroundColor = UIColor(red: 0.3, green: 0.3, blue: 0.4, alpha: 1.0)
+        expandCollapseButton.layer.cornerRadius = 8
+        expandCollapseButton.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .medium)
+        expandCollapseButton.addTarget(self, action: #selector(expandCollapseTapped), for: .touchUpInside)
+        view.addSubview(expandCollapseButton)
+    }
+    
+    private func setupConstraints() {
+        NSLayoutConstraint.activate([
+            // Search Bar
+            searchBar.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 16),
+            searchBar.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
+            searchBar.trailingAnchor.constraint(equalTo: expandCollapseButton.leadingAnchor, constant: -16),
+            
+            // Expand/Collapse Button
+            expandCollapseButton.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 16),
+            expandCollapseButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
+            expandCollapseButton.widthAnchor.constraint(equalToConstant: 100),
+            expandCollapseButton.heightAnchor.constraint(equalToConstant: 44),
+            
+            // JSONPreview
+            
+            previewView.topAnchor.constraint(equalTo: searchBar.bottomAnchor, constant: 16),
+            previewView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor),
+            previewView.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor),
+            previewView.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor)
+            
+            
+        ])
+    }
+    
+    
+    @objc private func expandCollapseTapped() {
+        if !isExpanded {
+            expandAllJSON()
+            expandCollapseButton.setTitle("Collapse All", for: .normal)
+            isExpanded = true
+        } else {
+            collapseAllJSON()
+            expandCollapseButton.setTitle("Expand All", for: .normal)
+            isExpanded = false
+        }
+    }
+    
+    private func expandAllJSON() {
+        previewView.preview(json, initialState: .expand)
+    }
+    
+    private func collapseAllJSON() {
+        previewView.preview(json, initialState: .folded)
+    }
+    
+    func loadJSON(_ jsonString: String) {
+        self.json = jsonString
+        previewView.preview(jsonString, initialState: .folded)
+        // Reset expand/collapse state when new JSON is loaded
+        isExpanded = false
+        expandCollapseButton.setTitle("Expand All", for: .normal)
+    }
+    
+ 
+}
+
+// MARK: - UISearchBarDelegate
+extension JSONPreviewViewController: UISearchBarDelegate {
+    func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
+        previewView.search(searchText)
+    }
+    
+    func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
+        searchBar.resignFirstResponder()
+    }
+    
+ }
+
+
+
