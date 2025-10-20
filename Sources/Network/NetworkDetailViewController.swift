@@ -38,146 +38,155 @@ class NetworkDetailViewController: UITableViewController, MFMailComposeViewContr
     
     
     //MARK: - tool
-    func setupModels()
-    {
-        guard let requestSerializer = httpModel?.requestSerializer else {return}
+    func setupModels() {
+        guard let requestSerializer = httpModel?.requestSerializer else { return }
         var requestContent: String? = nil
-        
-        //otherwise it will crash when it is nil
+
         if httpModel?.requestData == nil {
-            httpModel?.requestData = Data.init()
+            httpModel?.requestData = Data()
         }
         if httpModel?.responseData == nil {
-            httpModel?.responseData = Data.init()
+            httpModel?.responseData = Data()
         }
-        
-        //detect the request parameter format (JSON/Form)
+
+        // detect the request parameter format (JSON/Form)
         if requestSerializer == RequestSerializer.JSON {
-            //JSON
             requestContent = httpModel?.requestData.dataToPrettyPrintString()
-        }
-        else if requestSerializer == RequestSerializer.form {
+        }else if requestSerializer == RequestSerializer.form {
             if let data = httpModel?.requestData {
-                //1.protobuf
-//                if let message = try? GPBMessage.parse(from: data) {
-//                    if message.serializedSize() > 0 {
-//                        requestContent = message.description
-//                    } else {
-                        //2.Form
-                        requestContent = data.dataToString()
-//                    }
-//                }
-                if requestContent == nil || requestContent == "" || requestContent == "\u{8}\u{1e}" {
-                    //3.utf-8 string
-                    requestContent = String(data: data, encoding: .utf8)
+                // 1. Try UTF-8 string
+                var rawString = String(data: data, encoding: .utf8) ?? ""
+                if rawString.isEmpty {
+                    rawString = data.dataToString() ?? ""
                 }
+
+                // 2. Handle application/x-www-form-urlencoded
+                if rawString.contains("=") && !rawString.contains("Content-Disposition: form-data;") {
+                    var dict: [String: String] = [:]
+                    let pairs = rawString.components(separatedBy: "&")
+                    for pair in pairs {
+                        let parts = pair.components(separatedBy: "=")
+                        if parts.count >= 2 {
+                            let key = parts[0].removingPercentEncoding ?? parts[0]
+                            let value = parts[1...].joined(separator: "=").removingPercentEncoding ?? ""
+                            dict[key] = value
+                        }
+                    }
+                    if !dict.isEmpty,
+                       let jsonData = try? JSONSerialization.data(withJSONObject: dict, options: .prettyPrinted),
+                       let jsonString = String(data: jsonData, encoding: .utf8) {
+                        requestContent = jsonString
+                    } else {
+                        requestContent = rawString
+                    }
+                }
+                // 3. Handle multipart/form-data
+                else if rawString.contains("Content-Disposition: form-data;") {
+                    var formDict: [String: String] = [:]
+                    let boundaryParts = rawString.components(separatedBy: "--").filter { !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
+                    for part in boundaryParts {
+                        if let nameRange = part.range(of: "name=\""),
+                           let endRange = part[nameRange.upperBound...].range(of: "\"") {
+                            let name = String(part[nameRange.upperBound..<endRange.lowerBound])
+                            let sections = part.components(separatedBy: "\r\n\r\n")
+                            if sections.count > 1 {
+                                let value = sections[1].replacingOccurrences(of: "\r\n", with: "")
+                                if !value.isEmpty {
+                                    formDict[name] = value
+                                }
+                            }
+                        }
+                    }
+                    if !formDict.isEmpty,
+                       let jsonData = try? JSONSerialization.data(withJSONObject: formDict, options: .prettyPrinted),
+                       let jsonString = String(data: jsonData, encoding: .utf8) {
+                        requestContent = jsonString
+                    } else {
+                        requestContent = rawString
+                    }
+                }
+                // 4. Fallback
+                else {
+                    requestContent = rawString.isEmpty ? nil : rawString
+                }
+
                 if requestContent == "" || requestContent == "\u{8}\u{1e}" {
                     requestContent = nil
                 }
             }
         }
-        
+
         if httpModel?.isImage == true {
-            //image:
-            //1.
-            let model_1 = NetworkDetailModel.init(title: "URL", content: "https://github.com/CocoaDebug/CocoaDebug", url: httpModel?.url.absoluteString, httpModel: httpModel)
-            let model_3 = NetworkDetailModel.init(title: "REQUEST", content: requestContent, url: httpModel?.url.absoluteString, httpModel: httpModel)
-            var model_5 = NetworkDetailModel.init(title: "RESPONSE", content: nil, url: httpModel?.url.absoluteString, httpModel: httpModel)
-            let model_6 = NetworkDetailModel.init(title: "ERROR", content: httpModel?.errorLocalizedDescription, url: httpModel?.url.absoluteString, httpModel: httpModel)
-            let model_7 = NetworkDetailModel.init(title: "ERROR DESCRIPTION", content: httpModel?.errorDescription, url: httpModel?.url.absoluteString, httpModel: httpModel)
+            let model_1 = NetworkDetailModel(title: "URL", content: "https://github.com/CocoaDebug/CocoaDebug", url: httpModel?.url.absoluteString, httpModel: httpModel)
+            let model_3 = NetworkDetailModel(title: "REQUEST", content: requestContent, url: httpModel?.url.absoluteString, httpModel: httpModel)
+            var model_5 = NetworkDetailModel(title: "RESPONSE", content: nil, url: httpModel?.url.absoluteString, httpModel: httpModel)
+            let model_6 = NetworkDetailModel(title: "ERROR", content: httpModel?.errorLocalizedDescription, url: httpModel?.url.absoluteString, httpModel: httpModel)
+            let model_7 = NetworkDetailModel(title: "ERROR DESCRIPTION", content: httpModel?.errorDescription, url: httpModel?.url.absoluteString, httpModel: httpModel)
             if let responseData = httpModel?.responseData {
-                model_5 = NetworkDetailModel.init(title: "RESPONSE", content: nil, url: httpModel?.url.absoluteString, image: UIImage.init(gifData: responseData), httpModel: httpModel)
+                model_5 = NetworkDetailModel(title: "RESPONSE", content: nil, url: httpModel?.url.absoluteString, image: UIImage(gifData: responseData), httpModel: httpModel)
             }
-            //2.
-            let model_8 = NetworkDetailModel.init(title: "TOTAL TIME", content: httpModel?.totalDuration, url: httpModel?.url.absoluteString, httpModel: httpModel)
-            let model_9 = NetworkDetailModel.init(title: "MIME TYPE", content: httpModel?.mineType, url: httpModel?.url.absoluteString, httpModel: httpModel)
-            var model_2 = NetworkDetailModel.init(title: "REQUEST HEADER", content: nil, url: httpModel?.url.absoluteString, httpModel: httpModel)
-            if let requestHeaderFields = httpModel?.requestHeaderFields {
-                if !requestHeaderFields.isEmpty {
-                    model_2 = NetworkDetailModel.init(title: "REQUEST HEADER", content: requestHeaderFields.description, url: httpModel?.url.absoluteString, httpModel: httpModel)
-                    model_2.requestHeaderFields = requestHeaderFields
-                    model_2.content = String(requestHeaderFields.dictionaryToString()?.dropFirst().dropLast().dropFirst().dropLast().dropFirst().dropFirst() ?? "").replacingOccurrences(of: "\",\n  \"", with: "\",\n\"").replacingOccurrences(of: "\\/", with: "/")
+            let model_8 = NetworkDetailModel(title: "TOTAL TIME", content: httpModel?.totalDuration, url: httpModel?.url.absoluteString, httpModel: httpModel)
+            let model_9 = NetworkDetailModel(title: "MIME TYPE", content: httpModel?.mineType, url: httpModel?.url.absoluteString, httpModel: httpModel)
+
+            var model_2 = NetworkDetailModel(title: "REQUEST HEADER", content: nil, url: httpModel?.url.absoluteString, httpModel: httpModel)
+            if let requestHeaderFields = httpModel?.requestHeaderFields, !requestHeaderFields.isEmpty {
+                model_2 = NetworkDetailModel(title: "REQUEST HEADER", content: requestHeaderFields.description, url: httpModel?.url.absoluteString, httpModel: httpModel)
+                model_2.requestHeaderFields = requestHeaderFields
+                model_2.content = String(requestHeaderFields.dictionaryToString()?.dropFirst().dropLast().dropFirst().dropLast().dropFirst().dropFirst() ?? "")
+                    .replacingOccurrences(of: "\",\n  \"", with: "\",\n\"")
+                    .replacingOccurrences(of: "\\/", with: "/")
+            }
+
+            var model_4 = NetworkDetailModel(title: "RESPONSE HEADER", content: nil, url: httpModel?.url.absoluteString, httpModel: httpModel)
+            if let responseHeaderFields = httpModel?.responseHeaderFields, !responseHeaderFields.isEmpty {
+                model_4 = NetworkDetailModel(title: "RESPONSE HEADER", content: responseHeaderFields.description, url: httpModel?.url.absoluteString, httpModel: httpModel)
+                model_4.responseHeaderFields = responseHeaderFields
+                model_4.content = String(responseHeaderFields.dictionaryToString()?.dropFirst().dropLast().dropFirst().dropLast().dropFirst().dropFirst() ?? "")
+                    .replacingOccurrences(of: "\",\n  \"", with: "\",\n\"")
+                    .replacingOccurrences(of: "\\/", with: "/")
+            }
+
+            let model_0 = NetworkDetailModel(title: "RESPONSE SIZE", content: httpModel?.size, url: httpModel?.url.absoluteString, httpModel: httpModel)
+            detailModels.append(contentsOf: [model_1, model_2, model_3, model_4, model_5, model_6, model_7, model_0, model_8, model_9])
+        } else {
+            let model_1 = NetworkDetailModel(title: "URL", content: "https://github.com/CocoaDebug/CocoaDebug", url: httpModel?.url.absoluteString, httpModel: httpModel)
+            let model_3 = NetworkDetailModel(title: "REQUEST", content: requestContent, url: httpModel?.url.absoluteString, httpModel: httpModel)
+            let model_5 = NetworkDetailModel(title: "RESPONSE", content: httpModel?.responseData.dataToPrettyPrintString(), url: httpModel?.url.absoluteString, httpModel: httpModel)
+            let model_6 = NetworkDetailModel(title: "ERROR", content: httpModel?.errorLocalizedDescription, url: httpModel?.url.absoluteString, httpModel: httpModel)
+            let model_7 = NetworkDetailModel(title: "ERROR DESCRIPTION", content: httpModel?.errorDescription, url: httpModel?.url.absoluteString, httpModel: httpModel)
+            let model_8 = NetworkDetailModel(title: "TOTAL TIME", content: httpModel?.totalDuration, url: httpModel?.url.absoluteString, httpModel: httpModel)
+            let model_9 = NetworkDetailModel(title: "MIME TYPE", content: httpModel?.mineType, url: httpModel?.url.absoluteString, httpModel: httpModel)
+
+            var model_2 = NetworkDetailModel(title: "REQUEST HEADER", content: nil, url: httpModel?.url.absoluteString, httpModel: httpModel)
+            if let requestHeaderFields = httpModel?.requestHeaderFields, !requestHeaderFields.isEmpty {
+                model_2 = NetworkDetailModel(title: "REQUEST HEADER", content: requestHeaderFields.description, url: httpModel?.url.absoluteString, httpModel: httpModel)
+                model_2.requestHeaderFields = requestHeaderFields
+                if let data = try? JSONSerialization.data(withJSONObject: requestHeaderFields, options: [.prettyPrinted]),
+                   let jsonString = String(data: data, encoding: .utf8) {
+                    model_2.content = jsonString
+                } else {
+                    model_2.content = String(requestHeaderFields.dictionaryToString()?.dropFirst().dropLast().dropFirst().dropLast().dropFirst().dropFirst() ?? "")
+                        .replacingOccurrences(of: "\",\n  \"", with: "\",\n\"")
+                        .replacingOccurrences(of: "\\/", with: "/")
                 }
             }
-            var model_4 = NetworkDetailModel.init(title: "RESPONSE HEADER", content: nil, url: httpModel?.url.absoluteString, httpModel: httpModel)
-            if let responseHeaderFields = httpModel?.responseHeaderFields {
-                if !responseHeaderFields.isEmpty {
-                    model_4 = NetworkDetailModel.init(title: "RESPONSE HEADER", content: responseHeaderFields.description, url: httpModel?.url.absoluteString, httpModel: httpModel)
-                    model_4.responseHeaderFields = responseHeaderFields
-                    model_4.content = String(responseHeaderFields.dictionaryToString()?.dropFirst().dropLast().dropFirst().dropLast().dropFirst().dropFirst() ?? "").replacingOccurrences(of: "\",\n  \"", with: "\",\n\"").replacingOccurrences(of: "\\/", with: "/")
+
+            var model_4 = NetworkDetailModel(title: "RESPONSE HEADER", content: nil, url: httpModel?.url.absoluteString, httpModel: httpModel)
+            if let responseHeaderFields = httpModel?.responseHeaderFields, !responseHeaderFields.isEmpty {
+                model_4 = NetworkDetailModel(title: "RESPONSE HEADER", content: responseHeaderFields.description, url: httpModel?.url.absoluteString, httpModel: httpModel)
+                model_4.responseHeaderFields = responseHeaderFields
+                if let data = try? JSONSerialization.data(withJSONObject: responseHeaderFields, options: [.prettyPrinted]),
+                   let jsonString = String(data: data, encoding: .utf8) {
+                    model_4.content = jsonString
+                } else {
+                    model_4.content = String(responseHeaderFields.dictionaryToString()?.dropFirst().dropLast().dropFirst().dropLast().dropFirst().dropFirst() ?? "")
+                        .replacingOccurrences(of: "\",\n  \"", with: "\",\n\"")
+                        .replacingOccurrences(of: "\\/", with: "/")
                 }
             }
-            let model_0 = NetworkDetailModel.init(title: "RESPONSE SIZE", content: httpModel?.size, url: httpModel?.url.absoluteString, httpModel: httpModel)
-            //3.
-            detailModels.append(model_1)
-            detailModels.append(model_2)
-            detailModels.append(model_3)
-            detailModels.append(model_4)
-            detailModels.append(model_5)
-            detailModels.append(model_6)
-            detailModels.append(model_7)
-            detailModels.append(model_0)
-            detailModels.append(model_8)
-            detailModels.append(model_9)
-        }
-        else {
-            //not image:
-            //1.
-            let model_1 = NetworkDetailModel.init(title: "URL", content: "https://github.com/CocoaDebug/CocoaDebug", url: httpModel?.url.absoluteString, httpModel: httpModel)
-            let model_3 = NetworkDetailModel.init(title: "REQUEST", content: requestContent, url: httpModel?.url.absoluteString, httpModel: httpModel)
-            let model_5 = NetworkDetailModel.init(title: "RESPONSE", content: httpModel?.responseData.dataToPrettyPrintString(), url: httpModel?.url.absoluteString, httpModel: httpModel)
-            let model_6 = NetworkDetailModel.init(title: "ERROR", content: httpModel?.errorLocalizedDescription, url: httpModel?.url.absoluteString, httpModel: httpModel)
-            let model_7 = NetworkDetailModel.init(title: "ERROR DESCRIPTION", content: httpModel?.errorDescription, url: httpModel?.url.absoluteString, httpModel: httpModel)
-            //2.
-            let model_8 = NetworkDetailModel.init(title: "TOTAL TIME", content: httpModel?.totalDuration, url: httpModel?.url.absoluteString, httpModel: httpModel)
-            let model_9 = NetworkDetailModel.init(title: "MIME TYPE", content: httpModel?.mineType, url: httpModel?.url.absoluteString, httpModel: httpModel)
-            var model_2 = NetworkDetailModel.init(title: "REQUEST HEADER", content: nil, url: httpModel?.url.absoluteString, httpModel: httpModel)
-            if let requestHeaderFields = httpModel?.requestHeaderFields {
-                if !requestHeaderFields.isEmpty {
-                    model_2 = NetworkDetailModel.init(title: "REQUEST HEADER", content: requestHeaderFields.description, url: httpModel?.url.absoluteString, httpModel: httpModel)
-                    model_2.requestHeaderFields = requestHeaderFields
-                    if let data = try? JSONSerialization.data(withJSONObject: requestHeaderFields, options: [.prettyPrinted]),
-                       let jsonString = String(data: data, encoding: .utf8) {
-                        model_2.content = jsonString
-                    } else {
-                        // fallback to original transformation if serialization fails
-                        model_2.content = String(requestHeaderFields.dictionaryToString()?.dropFirst().dropLast().dropFirst().dropLast().dropFirst().dropFirst() ?? "")
-                            .replacingOccurrences(of: "\",\n  \"", with: "\",\n\"")
-                            .replacingOccurrences(of: "\\/", with: "/")
-                    }
-                }
-            }
-            var model_4 = NetworkDetailModel.init(title: "RESPONSE HEADER", content: nil, url: httpModel?.url.absoluteString, httpModel: httpModel)
-            if let responseHeaderFields = httpModel?.responseHeaderFields {
-                if !responseHeaderFields.isEmpty {
-                    model_4 = NetworkDetailModel.init(title: "RESPONSE HEADER", content: responseHeaderFields.description, url: httpModel?.url.absoluteString, httpModel: httpModel)
-                    model_4.responseHeaderFields = responseHeaderFields
-                    
-                    if let data = try? JSONSerialization.data(withJSONObject: responseHeaderFields, options: [.prettyPrinted]),
-                       let jsonString = String(data: data, encoding: .utf8) {
-                        model_4.content = jsonString
-                    } else {
-                        // fallback to original transformation if serialization fails
-                        model_4.content = String(responseHeaderFields.dictionaryToString()?.dropFirst().dropLast().dropFirst().dropLast().dropFirst().dropFirst() ?? "").replacingOccurrences(of: "\",\n  \"", with: "\",\n\"").replacingOccurrences(of: "\\/", with: "/")
-                    }
-                    
-                    
-                    
-               
-                }
-            }
-            let model_0 = NetworkDetailModel.init(title: "RESPONSE SIZE", content: httpModel?.size, url: httpModel?.url.absoluteString, httpModel: httpModel)
-            //3.
-            detailModels.append(model_1)
-            detailModels.append(model_2)
-            detailModels.append(model_3)
-            detailModels.append(model_4)
-            detailModels.append(model_5)
-            detailModels.append(model_6)
-            detailModels.append(model_7)
-            detailModels.append(model_0)
-            detailModels.append(model_8)
-            detailModels.append(model_9)
+
+            let model_0 = NetworkDetailModel(title: "RESPONSE SIZE", content: httpModel?.size, url: httpModel?.url.absoluteString, httpModel: httpModel)
+            detailModels.append(contentsOf: [model_1, model_2, model_3, model_4, model_5, model_6, model_7, model_0, model_8, model_9])
         }
     }
     

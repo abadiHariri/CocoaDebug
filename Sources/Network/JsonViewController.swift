@@ -13,6 +13,7 @@ enum EditType {
     case log
 }
 
+
 import Foundation
 import UIKit
 
