@@ -14,6 +14,7 @@
 @interface NSData (CocoaDebug)
 
 + (NSData *_Nullable)dataWithInputStream:(NSInputStream *_Nullable)stream;
++ (NSData *_Nullable)dataWithInputStream:(NSInputStream *_Nullable)stream maxLength:(NSUInteger)maxLength;
 
 @end
 

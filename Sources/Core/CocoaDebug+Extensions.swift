@@ -150,24 +150,23 @@ extension Data {
 }
 
 extension Data {
+    /// Try to parse as any valid JSON (dictionary OR array) and return it.
+    func dataToJSONObject() -> Any? {
+        do {
+            return try JSONSerialization.jsonObject(with: self, options: [])
+        } catch {}
+        return nil
+    }
+
     func dataToPrettyPrintString() -> String? {
-        //1.pretty json
-        if let str = self.dataToDictionary()?.dictionaryToString() {
+        //1.pretty json (handles both dictionaries and arrays)
+        if let jsonObject = self.dataToJSONObject(),
+           let prettyData = try? JSONSerialization.data(withJSONObject: jsonObject, options: .prettyPrinted),
+           let str = String(data: prettyData, encoding: .utf8) {
             return str
-        } else {
-            //2.protobuf
-            //            if let message = try? GPBMessage.parse(from: self) {
-            //                if message.serializedSize() > 0 {
-            //                    return message.description
-            //                } else {
-            //                    //3.utf-8 string
-            //                    return String(data: self, encoding: .utf8)
-            //                }
-            //            } else {
-            //3.utf-8 string
-            return String(data: self, encoding: .utf8)
-            //            }
         }
+        //2.utf-8 string
+        return String(data: self, encoding: .utf8)
     }
 }
 

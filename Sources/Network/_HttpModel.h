@@ -27,7 +27,8 @@ typedef NS_ENUM(NSUInteger, RequestSerializer) {
 @property (nonatomic,copy)NSString  *endTime;
 @property (nonatomic,copy)NSString  *totalDuration;
 @property (nonatomic,assign)BOOL    isImage;
-
+@property (nonatomic,assign)BOOL    isResponseTruncated;
+@property (nonatomic,assign)BOOL    isRequestBodyTruncated;
 
 @property (nonatomic,copy)NSDictionary<NSString*, id>           *requestHeaderFields;
 @property (nonatomic,copy)NSDictionary<NSString*, id>           *responseHeaderFields;

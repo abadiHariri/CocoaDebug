@@ -233,7 +233,21 @@ import Foundation
             _NetworkHelper.shared().protobufTransferMap = protobufTransferMap
         }
     }
-    
+
+    //Max response body size (bytes) to capture. Default 10 MB.
+    @objc public var maxResponseSize: UInt = 10 * 1024 * 1024 {
+        didSet {
+            _NetworkHelper.shared().maxResponseSize = maxResponseSize
+        }
+    }
+
+    //Max request body size (bytes) to capture from streams. Default 512 KB.
+    @objc public var maxRequestBodySize: UInt = 512 * 1024 {
+        didSet {
+            _NetworkHelper.shared().maxRequestBodySize = maxRequestBodySize
+        }
+    }
+
     private override init() {
         responseShake = UserDefaults.standard.bool(forKey: "responseShake_CocoaDebug")
         firstIn = UserDefaults.standard.string(forKey: "firstIn_CocoaDebug")
@@ -268,7 +282,11 @@ import Foundation
         
         //protobuf
         protobufTransferMap = _NetworkHelper.shared().protobufTransferMap
-        
+
+        //Size limits
+        maxResponseSize = _NetworkHelper.shared().maxResponseSize
+        maxRequestBodySize = _NetworkHelper.shared().maxRequestBodySize
+
         //Memory
         enableMemoryLeaksMonitoring_ViewController = UserDefaults.standard.bool(forKey: "enableMemoryLeaksMonitoring_UIViewController_CocoaDebug")
         enableMemoryLeaksMonitoring_View = UserDefaults.standard.bool(forKey: "enableMemoryLeaksMonitoring_UIView_CocoaDebug")
