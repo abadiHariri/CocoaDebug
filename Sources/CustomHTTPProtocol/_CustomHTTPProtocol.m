@@ -137,6 +137,7 @@ typedef void (^_ChallengeCompletionHandler)(NSURLSessionAuthChallengeDisposition
 @property (atomic, strong) NSURLResponse         *response;
 @property (atomic, strong) NSMutableData         *data;
 @property (atomic, strong) NSError               *error;
+@property (atomic, assign) BOOL                  responseTruncated;
 
 @end
 
@@ -191,7 +192,8 @@ static id<_CustomHTTPProtocolDelegate> sDelegate;
         NSURLSessionConfiguration *     config;
         
         config = [NSURLSessionConfiguration defaultSessionConfiguration];
-        // You have to explicitly configure the session to use your own protocol subclass here 
+        // [config setHTTPShouldHandleCookies:NO];
+        // You have to explicitly configure the session to use your own protocol subclass here
         // otherwise you don't see redirects <rdar://problem/17384498>.
         config.protocolClasses = @[ self ];
         sDemux = [[_QNSURLSessionDemux alloc] initWithConfiguration:config];
@@ -430,14 +432,23 @@ static NSString * kOurRecursiveRequestFlagProperty = @"com.apple.dts.CustomHTTPP
     if (self.request.HTTPBody) {
         model.requestData = self.request.HTTPBody;
     }
-    if (self.request.HTTPBodyStream) {//liman
-        NSData* data = [NSData dataWithInputStream:self.request.HTTPBodyStream];
-        model.requestData = data;
+    if (self.request.HTTPBodyStream) {
+        NSUInteger maxBodySize = [_NetworkHelper shared].maxRequestBodySize;
+        NSData *bodyData = [NSData dataWithInputStream:self.request.HTTPBodyStream maxLength:maxBodySize];
+        model.requestData = bodyData;
+        if (bodyData.length >= maxBodySize) {
+            model.isRequestBodyTruncated = YES;
+        }
     }
-    
-    NSHTTPURLResponse* httpResponse = (NSHTTPURLResponse*)self.response;
-    model.statusCode = [NSString stringWithFormat:@"%d",(int)httpResponse.statusCode];
+
+    if ([self.response isKindOfClass:[NSHTTPURLResponse class]]) {
+        NSHTTPURLResponse *httpResponse = (NSHTTPURLResponse *)self.response;
+        model.statusCode = [NSString stringWithFormat:@"%d", (int)httpResponse.statusCode];
+    } else {
+        model.statusCode = @"0";
+    }
     model.responseData = self.data;
+    model.isResponseTruncated = self.responseTruncated;
     model.size = [[NSByteCountFormatter new] stringFromByteCount:self.data.length];
     model.isImage = [self.response.MIMEType rangeOfString:@"image"].location != NSNotFound;
     
@@ -848,7 +859,21 @@ static NSString * kOurRecursiveRequestFlagProperty = @"com.apple.dts.CustomHTTPP
 
 
     [[self client] URLProtocol:self didLoadData:data];
-    [self.data appendData:data];//liman
+
+    // Only accumulate for CocoaDebug's capture if under the size cap.
+    // The client always receives the full, unmodified data above.
+    if (!self.responseTruncated) {
+        NSUInteger maxSize = [_NetworkHelper shared].maxResponseSize;
+        if (self.data.length + data.length <= maxSize) {
+            [self.data appendData:data];
+        } else {
+            NSUInteger remaining = maxSize - self.data.length;
+            if (remaining > 0) {
+                [self.data appendData:[data subdataWithRange:NSMakeRange(0, remaining)]];
+            }
+            self.responseTruncated = YES;
+        }
+    }
 }
 
 - (void)URLSession:(NSURLSession *)session dataTask:(NSURLSessionDataTask *)dataTask willCacheResponse:(NSCachedURLResponse *)proposedResponse completionHandler:(void (^)(NSCachedURLResponse *))completionHandler

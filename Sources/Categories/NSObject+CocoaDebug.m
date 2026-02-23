@@ -20,7 +20,7 @@
     [stream open];
     NSInteger result;
     uint8_t buffer[1024]; // BUFFER_LEN can be any positive integer
-    
+
     while((result = [stream read:buffer maxLength:1024]) != 0) {
         if (result > 0) {
             // buffer contains result bytes of data to be handled
@@ -29,10 +29,38 @@
             // The stream had an error. You can get an NSError object using [iStream streamError]
             if (result < 0) {
 //                [NSException raise:@"STREAM_ERROR" format:@"%@", [stream streamError]];
+                [stream close];
                 return nil;//liman
             }
         }
     }
+    [stream close];
+    return data;
+}
+
++ (NSData *)dataWithInputStream:(NSInputStream *)stream maxLength:(NSUInteger)maxLength
+{
+    if (!stream) return nil;
+
+    NSMutableData *data = [NSMutableData data];
+    [stream open];
+    NSInteger result;
+    uint8_t buffer[1024];
+
+    while ((result = [stream read:buffer maxLength:MIN(1024, maxLength - data.length)]) != 0) {
+        if (result > 0) {
+            [data appendBytes:buffer length:result];
+            if (data.length >= maxLength) {
+                break;
+            }
+        } else {
+            if (result < 0) {
+                [stream close];
+                return nil;
+            }
+        }
+    }
+    [stream close];
     return data;
 }
 

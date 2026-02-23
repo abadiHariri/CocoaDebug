@@ -29,6 +29,12 @@
 //protobuf
 @property (nonatomic, copy) NSDictionary<NSString *, NSArray<NSString*> *> *protobufTransferMap;
 
+//Maximum response body size (bytes) to capture. Default 10 MB.
+@property (nonatomic, assign) NSUInteger maxResponseSize;
+
+//Maximum request body size (bytes) to capture from streams. Default 512 KB.
+@property (nonatomic, assign) NSUInteger maxRequestBodySize;
+
 //
 @property (nonatomic, assign) BOOL isNetworkEnable;
 

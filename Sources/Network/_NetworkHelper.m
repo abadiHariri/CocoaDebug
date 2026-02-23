@@ -33,6 +33,8 @@
     if (self = [super init])  {
         self.mainColor = [UIColor colorFromHexString:@"#42d459"];
         self.isNetworkEnable = YES;
+        self.maxResponseSize = 10 * 1024 * 1024;   // 10 MB
+        self.maxRequestBodySize = 512 * 1024;       // 512 KB
     }
     return self;
 }

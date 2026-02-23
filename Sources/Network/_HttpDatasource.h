@@ -12,6 +12,7 @@
 @interface _HttpDatasource : NSObject
 
 @property (nonatomic, strong) NSMutableArray<_HttpModel *> *httpModels;
+@property (nonatomic, assign, readonly) NSUInteger totalDataSize;
 
 + (instancetype)shared;
 

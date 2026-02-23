@@ -132,18 +132,20 @@ class NetworkDetailViewController: UITableViewController, MFMailComposeViewContr
             if let requestHeaderFields = httpModel?.requestHeaderFields, !requestHeaderFields.isEmpty {
                 model_2 = NetworkDetailModel(title: "REQUEST HEADER", content: requestHeaderFields.description, url: httpModel?.url.absoluteString, httpModel: httpModel)
                 model_2.requestHeaderFields = requestHeaderFields
-                model_2.content = String(requestHeaderFields.dictionaryToString()?.dropFirst().dropLast().dropFirst().dropLast().dropFirst().dropFirst() ?? "")
-                    .replacingOccurrences(of: "\",\n  \"", with: "\",\n\"")
-                    .replacingOccurrences(of: "\\/", with: "/")
+                if let data = try? JSONSerialization.data(withJSONObject: requestHeaderFields, options: [.prettyPrinted]),
+                   let jsonString = String(data: data, encoding: .utf8) {
+                    model_2.content = jsonString
+                }
             }
 
             var model_4 = NetworkDetailModel(title: "RESPONSE HEADER", content: nil, url: httpModel?.url.absoluteString, httpModel: httpModel)
             if let responseHeaderFields = httpModel?.responseHeaderFields, !responseHeaderFields.isEmpty {
                 model_4 = NetworkDetailModel(title: "RESPONSE HEADER", content: responseHeaderFields.description, url: httpModel?.url.absoluteString, httpModel: httpModel)
                 model_4.responseHeaderFields = responseHeaderFields
-                model_4.content = String(responseHeaderFields.dictionaryToString()?.dropFirst().dropLast().dropFirst().dropLast().dropFirst().dropFirst() ?? "")
-                    .replacingOccurrences(of: "\",\n  \"", with: "\",\n\"")
-                    .replacingOccurrences(of: "\\/", with: "/")
+                if let data = try? JSONSerialization.data(withJSONObject: responseHeaderFields, options: [.prettyPrinted]),
+                   let jsonString = String(data: data, encoding: .utf8) {
+                    model_4.content = jsonString
+                }
             }
 
             let model_0 = NetworkDetailModel(title: "RESPONSE SIZE", content: httpModel?.size, url: httpModel?.url.absoluteString, httpModel: httpModel)
@@ -164,10 +166,6 @@ class NetworkDetailViewController: UITableViewController, MFMailComposeViewContr
                 if let data = try? JSONSerialization.data(withJSONObject: requestHeaderFields, options: [.prettyPrinted]),
                    let jsonString = String(data: data, encoding: .utf8) {
                     model_2.content = jsonString
-                } else {
-                    model_2.content = String(requestHeaderFields.dictionaryToString()?.dropFirst().dropLast().dropFirst().dropLast().dropFirst().dropFirst() ?? "")
-                        .replacingOccurrences(of: "\",\n  \"", with: "\",\n\"")
-                        .replacingOccurrences(of: "\\/", with: "/")
                 }
             }
 
@@ -178,10 +176,6 @@ class NetworkDetailViewController: UITableViewController, MFMailComposeViewContr
                 if let data = try? JSONSerialization.data(withJSONObject: responseHeaderFields, options: [.prettyPrinted]),
                    let jsonString = String(data: data, encoding: .utf8) {
                     model_4.content = jsonString
-                } else {
-                    model_4.content = String(responseHeaderFields.dictionaryToString()?.dropFirst().dropLast().dropFirst().dropLast().dropFirst().dropFirst() ?? "")
-                        .replacingOccurrences(of: "\",\n  \"", with: "\",\n\"")
-                        .replacingOccurrences(of: "\\/", with: "/")
                 }
             }
 
@@ -569,7 +563,7 @@ extension NetworkDetailViewController {
 
 // MARK: - JSON validity check
 @inline(__always)
-private func isValidJSON(_ text: String) -> Bool {
+func isValidJSON(_ text: String) -> Bool {
     guard let data = text.data(using: .utf8), !data.isEmpty else { return false }
     do {
         _ = try JSONSerialization.jsonObject(with: data, options: [])
