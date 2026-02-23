@@ -84,13 +84,15 @@ class NetworkCell: UITableViewCell {
             }
             
             //Whether to display the image label
-            if httpModel?.isImage == true
-            {
+            if httpModel?.isWebViewRequest == true {
+                imageLabel.isHidden = false
+                imageLabel.text = "WEB"
+                imageLabel.backgroundColor = "#4b8af7".hexColor
+            } else if httpModel?.isImage == true {
                 imageLabel.isHidden = false
                 imageLabel.text = "Image"
-            }
-            else
-            {
+                imageLabel.backgroundColor = Color.mainGreen
+            } else {
                 //js css
                 if let urlString = httpModel?.url.absoluteString {
                     if urlString.suffix(3) == ".js" {
@@ -105,6 +107,7 @@ class NetworkCell: UITableViewCell {
                 } else {
                     imageLabel.isHidden = true
                 }
+                imageLabel.backgroundColor = Color.mainGreen
             }
             
             //tag

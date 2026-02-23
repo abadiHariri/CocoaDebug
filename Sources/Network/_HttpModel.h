@@ -29,6 +29,7 @@ typedef NS_ENUM(NSUInteger, RequestSerializer) {
 @property (nonatomic,assign)BOOL    isImage;
 @property (nonatomic,assign)BOOL    isResponseTruncated;
 @property (nonatomic,assign)BOOL    isRequestBodyTruncated;
+@property (nonatomic,assign)BOOL    isWebViewRequest;
 
 @property (nonatomic,copy)NSDictionary<NSString*, id>           *requestHeaderFields;
 @property (nonatomic,copy)NSDictionary<NSString*, id>           *responseHeaderFields;
