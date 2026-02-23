@@ -463,7 +463,7 @@ class NetworkViewController: UIViewController {
         if #available(iOS 15.0, *) {
             if let sheetPC = sheet.sheetPresentationController {
                 sheetPC.detents = [.medium(), .large()]
-                sheetPC.prefersGrabberHandle = true
+                // sheetPC.prefersGrabberHandle = true
             }
         }
         present(sheet, animated: true)

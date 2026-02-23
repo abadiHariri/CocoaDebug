@@ -346,24 +346,19 @@ class LogViewController: UIViewController {
         
         
         
-        //hide searchBar icon
-        let textFieldInsideSearchBar = defaultSearchBar.value(forKey: "searchField") as! UITextField
-        textFieldInsideSearchBar.leftViewMode = .never
-        textFieldInsideSearchBar.leftView = nil
-        textFieldInsideSearchBar.backgroundColor = .white
-        textFieldInsideSearchBar.returnKeyType = .default
-        
-        let textFieldInsideSearchBar2 = rnSearchBar.value(forKey: "searchField") as! UITextField
-        textFieldInsideSearchBar2.leftViewMode = .never
-        textFieldInsideSearchBar2.leftView = nil
-        textFieldInsideSearchBar2.backgroundColor = .white
-        textFieldInsideSearchBar2.returnKeyType = .default
-        
-        let textFieldInsideSearchBar3 = webSearchBar.value(forKey: "searchField") as! UITextField
-        textFieldInsideSearchBar3.leftViewMode = .never
-        textFieldInsideSearchBar3.leftView = nil
-        textFieldInsideSearchBar3.backgroundColor = .white
-        textFieldInsideSearchBar3.returnKeyType = .default
+        // Style all search bars for dark theme
+        for sb in [defaultSearchBar!, rnSearchBar!, webSearchBar!] {
+            sb.barTintColor = .black
+            sb.isTranslucent = false
+            sb.tintColor = Color.mainGreen
+            sb.searchTextField.textColor = .white
+            sb.searchTextField.attributedPlaceholder = NSAttributedString(
+                string: "Search...",
+                attributes: [.foregroundColor: UIColor.lightGray]
+            )
+            sb.searchTextField.leftView?.tintColor = .lightGray
+            sb.searchTextField.returnKeyType = .default
+        }
     }
     
     override func viewWillDisappear(_ animated: Bool) {
@@ -593,15 +588,30 @@ extension LogViewController: UITableViewDelegate {
         
         //
         guard let models = models_ else {return}
-        
+
+        let logModel = models[indexPath.row]
+
+        // If the log content is valid JSON, open the JSON viewer (same as network request preview)
+        if let data = logModel.contentData,
+           let content = String(data: data, encoding: .utf8),
+           isValidJSON(content) {
+            // Update selection state (mirroring JsonViewController.viewWillDisappear)
+            if let prevIndex = models.firstIndex(where: { $0.isSelected }) {
+                models[prevIndex].isSelected = false
+            }
+            logModel.isSelected = true
+            pushJSONViewerOrFallback(with: content)
+            return
+        }
+
         let vc = JsonViewController.instanceFromStoryBoard()
         vc.editType = .log
         vc.logTitleString = logTitleString
         vc.logModels = models
-        vc.logModel = models[indexPath.row]
-        
+        vc.logModel = logModel
+
         navigationController?.pushViewController(vc, animated: true)
-        
+
         vc.justCancelCallback = {
             tableView.reloadData()
         }

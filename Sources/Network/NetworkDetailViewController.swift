@@ -563,7 +563,7 @@ extension NetworkDetailViewController {
 
 // MARK: - JSON validity check
 @inline(__always)
-private func isValidJSON(_ text: String) -> Bool {
+func isValidJSON(_ text: String) -> Bool {
     guard let data = text.data(using: .utf8), !data.isEmpty else { return false }
     do {
         _ = try JSONSerialization.jsonObject(with: data, options: [])
