@@ -13,6 +13,63 @@
 #import "_HttpModel.h"
 #import "_HttpDatasource.h"
 
+#pragma mark - Script Message Proxy
+
+/// Wraps an app-registered WKScriptMessageHandler so CocoaDebug can log the
+/// message before forwarding it to the original handler.
+@interface _WKScriptMessageProxy : NSObject <WKScriptMessageHandler>
+@property (nonatomic, strong) id<WKScriptMessageHandler> originalHandler;
+- (instancetype)initWithOriginalHandler:(id<WKScriptMessageHandler>)handler;
+@end
+
+@implementation _WKScriptMessageProxy
+
+- (instancetype)initWithOriginalHandler:(id<WKScriptMessageHandler>)handler {
+    if (self = [super init]) {
+        _originalHandler = handler;
+    }
+    return self;
+}
+
+- (void)userContentController:(WKUserContentController *)userContentController
+      didReceiveScriptMessage:(WKScriptMessage *)message {
+    // Log to CocoaDebug Logs tab (Web section)
+    [_ObjcLog logWithFile:"[WKWebView]"
+                 function:[message.name UTF8String]
+                     line:0
+                    color:[UIColor cyanColor]
+                  message:message.body];
+
+    // Forward to original handler
+    if (self.originalHandler &&
+        [self.originalHandler respondsToSelector:@selector(userContentController:didReceiveScriptMessage:)]) {
+        [self.originalHandler userContentController:userContentController
+                            didReceiveScriptMessage:message];
+    }
+}
+
+@end
+
+#pragma mark - WKUserContentController swizzling
+
+@implementation WKUserContentController (_CocoaDebugSwizzling)
+
+- (void)replaced_addScriptMessageHandler:(id<WKScriptMessageHandler>)handler name:(NSString *)name {
+    // Don't wrap CocoaDebug's own handlers (registered with WKWebView as handler)
+    if ([handler isKindOfClass:[WKWebView class]] ||
+        [handler isKindOfClass:[_WKScriptMessageProxy class]]) {
+        [self replaced_addScriptMessageHandler:handler name:name];
+        return;
+    }
+
+    _WKScriptMessageProxy *proxy = [[_WKScriptMessageProxy alloc] initWithOriginalHandler:handler];
+    [self replaced_addScriptMessageHandler:proxy name:name];
+}
+
+@end
+
+#pragma mark - WKWebView swizzling
+
 @interface WKWebView () <WKScriptMessageHandler>
 
 @end
@@ -27,6 +84,7 @@
         static dispatch_once_t onceToken;
         dispatch_once(&onceToken, ^{
 
+            // Swizzle WKWebView initWithFrame:configuration:
             SEL original_sel = @selector(initWithFrame:configuration:);
             SEL replaced_sel = @selector(replaced_initWithFrame:configuration:);
             Method original_method = class_getInstanceMethod([self class], original_sel);
@@ -37,6 +95,7 @@
 
             /*********************************************************************************************************************************/
 
+            // Swizzle WKWebView dealloc
             SEL original_sel2 = NSSelectorFromString(@"dealloc");
             SEL replaced_sel2 = @selector(replaced_dealloc);
             Method original_method2 = class_getInstanceMethod([self class], original_sel2);
@@ -49,6 +108,18 @@
             SEL replaced_sel3 = @selector(replaced_willDealloc);
             Method replaced_method3 = class_getInstanceMethod([self class], replaced_sel3);
             class_addMethod([self class], original_sel3, method_getImplementation(replaced_method3), method_getTypeEncoding(replaced_method3));
+
+            /*********************************************************************************************************************************/
+
+            // Swizzle WKUserContentController addScriptMessageHandler:name:
+            // to intercept ALL script message handler registrations
+            SEL uc_original = @selector(addScriptMessageHandler:name:);
+            SEL uc_replaced = @selector(replaced_addScriptMessageHandler:name:);
+            Method uc_orig_method = class_getInstanceMethod([WKUserContentController class], uc_original);
+            Method uc_repl_method = class_getInstanceMethod([WKUserContentController class], uc_replaced);
+            if (!class_addMethod([WKUserContentController class], uc_original, method_getImplementation(uc_repl_method), method_getTypeEncoding(uc_repl_method))) {
+                method_exchangeImplementations(uc_orig_method, uc_repl_method);
+            }
         });
     }
 }
