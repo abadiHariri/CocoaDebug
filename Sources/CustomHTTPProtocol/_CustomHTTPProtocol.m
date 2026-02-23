@@ -192,9 +192,7 @@ static id<_CustomHTTPProtocolDelegate> sDelegate;
         NSURLSessionConfiguration *     config;
         
         config = [NSURLSessionConfiguration defaultSessionConfiguration];
-        // Cookies are already handled by the app's original session.
-        // Disabling here avoids doubling cookie processing overhead.
-        [config setHTTPShouldHandleCookies:NO];
+        // [config setHTTPShouldHandleCookies:NO];
         // You have to explicitly configure the session to use your own protocol subclass here
         // otherwise you don't see redirects <rdar://problem/17384498>.
         config.protocolClasses = @[ self ];

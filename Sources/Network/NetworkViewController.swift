@@ -11,8 +11,9 @@ import UIKit
 /// Persists filter state in memory across view reloads (lives as long as the app).
 private final class NetworkFilterState {
     static let shared = NetworkFilterState()
-    var selectedHosts = Set<String>()       // raw host strings (from url.host)
-    var selectedEndpoints = Set<String>()   // normalized endpoint patterns
+    var selectedPathFilters = Set<String>()   // onlyURL-based filters (match by URL prefix)
+    var selectedHostFilters = Set<String>()   // plain host filters (match by host)
+    var selectedEndpoints = Set<String>()     // normalized endpoint patterns
 }
 
 class NetworkViewController: UIViewController {
@@ -36,74 +37,107 @@ class NetworkViewController: UIViewController {
     // Convenience accessors
     private var filterState: NetworkFilterState { NetworkFilterState.shared }
 
-    //MARK: - Host resolution
+    // Temporary selection state used during filter picker interaction
+    private var tempPathFilters = Set<String>()
+    private var tempHostFilters = Set<String>()
+    private var tempEndpoints = Set<String>()
 
-    /// Build the list of display hosts.
-    /// - For each entry in `onlyURLs`, extract the host portion (strip scheme) and show as-is.
-    /// - Any captured host NOT covered by `onlyURLs` is shown raw from the URL.
-    private func buildHostList() -> [(display: String, rawHost: String)] {
-        guard let allModels = cacheModels else { return [] }
+    //MARK: - Helpers
 
-        // Collect all unique raw hosts from captured models
-        var capturedHosts = [String]()
-        var capturedSet = Set<String>()
-        for model in allModels {
-            if let host = model.url?.host, !host.isEmpty, capturedSet.insert(host).inserted {
-                capturedHosts.append(host)
+    private func stripScheme(_ url: String) -> String {
+        var result = url
+        for prefix in ["https://", "http://", "HTTPS://", "HTTP://"] {
+            if result.hasPrefix(prefix) {
+                result = String(result.dropFirst(prefix.count))
+                break
             }
         }
-
-        // Build onlyURLs host mapping: display string -> set of raw hosts it matches
-        let onlyURLs = (_NetworkHelper.shared().onlyURLs as? [String]) ?? []
-        var result = [(display: String, rawHost: String)]()
-        var coveredHosts = Set<String>()
-
-        for urlString in onlyURLs {
-            // Strip scheme if present
-            var display = urlString
-            for prefix in ["https://", "http://", "HTTPS://", "HTTP://"] {
-                if display.hasPrefix(prefix) {
-                    display = String(display.dropFirst(prefix.count))
-                    break
-                }
-            }
-            // Remove trailing slash
-            if display.hasSuffix("/") { display = String(display.dropLast()) }
-
-            // Match against captured hosts: a captured host matches if the onlyURL
-            // display string starts with that host or contains it
-            for rawHost in capturedHosts {
-                if display.lowercased().hasPrefix(rawHost.lowercased()) ||
-                   rawHost.lowercased().hasPrefix(display.lowercased()) {
-                    if !coveredHosts.contains(rawHost) {
-                        result.append((display: display, rawHost: rawHost))
-                        coveredHosts.insert(rawHost)
-                    }
-                }
-            }
-        }
-
-        // Add any captured hosts not covered by onlyURLs
-        for rawHost in capturedHosts where !coveredHosts.contains(rawHost) {
-            result.append((display: rawHost, rawHost: rawHost))
-        }
-
-        return result.sorted { $0.display.lowercased() < $1.display.lowercased() }
+        return result
     }
 
-    /// Extract unique normalized endpoints for the given raw hosts
-    private func uniqueEndpoints(forRawHosts rawHosts: Set<String>) -> [String] {
+    //MARK: - Filter entry building
+
+    /// Build the list of filter entries.
+    /// - Each `onlyURLs` entry becomes a path-based filter (e.g. "salla.sa/mahally/v1").
+    /// - Captured hosts NOT covered by any `onlyURLs` entry become host-based filters.
+    private func buildFilterEntries() -> [(display: String, filterKey: String, isPathFilter: Bool)] {
+        guard let allModels = cacheModels, !allModels.isEmpty else { return [] }
+
+        let onlyURLs = (_NetworkHelper.shared().onlyURLs as? [String]) ?? []
+        var entries: [(display: String, filterKey: String, isPathFilter: Bool)] = []
+        var coveredHosts = Set<String>() // hosts that belong to an onlyURL entry
+
+        // 1. Build entries from onlyURLs
+        for urlString in onlyURLs {
+            var stripped = stripScheme(urlString)
+            // Remove trailing slash for display
+            if stripped.hasSuffix("/") { stripped = String(stripped.dropLast()) }
+
+            let host = stripped.components(separatedBy: "/").first ?? stripped
+
+            // Only include if at least one captured model matches this prefix
+            let hasMatch = allModels.contains { model in
+                let modelURL = stripScheme(model.url?.absoluteString ?? "").lowercased()
+                let key = stripped.lowercased()
+                return modelURL.hasPrefix(key + "/") || modelURL == key
+            }
+
+            if hasMatch {
+                entries.append((display: stripped, filterKey: stripped, isPathFilter: true))
+                coveredHosts.insert(host.lowercased())
+            }
+        }
+
+        // 2. Find hosts NOT covered by any onlyURL
+        var seenHosts = Set<String>()
+        for model in allModels {
+            guard let host = model.url?.host, !host.isEmpty else { continue }
+            let lowerHost = host.lowercased()
+            if seenHosts.contains(lowerHost) { continue }
+            seenHosts.insert(lowerHost)
+
+            if !coveredHosts.contains(lowerHost) {
+                entries.append((display: host, filterKey: host, isPathFilter: false))
+            }
+        }
+
+        return entries.sorted { $0.display.lowercased() < $1.display.lowercased() }
+    }
+
+    /// Extract unique normalized endpoints for models matching the current temp filters
+    private func uniqueEndpointsForTempFilters() -> [String] {
         guard let models = cacheModels else { return [] }
         var seen = Set<String>()
         var result = [String]()
         for model in models {
-            guard let host = model.url?.host, rawHosts.contains(host) else { continue }
+            if !modelMatchesTempFilters(model) { continue }
             let normalized = normalizeEndpoint(model.url?.path ?? "")
             if !normalized.isEmpty, seen.insert(normalized).inserted {
                 result.append(normalized)
             }
         }
         return result.sorted()
+    }
+
+    /// Check if a model matches the current temp path/host filters
+    private func modelMatchesTempFilters(_ model: _HttpModel) -> Bool {
+        if tempPathFilters.isEmpty && tempHostFilters.isEmpty { return true }
+
+        let modelURL = stripScheme(model.url?.absoluteString ?? "").lowercased()
+        let host = (model.url?.host ?? "").lowercased()
+
+        for pf in tempPathFilters {
+            let key = pf.lowercased()
+            if modelURL.hasPrefix(key + "/") || modelURL == key {
+                return true
+            }
+        }
+        for hf in tempHostFilters {
+            if host == hf.lowercased() {
+                return true
+            }
+        }
+        return false
     }
 
     /// Normalize a URL path by replacing numeric and UUID segments with {id}
@@ -122,27 +156,45 @@ class NetworkViewController: UIViewController {
 
     //MARK: - Filter logic
 
-    /// Apply current filter state to cacheModels and update models
+    /// Apply persisted filter state to cacheModels and update models
     private func applyFilter() {
         guard let cacheModels = cacheModels else {
             models = nil
             return
         }
 
-        let hosts = filterState.selectedHosts
+        let pathFilters = filterState.selectedPathFilters
+        let hostFilters = filterState.selectedHostFilters
         let endpoints = filterState.selectedEndpoints
 
-        if hosts.isEmpty && endpoints.isEmpty {
+        if pathFilters.isEmpty && hostFilters.isEmpty && endpoints.isEmpty {
             models = cacheModels
             return
         }
 
         models = cacheModels.filter { model in
-            guard let host = model.url?.host else { return false }
+            let hasFilterSelection = !pathFilters.isEmpty || !hostFilters.isEmpty
+            if hasFilterSelection {
+                let modelURL = stripScheme(model.url?.absoluteString ?? "").lowercased()
+                let host = (model.url?.host ?? "").lowercased()
 
-            // Host filter
-            if !hosts.isEmpty && !hosts.contains(host) {
-                return false
+                var matchesFilter = false
+                for pf in pathFilters {
+                    let key = pf.lowercased()
+                    if modelURL.hasPrefix(key + "/") || modelURL == key {
+                        matchesFilter = true
+                        break
+                    }
+                }
+                if !matchesFilter {
+                    for hf in hostFilters {
+                        if host == hf.lowercased() {
+                            matchesFilter = true
+                            break
+                        }
+                    }
+                }
+                if !matchesFilter { return false }
             }
 
             // Endpoint filter
@@ -159,7 +211,9 @@ class NetworkViewController: UIViewController {
 
     /// Update the filter button appearance
     private func updateFilterButtonTitle() {
-        let hasFilter = !filterState.selectedHosts.isEmpty || !filterState.selectedEndpoints.isEmpty
+        let hasFilter = !filterState.selectedPathFilters.isEmpty ||
+                        !filterState.selectedHostFilters.isEmpty ||
+                        !filterState.selectedEndpoints.isEmpty
         if hasFilter {
             filterButton.image = UIImage(systemName: "line.3.horizontal.decrease.circle.fill")
         } else {
@@ -167,96 +221,137 @@ class NetworkViewController: UIViewController {
         }
     }
 
-    //MARK: - Filter actions
+    //MARK: - Filter UI
 
     @objc func didTapFilter() {
-        let hostList = buildHostList()
-        if hostList.isEmpty { return }
+        let entries = buildFilterEntries()
+        if entries.isEmpty { return }
 
-        let alert = UIAlertController(title: "Filter by Host", message: "Select hosts to show (multi-select)", preferredStyle: .actionSheet)
+        // Initialize temp state from persisted state
+        tempPathFilters = filterState.selectedPathFilters
+        tempHostFilters = filterState.selectedHostFilters
+        tempEndpoints = filterState.selectedEndpoints
+
+        showHostFilterAlert(entries: entries)
+    }
+
+    private func showHostFilterAlert(entries: [(display: String, filterKey: String, isPathFilter: Bool)]) {
+        let alert = UIAlertController(title: "Filter by Host", message: nil, preferredStyle: .actionSheet)
 
         // Clear all filters
-        let clearAction = UIAlertAction(title: "Clear All Filters", style: .destructive) { [weak self] _ in
-            self?.filterState.selectedHosts.removeAll()
-            self?.filterState.selectedEndpoints.removeAll()
-            self?.applyFilter()
-            self?.updateFilterButtonTitle()
-            self?.tableView.reloadData()
+        let hasAnyTemp = !tempPathFilters.isEmpty || !tempHostFilters.isEmpty || !tempEndpoints.isEmpty
+        if hasAnyTemp {
+            alert.addAction(UIAlertAction(title: "Clear All Filters", style: .destructive) { [weak self] _ in
+                self?.tempPathFilters.removeAll()
+                self?.tempHostFilters.removeAll()
+                self?.tempEndpoints.removeAll()
+                self?.showHostFilterAlert(entries: entries)
+            })
         }
-        alert.addAction(clearAction)
 
-        // One toggle per host
-        for entry in hostList {
-            let isSelected = filterState.selectedHosts.contains(entry.rawHost)
+        // One toggle per entry
+        for entry in entries {
+            let isSelected = entry.isPathFilter
+                ? tempPathFilters.contains(entry.filterKey)
+                : tempHostFilters.contains(entry.filterKey)
             let title = isSelected ? "\u{2713}  \(entry.display)" : "     \(entry.display)"
-            let action = UIAlertAction(title: title, style: .default) { [weak self] _ in
+
+            alert.addAction(UIAlertAction(title: title, style: .default) { [weak self] _ in
                 guard let self = self else { return }
-                // Toggle this host
-                if self.filterState.selectedHosts.contains(entry.rawHost) {
-                    self.filterState.selectedHosts.remove(entry.rawHost)
+                if entry.isPathFilter {
+                    if self.tempPathFilters.contains(entry.filterKey) {
+                        self.tempPathFilters.remove(entry.filterKey)
+                    } else {
+                        self.tempPathFilters.insert(entry.filterKey)
+                    }
                 } else {
-                    self.filterState.selectedHosts.insert(entry.rawHost)
+                    if self.tempHostFilters.contains(entry.filterKey) {
+                        self.tempHostFilters.remove(entry.filterKey)
+                    } else {
+                        self.tempHostFilters.insert(entry.filterKey)
+                    }
                 }
-                // Clear endpoint filter when host selection changes
-                self.filterState.selectedEndpoints.removeAll()
-                self.applyFilter()
-                self.updateFilterButtonTitle()
-                self.tableView.reloadData()
-                // Re-show the host picker so user can select more
-                self.didTapFilter()
-            }
-            alert.addAction(action)
+                // Clear endpoint selection when host changes
+                self.tempEndpoints.removeAll()
+                self.showHostFilterAlert(entries: entries)
+            })
         }
 
-        // Endpoint filter option (only if hosts are selected)
-        if !filterState.selectedHosts.isEmpty {
-            let endpointAction = UIAlertAction(title: "Filter Endpoints...", style: .default) { [weak self] _ in
-                self?.showEndpointFilter()
-            }
-            alert.addAction(endpointAction)
+        // Endpoint filter option (only if some hosts are selected)
+        if !tempPathFilters.isEmpty || !tempHostFilters.isEmpty {
+            alert.addAction(UIAlertAction(title: "Filter Endpoints...", style: .default) { [weak self] _ in
+                self?.showEndpointFilterAlert(entries: entries)
+            })
         }
 
-        alert.addAction(UIAlertAction(title: "Done", style: .cancel))
+        // Apply
+        alert.addAction(UIAlertAction(title: "Apply", style: .default) { [weak self] _ in
+            guard let self = self else { return }
+            self.filterState.selectedPathFilters = self.tempPathFilters
+            self.filterState.selectedHostFilters = self.tempHostFilters
+            self.filterState.selectedEndpoints = self.tempEndpoints
+            self.applyFilter()
+            self.updateFilterButtonTitle()
+            self.tableView.reloadData()
+        })
+
+        // Dismiss
+        alert.addAction(UIAlertAction(title: "Dismiss", style: .cancel))
 
         alert.popoverPresentationController?.barButtonItem = filterButton
         present(alert, animated: true)
     }
 
-    private func showEndpointFilter() {
-        let endpoints = uniqueEndpoints(forRawHosts: filterState.selectedHosts)
-        if endpoints.isEmpty { return }
+    private func showEndpointFilterAlert(entries: [(display: String, filterKey: String, isPathFilter: Bool)]) {
+        let endpoints = uniqueEndpointsForTempFilters()
+        if endpoints.isEmpty {
+            showHostFilterAlert(entries: entries)
+            return
+        }
 
-        let hostNames = filterState.selectedHosts.sorted().joined(separator: ", ")
-        let alert = UIAlertController(title: "Filter by Endpoint", message: hostNames, preferredStyle: .actionSheet)
+        let alert = UIAlertController(title: "Filter by Endpoint", message: nil, preferredStyle: .actionSheet)
 
         // Clear endpoint filter
-        let clearAction = UIAlertAction(title: "Clear Endpoint Filter", style: .destructive) { [weak self] _ in
-            self?.filterState.selectedEndpoints.removeAll()
-            self?.applyFilter()
-            self?.tableView.reloadData()
+        if !tempEndpoints.isEmpty {
+            alert.addAction(UIAlertAction(title: "Clear Endpoint Filter", style: .destructive) { [weak self] _ in
+                self?.tempEndpoints.removeAll()
+                self?.showEndpointFilterAlert(entries: entries)
+            })
         }
-        alert.addAction(clearAction)
 
+        // Endpoint toggles
         for endpoint in endpoints {
-            let isSelected = filterState.selectedEndpoints.contains(endpoint)
+            let isSelected = tempEndpoints.contains(endpoint)
             let title = isSelected ? "\u{2713}  \(endpoint)" : "     \(endpoint)"
-            let action = UIAlertAction(title: title, style: .default) { [weak self] _ in
+            alert.addAction(UIAlertAction(title: title, style: .default) { [weak self] _ in
                 guard let self = self else { return }
-                // Toggle this endpoint
-                if self.filterState.selectedEndpoints.contains(endpoint) {
-                    self.filterState.selectedEndpoints.remove(endpoint)
+                if self.tempEndpoints.contains(endpoint) {
+                    self.tempEndpoints.remove(endpoint)
                 } else {
-                    self.filterState.selectedEndpoints.insert(endpoint)
+                    self.tempEndpoints.insert(endpoint)
                 }
-                self.applyFilter()
-                self.tableView.reloadData()
-                // Re-show the endpoint picker so user can select more
-                self.showEndpointFilter()
-            }
-            alert.addAction(action)
+                self.showEndpointFilterAlert(entries: entries)
+            })
         }
 
-        alert.addAction(UIAlertAction(title: "Done", style: .cancel))
+        // Back
+        alert.addAction(UIAlertAction(title: "\u{25C0} Back", style: .default) { [weak self] _ in
+            self?.showHostFilterAlert(entries: entries)
+        })
+
+        // Apply
+        alert.addAction(UIAlertAction(title: "Apply", style: .default) { [weak self] _ in
+            guard let self = self else { return }
+            self.filterState.selectedPathFilters = self.tempPathFilters
+            self.filterState.selectedHostFilters = self.tempHostFilters
+            self.filterState.selectedEndpoints = self.tempEndpoints
+            self.applyFilter()
+            self.updateFilterButtonTitle()
+            self.tableView.reloadData()
+        })
+
+        // Dismiss
+        alert.addAction(UIAlertAction(title: "Dismiss", style: .cancel))
 
         alert.popoverPresentationController?.barButtonItem = filterButton
         present(alert, animated: true)
@@ -373,7 +468,8 @@ class NetworkViewController: UIViewController {
         _HttpDatasource.shared().reset()
         models = []
         cacheModels = []
-        filterState.selectedHosts.removeAll()
+        filterState.selectedPathFilters.removeAll()
+        filterState.selectedHostFilters.removeAll()
         filterState.selectedEndpoints.removeAll()
         updateFilterButtonTitle()
         CocoaDebugSettings.shared.networkLastIndex = 0
