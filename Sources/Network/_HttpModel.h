@@ -17,8 +17,13 @@ typedef NS_ENUM(NSUInteger, RequestSerializer) {
 @interface _HttpModel : NSObject
 
 @property (nonatomic,strong)NSURL   *url;
+/// Request/response data is stored on disk. These getters load from disk on demand.
+/// Use requestDataSize/responseDataSize to check sizes without loading into memory.
 @property (nonatomic,copy)NSData    *requestData;
 @property (nonatomic,copy)NSData    *responseData;
+/// Cached sizes so _HttpDatasource can estimate without loading data from disk.
+@property (nonatomic,assign)NSUInteger requestDataSize;
+@property (nonatomic,assign)NSUInteger responseDataSize;
 @property (nonatomic,copy)NSString  *requestId;
 @property (nonatomic,copy)NSString  *method;
 @property (nonatomic,copy)NSString  *statusCode;
@@ -39,5 +44,8 @@ typedef NS_ENUM(NSUInteger, RequestSerializer) {
 @property (nonatomic,copy)NSString                              *errorDescription;
 @property (nonatomic,copy)NSString                              *errorLocalizedDescription;
 @property (nonatomic,copy)NSString                              *size;
+
++ (NSString *)diskCacheDirectory;
++ (void)clearDiskCache;
 
 @end

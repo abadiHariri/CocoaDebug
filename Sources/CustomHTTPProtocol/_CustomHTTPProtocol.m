@@ -495,9 +495,9 @@ static NSString * kOurRecursiveRequestFlagProperty = @"com.apple.dts.CustomHTTPP
     } else {
         model.statusCode = @"0";
     }
-    model.responseData = self.data;
-    model.isResponseTruncated = self.responseTruncated;
     model.size = [[NSByteCountFormatter new] stringFromByteCount:self.data.length];
+    model.responseData = self.data;  // setter writes to disk, frees NSData
+    model.isResponseTruncated = self.responseTruncated;
     model.isImage = [self.response.MIMEType rangeOfString:@"image"].location != NSNotFound;
     
     //时间

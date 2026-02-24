@@ -35,15 +35,18 @@ static const NSUInteger kDefaultMemoryBudget = 50 * 1024 * 1024; // 50 MB
     if (self) {
         self.httpModels = [NSMutableArray arrayWithCapacity:1000 + 100];
         self.totalDataSize = 0;
+        // Clear leftover disk cache from previous app session
+        [_HttpModel clearDiskCache];
     }
     return self;
 }
 
 - (NSUInteger)estimatedSizeOfModel:(_HttpModel *)model
 {
+    // Use cached sizes - data is on disk, don't load it just to check length
     NSUInteger size = 0;
-    size += model.requestData.length;
-    size += model.responseData.length;
+    size += model.requestDataSize;
+    size += model.responseDataSize;
     size += 1024; // overhead for URL, headers, strings, etc.
     return size;
 }
@@ -85,12 +88,13 @@ static const NSUInteger kDefaultMemoryBudget = 50 * 1024 * 1024; // 50 MB
             return NO;
         }
 
-        // Enforce memory budget: evict oldest models until we have room
+        // Enforce disk budget: evict oldest models until we have room
         NSUInteger modelSize = [self estimatedSizeOfModel:model];
         while (self.totalDataSize + modelSize > kDefaultMemoryBudget && self.httpModels.count > 0) {
             _HttpModel *oldest = self.httpModels[0];
             self.totalDataSize -= [self estimatedSizeOfModel:oldest];
             [self.httpModels removeObjectAtIndex:0];
+            // Note: model's dealloc deletes its disk files automatically
         }
 
         [self.httpModels addObject:model];
@@ -105,6 +109,8 @@ static const NSUInteger kDefaultMemoryBudget = 50 * 1024 * 1024; // 50 MB
     @synchronized (self) {
         [self.httpModels removeAllObjects];
         self.totalDataSize = 0;
+        // Clear all disk files
+        [_HttpModel clearDiskCache];
     }
 }
 
@@ -115,6 +121,7 @@ static const NSUInteger kDefaultMemoryBudget = 50 * 1024 * 1024; // 50 MB
             if ([obj.requestId isEqualToString:model.requestId]) {
                 self.totalDataSize -= [self estimatedSizeOfModel:obj];
                 [self.httpModels removeObjectAtIndex:index];
+                // Note: model's dealloc deletes its disk files automatically
             }
         }];
     }

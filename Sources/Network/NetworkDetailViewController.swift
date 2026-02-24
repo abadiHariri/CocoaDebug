@@ -42,18 +42,17 @@ class NetworkDetailViewController: UITableViewController, MFMailComposeViewContr
         guard let requestSerializer = httpModel?.requestSerializer else { return }
         var requestContent: String? = nil
 
-        if httpModel?.requestData == nil {
-            httpModel?.requestData = Data()
-        }
-        if httpModel?.responseData == nil {
-            httpModel?.responseData = Data()
-        }
+        // Load data from disk ONCE into local variables.
+        // Each access to .requestData / .responseData reads from disk,
+        // so we must not call the getter multiple times.
+        let cachedRequestData: Data? = httpModel?.requestData  // single disk read
+        // responseData loaded later, only when needed
 
         // detect the request parameter format (JSON/Form)
         if requestSerializer == RequestSerializer.JSON {
-            requestContent = httpModel?.requestData.dataToPrettyPrintString()
+            requestContent = cachedRequestData?.dataToPrettyPrintString()
         }else if requestSerializer == RequestSerializer.form {
-            if let data = httpModel?.requestData {
+            if let data = cachedRequestData {
                 // 1. Try UTF-8 string
                 var rawString = String(data: data, encoding: .utf8) ?? ""
                 if rawString.isEmpty {
@@ -116,13 +115,16 @@ class NetworkDetailViewController: UITableViewController, MFMailComposeViewContr
             }
         }
 
+        // Load response data from disk ONCE - single disk read
+        let cachedResponseData: Data? = httpModel?.responseData
+
         if httpModel?.isImage == true {
             let model_1 = NetworkDetailModel(title: "URL", content: "https://github.com/CocoaDebug/CocoaDebug", url: httpModel?.url.absoluteString, httpModel: httpModel)
             let model_3 = NetworkDetailModel(title: "REQUEST", content: requestContent, url: httpModel?.url.absoluteString, httpModel: httpModel)
             var model_5 = NetworkDetailModel(title: "RESPONSE", content: nil, url: httpModel?.url.absoluteString, httpModel: httpModel)
             let model_6 = NetworkDetailModel(title: "ERROR", content: httpModel?.errorLocalizedDescription, url: httpModel?.url.absoluteString, httpModel: httpModel)
             let model_7 = NetworkDetailModel(title: "ERROR DESCRIPTION", content: httpModel?.errorDescription, url: httpModel?.url.absoluteString, httpModel: httpModel)
-            if let responseData = httpModel?.responseData {
+            if let responseData = cachedResponseData {
                 model_5 = NetworkDetailModel(title: "RESPONSE", content: nil, url: httpModel?.url.absoluteString, image: UIImage(gifData: responseData), httpModel: httpModel)
             }
             let model_8 = NetworkDetailModel(title: "TOTAL TIME", content: httpModel?.totalDuration, url: httpModel?.url.absoluteString, httpModel: httpModel)
@@ -153,7 +155,7 @@ class NetworkDetailViewController: UITableViewController, MFMailComposeViewContr
         } else {
             let model_1 = NetworkDetailModel(title: "URL", content: "https://github.com/CocoaDebug/CocoaDebug", url: httpModel?.url.absoluteString, httpModel: httpModel)
             let model_3 = NetworkDetailModel(title: "REQUEST", content: requestContent, url: httpModel?.url.absoluteString, httpModel: httpModel)
-            let model_5 = NetworkDetailModel(title: "RESPONSE", content: httpModel?.responseData.dataToPrettyPrintString(), url: httpModel?.url.absoluteString, httpModel: httpModel)
+            let model_5 = NetworkDetailModel(title: "RESPONSE", content: cachedResponseData?.dataToPrettyPrintString(), url: httpModel?.url.absoluteString, httpModel: httpModel)
             let model_6 = NetworkDetailModel(title: "ERROR", content: httpModel?.errorLocalizedDescription, url: httpModel?.url.absoluteString, httpModel: httpModel)
             let model_7 = NetworkDetailModel(title: "ERROR DESCRIPTION", content: httpModel?.errorDescription, url: httpModel?.url.absoluteString, httpModel: httpModel)
             let model_8 = NetworkDetailModel(title: "TOTAL TIME", content: httpModel?.totalDuration, url: httpModel?.url.absoluteString, httpModel: httpModel)
@@ -360,18 +362,22 @@ class NetworkDetailViewController: UITableViewController, MFMailComposeViewContr
     
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
-        
+
         if let index = httpModels?.firstIndex(where: { (model) -> Bool in
             return model.isSelected == true
         }) {
             httpModels?[index].isSelected = false
         }
-        
+
         httpModel?.isSelected = true
-        
+
         if let justCancelCallback = justCancelCallback {
             justCancelCallback()
         }
+
+        // Release large strings (response body, request body) immediately
+        // when navigating away instead of waiting for dealloc.
+        detailModels.removeAll()
     }
     
     //MARK: - target action
