@@ -514,14 +514,16 @@ class NetworkViewController: UIViewController {
         // Search bar styling
         searchBar.barTintColor = .black
         searchBar.isTranslucent = false
+        searchBar.tintColor = Color.mainGreen
+        searchBar.backgroundImage = UIImage() // remove default border/gradient
         searchBar.searchTextField.textColor = .white
+        searchBar.searchTextField.backgroundColor = UIColor(white: 0.15, alpha: 1)
         searchBar.searchTextField.attributedPlaceholder = NSAttributedString(
             string: "Search URL...",
             attributes: [.foregroundColor: UIColor.lightGray]
         )
         searchBar.searchTextField.leftView?.tintColor = .lightGray
         searchBar.delegate = self
-        searchBar.tintColor = Color.mainGreen
 
         // Filter button in nav bar
         filterButton = UIBarButtonItem(

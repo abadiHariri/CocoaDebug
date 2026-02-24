@@ -346,12 +346,14 @@ class LogViewController: UIViewController {
         
         
         
-        // Style all search bars for dark theme
+        // Style all search bars for dark theme (same as Network tab)
         for sb in [defaultSearchBar!, rnSearchBar!, webSearchBar!] {
             sb.barTintColor = .black
             sb.isTranslucent = false
             sb.tintColor = Color.mainGreen
+            sb.backgroundImage = UIImage() // remove default border/gradient
             sb.searchTextField.textColor = .white
+            sb.searchTextField.backgroundColor = UIColor(white: 0.15, alpha: 1)
             sb.searchTextField.attributedPlaceholder = NSAttributedString(
                 string: "Search...",
                 attributes: [.foregroundColor: UIColor.lightGray]

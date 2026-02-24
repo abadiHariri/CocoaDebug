@@ -61,55 +61,63 @@ static const NSUInteger kDefaultMemoryBudget = 50 * 1024 * 1024; // 50 MB
         }
     }
 
-    //Maximum number limit
-    if (self.httpModels.count >= 1000) {
-        if ([self.httpModels count] > 0) {
+    // All mutations to httpModels must be synchronized - stopLoading is called
+    // from different protocol instance threads concurrently.
+    @synchronized (self) {
+        //Maximum number limit
+        if (self.httpModels.count >= 1000) {
+            if ([self.httpModels count] > 0) {
+                _HttpModel *oldest = self.httpModels[0];
+                self.totalDataSize -= [self estimatedSizeOfModel:oldest];
+                [self.httpModels removeObjectAtIndex:0];
+            }
+        }
+
+        //detect repeated
+        __block BOOL isExist = NO;
+        [self.httpModels enumerateObjectsUsingBlock:^(_HttpModel *obj, NSUInteger index, BOOL *stop) {
+            if ([obj.requestId isEqualToString:model.requestId]) {
+                isExist = YES;
+                *stop = YES;
+            }
+        }];
+        if (isExist) {
+            return NO;
+        }
+
+        // Enforce memory budget: evict oldest models until we have room
+        NSUInteger modelSize = [self estimatedSizeOfModel:model];
+        while (self.totalDataSize + modelSize > kDefaultMemoryBudget && self.httpModels.count > 0) {
             _HttpModel *oldest = self.httpModels[0];
             self.totalDataSize -= [self estimatedSizeOfModel:oldest];
             [self.httpModels removeObjectAtIndex:0];
         }
-    }
 
-    //detect repeated
-    __block BOOL isExist = NO;
-    [self.httpModels enumerateObjectsUsingBlock:^(_HttpModel *obj, NSUInteger index, BOOL *stop) {
-        if ([obj.requestId isEqualToString:model.requestId]) {
-            isExist = YES;
-            *stop = YES;
-        }
-    }];
-    if (isExist) {
-        return NO;
+        [self.httpModels addObject:model];
+        self.totalDataSize += modelSize;
     }
-
-    // Enforce memory budget: evict oldest models until we have room
-    NSUInteger modelSize = [self estimatedSizeOfModel:model];
-    while (self.totalDataSize + modelSize > kDefaultMemoryBudget && self.httpModels.count > 0) {
-        _HttpModel *oldest = self.httpModels[0];
-        self.totalDataSize -= [self estimatedSizeOfModel:oldest];
-        [self.httpModels removeObjectAtIndex:0];
-    }
-
-    [self.httpModels addObject:model];
-    self.totalDataSize += modelSize;
 
     return YES;
 }
 
 - (void)reset
 {
-    [self.httpModels removeAllObjects];
-    self.totalDataSize = 0;
+    @synchronized (self) {
+        [self.httpModels removeAllObjects];
+        self.totalDataSize = 0;
+    }
 }
 
 - (void)remove:(_HttpModel *)model
 {
-    [self.httpModels enumerateObjectsWithOptions:NSEnumerationReverse usingBlock:^(_HttpModel *obj, NSUInteger index, BOOL *stop) {
-        if ([obj.requestId isEqualToString:model.requestId]) {
-            self.totalDataSize -= [self estimatedSizeOfModel:obj];
-            [self.httpModels removeObjectAtIndex:index];
-        }
-    }];
+    @synchronized (self) {
+        [self.httpModels enumerateObjectsWithOptions:NSEnumerationReverse usingBlock:^(_HttpModel *obj, NSUInteger index, BOOL *stop) {
+            if ([obj.requestId isEqualToString:model.requestId]) {
+                self.totalDataSize -= [self estimatedSizeOfModel:obj];
+                [self.httpModels removeObjectAtIndex:index];
+            }
+        }];
+    }
 }
 
 @end
