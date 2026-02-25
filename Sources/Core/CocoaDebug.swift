@@ -31,6 +31,10 @@ import UIKit
     @objc public static var mainColor: String = "#42d459"
     ///protobuf url and response class transfer map. Default value is `nil`.
     @objc public static var protobufTransferMap: [String: [String]]? = nil
+    ///Custom host-based tags for the network list. Key: host keyword (case-insensitive substring match).
+    ///Value: label to display. e.g. ["algolia": "Algolia", "onesignal": "OneSignal"]
+    ///Colors are auto-generated per host. Default value is `nil`.
+    @objc public static var networkTagMap: [String: String]? = nil
 
     //MARK: - CocoaDebug enable
     @objc public static func enable() {

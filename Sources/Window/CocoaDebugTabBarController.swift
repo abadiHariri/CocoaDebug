@@ -18,7 +18,9 @@ class CocoaDebugTabBarController: UITabBarController {
         
         setChildControllers()
         
-        self.selectedIndex = CocoaDebugSettings.shared.tabBarSelectItem 
+        let savedIndex = CocoaDebugSettings.shared.tabBarSelectItem
+        let maxIndex = (self.viewControllers?.count ?? 1) - 1
+        self.selectedIndex = min(savedIndex, max(0, maxIndex))
         self.tabBar.tintColor = Color.mainGreen
         
         //bugfix #issues-158
@@ -52,30 +54,22 @@ class CocoaDebugTabBarController: UITabBarController {
     
     //MARK: - private
     func setChildControllers() {
-        
+
         //1.
         let logs = UIStoryboard(name: "Logs", bundle: Bundle(for: CocoaDebug.self)).instantiateViewController(withIdentifier: "Logs")
         let network = UIStoryboard(name: "Network", bundle: Bundle(for: CocoaDebug.self)).instantiateViewController(withIdentifier: "Network")
         let app = UIStoryboard(name: "App", bundle: Bundle(for: CocoaDebug.self)).instantiateViewController(withIdentifier: "App")
-        
-        //2.
-        _Sandboxer.shared.isSystemFilesHidden = false
-        _Sandboxer.shared.isExtensionHidden = false
-        _Sandboxer.shared.isShareable = true
-        _Sandboxer.shared.isFileDeletable = true
-        _Sandboxer.shared.isDirectoryDeletable = true
-        guard let sandbox = _Sandboxer.shared.homeDirectoryNavigationController() else {return}
-        sandbox.tabBarItem.title = "Sandbox"
-        sandbox.tabBarItem.image = UIImage.init(named: "_icon_file_type_sandbox", in: Bundle.init(for: CocoaDebug.self), compatibleWith: nil)
-        
+
+        //2. Sandbox removed — skip initialization
+
         //3.
         guard let additionalViewController = CocoaDebugSettings.shared.additionalViewController else {
-            self.viewControllers = [network, logs, sandbox, app]
+            self.viewControllers = [network, logs, app]
             return
         }
-        
+
         //4.Add additional controller
-        var temp = [network, logs, sandbox, app]
+        var temp = [network, logs, app]
         
         let nav = UINavigationController.init(rootViewController: additionalViewController)
         nav.navigationBar.barTintColor = "#1f2124".hexColor

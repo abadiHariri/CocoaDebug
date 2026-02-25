@@ -386,7 +386,8 @@
         model.isWebViewRequest = YES;
 
         // Size
-        NSUInteger size = model.requestData.length + model.responseData.length;
+        // Use cached sizes - don't load data back from disk just to get length
+        NSUInteger size = model.requestDataSize + model.responseDataSize;
         if (size > 1024 * 1024) {
             model.size = [NSString stringWithFormat:@"%.1f MB", (double)size / (1024.0 * 1024.0)];
         } else if (size > 1024) {

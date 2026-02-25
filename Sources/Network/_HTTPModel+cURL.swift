@@ -10,42 +10,49 @@ import Foundation
 
 extension _HttpModel {
 
-    func cURLDescription() -> String {
-        var components = ["curl"]
+    /// Build a complete, valid cURL command from this request model.
+    /// Output is compatible with terminal paste AND Postman "Import > Raw Text".
+    /// Accepts optional pre-cached data to avoid redundant disk reads.
+    func cURLDescription(cachedRequestData: Data? = nil) -> String {
+        var parts = [String]()
 
-        // URL — single-quoted to prevent shell expansion
-        components.append("'\(shellEscape(url?.absoluteString ?? ""))'")
+        // 1. Command + method (always explicit for clarity)
+        let httpMethod = (method ?? "GET").uppercased()
+        parts.append("curl -X \(httpMethod)")
 
-        // Method
-        if let method, method != "GET" {
-            components.append("-X \(method)")
-        }
+        // 2. URL
+        let urlString = url?.absoluteString ?? ""
+        parts.append(shellQuote(urlString))
 
-        // Headers — guard against nil (property is implicitly unwrapped optional)
+        // 3. Headers (sorted for consistent output)
         if let headers = requestHeaderFields as? [String: Any] {
-            for (field, value) in headers {
-                components.append("-H '\(shellEscape("\(field): \(value)"))'")
+            let sortedKeys = headers.keys.sorted()
+            for key in sortedKeys {
+                let value = "\(headers[key] ?? "")"
+                parts.append("-H \(shellQuote("\(key): \(value)"))")
             }
         }
 
-        // Body
-        if let requestData, !requestData.isEmpty {
-            if let bodyString = String(data: requestData, encoding: .utf8), !bodyString.isEmpty {
-                components.append("-d '\(shellEscape(bodyString))'")
+        // 4. Body
+        let bodyData: Data? = cachedRequestData ?? self.requestData
+        if let data = bodyData, !data.isEmpty {
+            if let bodyString = String(data: data, encoding: .utf8), !bodyString.isEmpty {
+                // Text body (JSON, form-encoded, multipart, plain text)
+                parts.append("--data-raw \(shellQuote(bodyString))")
             } else {
-                // Binary data — encode as base64 with inline decode
-                let base64 = requestData.base64EncodedString(options: .lineLength76Characters)
-                components.append("--data-binary \"$(echo '\(shellEscape(base64))' | base64 -D)\"")
+                // Binary data — encode as base64 string (for reference/documentation)
+                let b64 = data.base64EncodedString()
+                parts.append("--data-binary \(shellQuote(b64))")
             }
         }
 
-        return components.joined(separator: " \\\n")
+        return parts.joined(separator: " \\\n  ")
     }
 
-    /// Escapes a string for use inside single quotes.
-    /// The only character that needs escaping in single-quoted strings is
-    /// the single quote itself: replace ' with '\''
-    private func shellEscape(_ string: String) -> String {
-        return string.replacingOccurrences(of: "'", with: "'\\''")
+    /// Shell-quote a string using single quotes.
+    /// Single quotes in the string are replaced with '\'' (end quote, escaped quote, start quote).
+    private func shellQuote(_ string: String) -> String {
+        let escaped = string.replacingOccurrences(of: "'", with: "'\\''")
+        return "'\(escaped)'"
     }
 }

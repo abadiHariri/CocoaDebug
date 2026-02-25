@@ -138,6 +138,10 @@ typedef void (^_ChallengeCompletionHandler)(NSURLSessionAuthChallengeDisposition
 @property (atomic, strong) NSMutableData         *data;
 @property (atomic, strong) NSError               *error;
 @property (atomic, assign) BOOL                  responseTruncated;
+/// Request body captured from HTTPBodyStream in startLoading.
+/// self.request.HTTPBody is nil when the body was sent via a stream,
+/// so we must capture it from the recursiveRequest after reading the stream.
+@property (atomic, strong) NSData                *capturedRequestBody;
 
 @end
 
@@ -192,7 +196,13 @@ static id<_CustomHTTPProtocolDelegate> sDelegate;
         NSURLSessionConfiguration *     config;
         
         config = [NSURLSessionConfiguration defaultSessionConfiguration];
-        // [config setHTTPShouldHandleCookies:NO];
+        config.HTTPShouldSetCookies = NO;
+        // Disable cache on the demux session - caching is already handled by the original
+        // request's session. Without this, every response gets cached TWICE (doubling memory).
+        config.URLCache = nil;
+        config.requestCachePolicy = NSURLRequestReloadIgnoringLocalCacheData;
+        // Limit concurrent connections to reduce TubeManager connection overhead (5.1% CPU).
+        config.HTTPMaximumConnectionsPerHost = 1;
         // You have to explicitly configure the session to use your own protocol subclass here
         // otherwise you don't see redirects <rdar://problem/17384498>.
         config.protocolClasses = @[ self ];
@@ -286,7 +296,25 @@ static NSString * kOurRecursiveRequestFlagProperty = @"com.apple.dts.CustomHTTPP
     if ([NSURLProtocol propertyForKey:kOurRecursiveRequestFlagProperty inRequest:request] ) {
         return NO;
     }
-    
+
+    // Skip image/binary/media requests - intercepting these wastes CPU (cookie doubling,
+    // body cloning) and memory (response data accumulation) with no debugging value.
+    {
+        static NSSet *skippedExtensions = nil;
+        static dispatch_once_t extOnceToken;
+        dispatch_once(&extOnceToken, ^{
+            skippedExtensions = [NSSet setWithArray:@[
+                @"png", @"jpg", @"jpeg", @"gif", @"webp", @"svg", @"ico", @"bmp", @"tiff", @"heic", @"heif",
+                @"mp4", @"mov", @"avi", @"m4v", @"m4a", @"mp3", @"wav", @"aac",
+                @"woff", @"woff2", @"ttf", @"otf", @"eot"
+            ]];
+        });
+        NSString *pathExtension = [[request.URL pathExtension] lowercaseString];
+        if (pathExtension.length > 0 && [skippedExtensions containsObject:pathExtension]) {
+            return NO;
+        }
+    }
+
     if ([[_NetworkHelper shared] onlyURLs].count > 0) {
         NSString* url = [request.URL.absoluteString lowercaseString];
         for (NSString* _url in [_NetworkHelper shared].onlyURLs) {
@@ -375,6 +403,34 @@ static NSString * kOurRecursiveRequestFlagProperty = @"com.apple.dts.CustomHTTPP
     
     [[self class] setProperty:@YES forKey:kOurRecursiveRequestFlagProperty inRequest:recursiveRequest];
 
+    // Convert body stream to body data to avoid needNewBodyStream overhead.
+    // When a request with HTTPBodyStream is cloned, CFNetwork calls needNewBodyStream:
+    // which bounces through the demux delegate on another thread - 11.4% of CPU in traces.
+    // Reading the stream into HTTPBody eliminates this callback entirely.
+    if (recursiveRequest.HTTPBodyStream != nil && recursiveRequest.HTTPBody == nil) {
+        NSInputStream *stream = recursiveRequest.HTTPBodyStream;
+        NSMutableData *bodyData = [NSMutableData data];
+        uint8_t buffer[4096];
+        [stream open];
+        while ([stream hasBytesAvailable]) {
+            NSInteger bytesRead = [stream read:buffer maxLength:sizeof(buffer)];
+            if (bytesRead > 0) {
+                [bodyData appendBytes:buffer length:bytesRead];
+            } else {
+                break;
+            }
+        }
+        [stream close];
+        if (bodyData.length > 0) {
+            recursiveRequest.HTTPBody = bodyData;
+        }
+    }
+
+    // Capture the request body for the debug model.
+    // The original request's HTTPBody may be nil when the body was sent via
+    // HTTPBodyStream. recursiveRequest now has the stream data converted to HTTPBody.
+    self.capturedRequestBody = recursiveRequest.HTTPBody;
+
     //liman
     self.startTime = [[NSDate date] timeIntervalSince1970];
     self.data = [NSMutableData data];
@@ -429,17 +485,20 @@ static NSString * kOurRecursiveRequestFlagProperty = @"com.apple.dts.CustomHTTPP
     model.url = self.request.URL;
     model.method = self.request.HTTPMethod;
     model.mineType = self.response.MIMEType;
-    if (self.request.HTTPBody) {
-        model.requestData = self.request.HTTPBody;
-    }
-    if (self.request.HTTPBodyStream) {
+    // Use capturedRequestBody which includes stream-based bodies
+    // (self.request.HTTPBody is nil when the body was sent via HTTPBodyStream)
+    NSData *reqBody = self.capturedRequestBody;
+    if (reqBody && reqBody.length > 0) {
         NSUInteger maxBodySize = [_NetworkHelper shared].maxRequestBodySize;
-        NSData *bodyData = [NSData dataWithInputStream:self.request.HTTPBodyStream maxLength:maxBodySize];
-        model.requestData = bodyData;
-        if (bodyData.length >= maxBodySize) {
+        if (reqBody.length <= maxBodySize) {
+            model.requestData = reqBody;
+        } else {
+            model.requestData = [reqBody subdataWithRange:NSMakeRange(0, maxBodySize)];
             model.isRequestBodyTruncated = YES;
         }
     }
+    // NOTE: Do NOT re-read HTTPBodyStream here - it's already consumed by the URL loading
+    // system at this point. The body was already converted to HTTPBody in startLoading.
 
     if ([self.response isKindOfClass:[NSHTTPURLResponse class]]) {
         NSHTTPURLResponse *httpResponse = (NSHTTPURLResponse *)self.response;
@@ -447,9 +506,9 @@ static NSString * kOurRecursiveRequestFlagProperty = @"com.apple.dts.CustomHTTPP
     } else {
         model.statusCode = @"0";
     }
-    model.responseData = self.data;
-    model.isResponseTruncated = self.responseTruncated;
     model.size = [[NSByteCountFormatter new] stringFromByteCount:self.data.length];
+    model.responseData = self.data;  // setter writes to disk, frees NSData
+    model.isResponseTruncated = self.responseTruncated;
     model.isImage = [self.response.MIMEType rangeOfString:@"image"].location != NSNotFound;
     
     //时间
@@ -495,6 +554,12 @@ static NSString * kOurRecursiveRequestFlagProperty = @"com.apple.dts.CustomHTTPP
     {
         [[NSNotificationCenter defaultCenter] postNotificationName:@"reloadHttp_CocoaDebug" object:nil userInfo:@{@"statusCode":model.statusCode}];
     }
+
+    // Release accumulated data immediately - don't wait for dealloc.
+    // The model now owns the data; keeping a second reference wastes memory.
+    self.data = nil;
+    self.response = nil;
+    self.error = nil;
 }
 
 #pragma mark * Authentication challenge handling

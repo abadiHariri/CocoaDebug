@@ -9,605 +9,276 @@
 import UIKit
 
 class LogViewController: UIViewController {
-    
-    var reachEndDefault: Bool = true
-    var reachEndRN: Bool = true
-    var reachEndWeb: Bool = true
-    
-    var firstInDefault: Bool = true
-    var firstInRN: Bool = true
-    var firstInWeb: Bool = true
-    
-    var selectedSegmentIndex: Int = 0
-    var selectedSegment_0: Bool = false
-    var selectedSegment_1: Bool = false
-    var selectedSegment_2: Bool = false
-    
-    var defaultReloadDataFinish: Bool = true
-    var rnReloadDataFinish: Bool = true
-    var webReloadDataFinish: Bool = true
-    
-    
+
+    var reachEnd: Bool = true
+    var firstIn: Bool = true
+    var reloadDataFinish: Bool = true
+
     @IBOutlet weak var segmentedControl: UISegmentedControl!
     @IBOutlet weak var deleteItem: UIBarButtonItem!
-    
+
+    // Use only the default table/search from storyboard — hide RN & Web
     @IBOutlet weak var defaultTableView: UITableView!
     @IBOutlet weak var defaultSearchBar: UISearchBar!
-    var defaultModels: [_OCLogModel] = [_OCLogModel]()
-    var defaultCacheModels: Array<_OCLogModel>?
-    var defaultSearchModels: Array<_OCLogModel>?
-    
+
     @IBOutlet weak var rnTableView: UITableView!
     @IBOutlet weak var rnSearchBar: UISearchBar!
-    var rnModels: [_OCLogModel] = [_OCLogModel]()
-    var rnCacheModels: Array<_OCLogModel>?
-    var rnSearchModels: Array<_OCLogModel>?
-    
     @IBOutlet weak var webTableView: UITableView!
     @IBOutlet weak var webSearchBar: UISearchBar!
-    var webModels: [_OCLogModel] = [_OCLogModel]()
+
+    /// Combined log models from all sources (app + RN + web), sorted by date
+    var allModels: [_OCLogModel] = []
+    var cacheModels: [_OCLogModel]?
+    var searchModels: [_OCLogModel]?
+
+    // Keep legacy properties so storyboard outlets don't crash
+    var defaultModels: [_OCLogModel] { allModels }
+    var defaultCacheModels: Array<_OCLogModel>? { cacheModels }
+    var defaultSearchModels: Array<_OCLogModel>? { searchModels }
+    var rnModels: [_OCLogModel] = []
+    var rnCacheModels: Array<_OCLogModel>?
+    var rnSearchModels: Array<_OCLogModel>?
+    var webModels: [_OCLogModel] = []
     var webCacheModels: Array<_OCLogModel>?
     var webSearchModels: Array<_OCLogModel>?
-    
-    
-    
-    //MARK: - tool
-    //搜索逻辑
+    var selectedSegmentIndex: Int = 0
+
+
+    // MARK: - Search
+
     func searchLogic(_ searchText: String = "") {
-        
-        if selectedSegmentIndex == 0
-        {
-            guard let defaultCacheModels = defaultCacheModels else {return}
-            defaultSearchModels = defaultCacheModels
-            
-            if searchText == "" {
-                defaultModels = defaultCacheModels
-            } else {
-                guard let defaultSearchModels = defaultSearchModels else {return}
-                
-                for _ in defaultSearchModels {
-                    if let index = self.defaultSearchModels?.firstIndex(where: { (model) -> Bool in
-                        return !model.content.lowercased().contains(searchText.lowercased())//忽略大小写
-                    }) {
-                        self.defaultSearchModels?.remove(at: index)
-                    }
-                }
-                defaultModels = self.defaultSearchModels ?? []
-            }
-        }
-        else if selectedSegmentIndex == 1
-        {
-            guard let rnCacheModels = rnCacheModels else {return}
-            rnSearchModels = rnCacheModels
-            
-            if searchText == "" {
-                rnModels = rnCacheModels
-            } else {
-                guard let rnSearchModels = rnSearchModels else {return}
-                
-                for _ in rnSearchModels {
-                    if let index = self.rnSearchModels?.firstIndex(where: { (model) -> Bool in
-                        return !model.content.lowercased().contains(searchText.lowercased())//忽略大小写
-                    }) {
-                        self.rnSearchModels?.remove(at: index)
-                    }
-                }
-                rnModels = self.rnSearchModels ?? []
-            }
-        }
-        else
-        {
-            guard let webCacheModels = webCacheModels else {return}
-            webSearchModels = webCacheModels
-            
-            if searchText == "" {
-                webModels = webCacheModels
-            } else {
-                guard let webSearchModels = webSearchModels else {return}
-                
-                for _ in webSearchModels {
-                    if let index = self.webSearchModels?.firstIndex(where: { (model) -> Bool in
-                        return !model.content.lowercased().contains(searchText.lowercased())//忽略大小写
-                    }) {
-                        self.webSearchModels?.remove(at: index)
-                    }
-                }
-                webModels = self.webSearchModels ?? []
+        guard let cache = cacheModels else { return }
+        if searchText.isEmpty {
+            allModels = cache
+        } else {
+            allModels = cache.filter {
+                $0.content.lowercased().contains(searchText.lowercased())
             }
         }
     }
-    
-    //MARK: - private
+
+    // MARK: - Reload
+
     func reloadLogs(needScrollToEnd: Bool = false, needReloadData: Bool = true) {
-        
-        if selectedSegmentIndex == 0
-        {
-            if defaultReloadDataFinish == false {return}
-            
-            if defaultSearchBar.isHidden != false ||
-                rnSearchBar.isHidden != true ||
-                webSearchBar.isHidden != true {
-                defaultSearchBar.isHidden = false
-                rnSearchBar.isHidden = true
-                webSearchBar.isHidden = true
-            }
-            
-            if defaultTableView.isHidden != false ||
-                rnTableView.isHidden != true ||
-                webTableView.isHidden != true {
-                defaultTableView.isHidden = false
-                rnTableView.isHidden = true
-                webTableView.isHidden = true
-            }
-            
-            if needReloadData == false && defaultModels.count > 0 {return}
-            
-            if let arr = _OCLogStoreManager.shared()?.normalLogArray {
-                defaultModels = arr as! [_OCLogModel]
-            }
-            
-            self.defaultCacheModels = self.defaultModels
-            
-            self.searchLogic(CocoaDebugSettings.shared.logSearchWordNormal ?? "")
-            
-            //            dispatch_main_async_safe { [weak self] in
-            self.defaultReloadDataFinish = false
-            self.defaultTableView.reloadData {
-                self.defaultReloadDataFinish = true
-            }
-            
-            if needScrollToEnd == false {return}
-            
-            //table下滑到底部
-            //                guard let count = self.defaultModels.count else {return}
-            if self.defaultModels.count > 0 {
-                //                    guard let firstInDefault = self.firstInDefault else {return}
-                self.defaultTableView.tableViewScrollToBottom(animated: !firstInDefault)
-                self.firstInDefault = false
-            }
-            //            }
+        if !reloadDataFinish { return }
+
+        // Merge all 3 log stores into one list sorted by date
+        var combined: [_OCLogModel] = []
+        if let normal = _OCLogStoreManager.shared()?.normalLogArray as? [_OCLogModel] {
+            combined.append(contentsOf: normal)
         }
-        else if selectedSegmentIndex == 1
-        {
-            if rnReloadDataFinish == false {return}
-            
-            if defaultSearchBar.isHidden != true ||
-                rnSearchBar.isHidden != false ||
-                webSearchBar.isHidden != true {
-                defaultSearchBar.isHidden = true
-                rnSearchBar.isHidden = false
-                webSearchBar.isHidden = true
-            }
-            
-            if defaultTableView.isHidden != true ||
-                rnTableView.isHidden != false ||
-                webTableView.isHidden != true {
-                defaultTableView.isHidden = true
-                rnTableView.isHidden = false
-                webTableView.isHidden = true
-            }
-            
-            if needReloadData == false && rnModels.count > 0 {return}
-            
-            if let arr = _OCLogStoreManager.shared()?.rnLogArray {
-                rnModels = arr as! [_OCLogModel]
-            }
-            
-            self.rnCacheModels = self.rnModels
-            
-            self.searchLogic(CocoaDebugSettings.shared.logSearchWordRN ?? "")
-            
-            //            dispatch_main_async_safe { [weak self] in
-            self.rnReloadDataFinish = false
-            self.rnTableView.reloadData {
-                self.rnReloadDataFinish = true
-            }
-            
-            if needScrollToEnd == false {return}
-            
-            //table下滑到底部
-            //                guard let count = self.rnModels.count else {return}
-            if self.rnModels.count > 0 {
-                //                    guard let firstInRN = self.firstInRN else {return}
-                self.rnTableView.tableViewScrollToBottom(animated: !firstInRN)
-                self.firstInRN = false
-            }
-            //            }
+        if let rn = _OCLogStoreManager.shared()?.rnLogArray as? [_OCLogModel] {
+            combined.append(contentsOf: rn)
         }
-        else
-        {
-            if webReloadDataFinish == false {return}
-            
-            if defaultSearchBar.isHidden != true ||
-                rnSearchBar.isHidden != true ||
-                webSearchBar.isHidden != false {
-                defaultSearchBar.isHidden = true
-                rnSearchBar.isHidden = true
-                webSearchBar.isHidden = false
+        if let web = _OCLogStoreManager.shared()?.webLogArray as? [_OCLogModel] {
+            combined.append(contentsOf: web)
+        }
+        combined.sort { ($0.date ?? .distantPast) < ($1.date ?? .distantPast) }
+        allModels = combined
+        cacheModels = combined
+
+        // Apply search filter
+        searchLogic(CocoaDebugSettings.shared.logSearchWordNormal ?? "")
+
+        if needReloadData || allModels.count > 0 {
+            reloadDataFinish = false
+            defaultTableView.reloadData {
+                self.reloadDataFinish = true
             }
-            
-            if defaultTableView.isHidden != true ||
-                rnTableView.isHidden != true ||
-                webTableView.isHidden != false {
-                defaultTableView.isHidden = true
-                rnTableView.isHidden = true
-                webTableView.isHidden = false
-            }
-            
-            if needReloadData == false && webModels.count > 0 {return}
-            
-            if let arr = _OCLogStoreManager.shared().webLogArray {
-                webModels = arr as! [_OCLogModel]
-            }
-            
-            self.webCacheModels = self.webModels
-            
-            self.searchLogic(CocoaDebugSettings.shared.logSearchWordWeb ?? "")
-            
-            //            dispatch_main_async_safe { [weak self] in
-            self.webReloadDataFinish = false
-            self.webTableView.reloadData {
-                self.webReloadDataFinish = true
-            }
-            
-            if needScrollToEnd == false {return}
-            
-            //table下滑到底部
-            //                guard let count = self.webModels.count else {return}
-            if self.webModels.count > 0 {
-                //                    guard let firstInWeb = self.firstInWeb else {return}
-                self.webTableView.tableViewScrollToBottom(animated: !firstInWeb)
-                self.firstInWeb = false
-            }
-            //            }
+        }
+
+        if needScrollToEnd && allModels.count > 0 {
+            defaultTableView.tableViewScrollToBottom(animated: !firstIn)
+            firstIn = false
         }
     }
-    
-    
-    //MARK: - init
+
+    // MARK: - viewDidLoad
+
     override func viewDidLoad() {
         super.viewDidLoad()
-        
-        let tap = UITapGestureRecognizer.init(target: self, action: #selector(didTapView))
+
+        let tap = UITapGestureRecognizer(target: self, action: #selector(didTapView))
         tap.cancelsTouchesInView = false
         view.addGestureRecognizer(tap)
-        
-        
+
         deleteItem.tintColor = Color.mainGreen
-        segmentedControl.tintColor = Color.mainGreen
-        
-        if UIScreen.main.bounds.size.width == 320 {
-            segmentedControl.setTitleTextAttributes([NSAttributedString.Key.font: UIFont.systemFont(ofSize: 11)], for: .normal)
-        } else {
-            segmentedControl.setTitleTextAttributes([NSAttributedString.Key.font: UIFont.systemFont(ofSize: 13)], for: .normal)
-        }
-        
-        //notification
-        NotificationCenter.default.addObserver(forName: NSNotification.Name(rawValue: "refreshLogs_CocoaDebug"), object: nil, queue: OperationQueue.main) { [weak self] _ in
-            self?.refreshLogs_notification()
-        }
-        
-        
+
+        // Hide segmented control
+        segmentedControl.isHidden = true
+        segmentedControl.removeFromSuperview()
+        navigationItem.titleView = nil
+
+        // Set a simple title instead
+        let titleLabel = UILabel()
+        titleLabel.text = "Logs"
+        titleLabel.font = .boldSystemFont(ofSize: 20)
+        titleLabel.textColor = Color.mainGreen
+        navigationItem.titleView = titleLabel
+
+        // Hide RN & Web table/search (keep outlets connected so no crash)
+        rnTableView.isHidden = true
+        rnSearchBar.isHidden = true
+        webTableView.isHidden = true
+        webSearchBar.isHidden = true
+
+        // Configure main table
+        defaultSearchBar.isHidden = false
+        defaultTableView.isHidden = false
+
+        // Register programmatic cell (overrides storyboard prototype)
+        defaultTableView.register(LogCell.self, forCellReuseIdentifier: "LogCell")
         defaultTableView.tableFooterView = UIView()
         defaultTableView.delegate = self
         defaultTableView.dataSource = self
-        //        defaultTableView.rowHeight = UITableViewAutomaticDimension
+        defaultTableView.backgroundColor = .black
+        defaultTableView.separatorStyle = .none
+        defaultTableView.rowHeight = UITableView.automaticDimension
+        defaultTableView.estimatedRowHeight = 80
+        defaultTableView.contentInset = UIEdgeInsets(top: 8, left: 0, bottom: 80, right: 0)
+        defaultTableView.showsVerticalScrollIndicator = false
+
+        // Search bar
         defaultSearchBar.delegate = self
         defaultSearchBar.text = CocoaDebugSettings.shared.logSearchWordNormal
-        defaultSearchBar.isHidden = true
-        //抖动bug
-        defaultTableView.estimatedRowHeight = 0
-        defaultTableView.estimatedSectionHeaderHeight = 0
-        defaultTableView.estimatedSectionFooterHeight = 0
-        
-        
-        
-        rnTableView.tableFooterView = UIView()
-        rnTableView.delegate = self
-        rnTableView.dataSource = self
-        //        rnTableView.rowHeight = UITableViewAutomaticDimension
-        rnSearchBar.delegate = self
-        rnSearchBar.text = CocoaDebugSettings.shared.logSearchWordRN
-        rnSearchBar.isHidden = true
-        //抖动bug
-        rnTableView.estimatedRowHeight = 0
-        rnTableView.estimatedSectionHeaderHeight = 0
-        rnTableView.estimatedSectionFooterHeight = 0
-        
-        
-        
-        webTableView.tableFooterView = UIView()
-        webTableView.delegate = self
-        webTableView.dataSource = self
-        //        webTableView.rowHeight = UITableViewAutomaticDimension
-        webSearchBar.delegate = self
-        webSearchBar.text = CocoaDebugSettings.shared.logSearchWordWeb
-        webSearchBar.isHidden = true
-        //抖动bug
-        webTableView.estimatedRowHeight = 0
-        webTableView.estimatedSectionHeaderHeight = 0
-        webTableView.estimatedSectionFooterHeight = 0
-        
-        
-        
-        //segmentedControl
-        selectedSegmentIndex = CocoaDebugSettings.shared.logSelectIndex 
-        segmentedControl.selectedSegmentIndex = selectedSegmentIndex
-        
-        if selectedSegmentIndex == 0 {
-            selectedSegment_0 = true
-        } else if selectedSegmentIndex == 1 {
-            selectedSegment_1 = true
-        } else {
-            selectedSegment_2 = true
+
+        // Style search bar for dark theme
+        defaultSearchBar.barTintColor = .black
+        defaultSearchBar.isTranslucent = false
+        defaultSearchBar.tintColor = Color.mainGreen
+        defaultSearchBar.backgroundImage = UIImage()
+        defaultSearchBar.searchTextField.textColor = .white
+        defaultSearchBar.searchTextField.backgroundColor = UIColor(white: 0.15, alpha: 1)
+        defaultSearchBar.searchTextField.attributedPlaceholder = NSAttributedString(
+            string: "Search logs...",
+            attributes: [.foregroundColor: UIColor.lightGray]
+        )
+        defaultSearchBar.searchTextField.leftView?.tintColor = .lightGray
+        defaultSearchBar.searchTextField.returnKeyType = .default
+
+        // Notification
+        NotificationCenter.default.addObserver(
+            forName: NSNotification.Name(rawValue: "refreshLogs_CocoaDebug"),
+            object: nil, queue: .main
+        ) { [weak self] _ in
+            self?.refreshLogs_notification()
         }
-        
+
         reloadLogs(needScrollToEnd: true, needReloadData: true)
-        
-        
-        
-        // Style all search bars for dark theme
-        for sb in [defaultSearchBar!, rnSearchBar!, webSearchBar!] {
-            sb.barTintColor = .black
-            sb.isTranslucent = false
-            sb.tintColor = Color.mainGreen
-            sb.searchTextField.textColor = .white
-            sb.searchTextField.attributedPlaceholder = NSAttributedString(
-                string: "Search...",
-                attributes: [.foregroundColor: UIColor.lightGray]
-            )
-            sb.searchTextField.leftView?.tintColor = .lightGray
-            sb.searchTextField.returnKeyType = .default
-        }
     }
-    
+
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
         defaultSearchBar.resignFirstResponder()
-        rnSearchBar.resignFirstResponder()
-        webSearchBar.resignFirstResponder()
     }
-    
+
     deinit {
-        //notification
         NotificationCenter.default.removeObserver(self)
     }
-    
-    
-    //MARK: - target action
+
+    // MARK: - Actions
+
     @IBAction func didTapDown(_ sender: Any) {
-        if selectedSegmentIndex == 0
-        {
-            defaultTableView.tableViewScrollToBottom(animated: true)
-            defaultSearchBar.resignFirstResponder()
-            reachEndDefault = true
-        }
-        else if selectedSegmentIndex == 1
-        {
-            rnTableView.tableViewScrollToBottom(animated: true)
-            rnSearchBar.resignFirstResponder()
-            reachEndRN = true
-        }
-        else
-        {
-            webTableView.tableViewScrollToBottom(animated: true)
-            webSearchBar.resignFirstResponder()
-            reachEndWeb = true
-        }
+        defaultTableView.tableViewScrollToBottom(animated: true)
+        defaultSearchBar.resignFirstResponder()
+        reachEnd = true
     }
-    
+
     @IBAction func didTapUp(_ sender: Any) {
-        if selectedSegmentIndex == 0
-        {
-            defaultTableView.tableViewScrollToHeader(animated: true)
-            defaultSearchBar.resignFirstResponder()
-            reachEndDefault = false
-        }
-        else if selectedSegmentIndex == 1
-        {
-            rnTableView.tableViewScrollToHeader(animated: true)
-            rnSearchBar.resignFirstResponder()
-            reachEndRN = false
-        }
-        else
-        {
-            webTableView.tableViewScrollToHeader(animated: true)
-            webSearchBar.resignFirstResponder()
-            reachEndWeb = false
-        }
+        defaultTableView.tableViewScrollToHeader(animated: true)
+        defaultSearchBar.resignFirstResponder()
+        reachEnd = false
     }
-    
-    
+
     @IBAction func resetLogs(_ sender: Any) {
-        if selectedSegmentIndex == 0
-        {
-            defaultModels = []
-            defaultCacheModels = []
-            //            defaultSearchBar.text = nil
-            defaultSearchBar.resignFirstResponder()
-            //            CocoaDebugSettings.shared.logSearchWordNormal = nil
-            
-            _OCLogStoreManager.shared()?.resetNormalLogs()
-            
-            //            dispatch_main_async_safe { [weak self] in
-            self.defaultTableView.reloadData()
-            //            }
-        }
-        else if selectedSegmentIndex == 1
-        {
-            rnModels = []
-            rnCacheModels = []
-            //            rnSearchBar.text = nil
-            rnSearchBar.resignFirstResponder()
-            //            CocoaDebugSettings.shared.logSearchWordRN = nil
-            
-            _OCLogStoreManager.shared()?.resetRNLogs()
-            
-            //            dispatch_main_async_safe { [weak self] in
-            self.rnTableView.reloadData()
-            //            }
-        }
-        else
-        {
-            webModels = []
-            webCacheModels = []
-            //            webSearchBar.text = nil
-            webSearchBar.resignFirstResponder()
-            //            CocoaDebugSettings.shared.logSearchWordWeb = nil
-            
-            _OCLogStoreManager.shared().resetWebLogs()
-            
-            //            dispatch_main_async_safe { [weak self] in
-            self.webTableView.reloadData()
-            //            }
-        }
+        allModels = []
+        cacheModels = []
+        defaultSearchBar.resignFirstResponder()
+
+        _OCLogStoreManager.shared()?.resetNormalLogs()
+        _OCLogStoreManager.shared()?.resetRNLogs()
+        _OCLogStoreManager.shared()?.resetWebLogs()
+
+        defaultTableView.reloadData()
     }
-    
+
     @IBAction func segmentedControlAction(_ sender: UISegmentedControl) {
-        selectedSegmentIndex = segmentedControl.selectedSegmentIndex
-        CocoaDebugSettings.shared.logSelectIndex = selectedSegmentIndex
-        
-        if selectedSegmentIndex == 0 {
-            rnSearchBar.resignFirstResponder()
-            webSearchBar.resignFirstResponder()
-        } else if selectedSegmentIndex == 1 {
-            defaultSearchBar.resignFirstResponder()
-            webSearchBar.resignFirstResponder()
-        } else {
-            defaultSearchBar.resignFirstResponder()
-            rnSearchBar.resignFirstResponder()
-        }
-        
-        if selectedSegmentIndex == 0 && selectedSegment_0 == false {
-            selectedSegment_0 = true
-            reloadLogs(needScrollToEnd: true, needReloadData: true)
-            return
-        }
-        
-        if selectedSegmentIndex == 1 && selectedSegment_1 == false {
-            selectedSegment_1 = true
-            reloadLogs(needScrollToEnd: true, needReloadData: true)
-            return
-        }
-        
-        if selectedSegmentIndex == 2 && selectedSegment_2 == false {
-            selectedSegment_2 = true
-            reloadLogs(needScrollToEnd: true, needReloadData: true)
-            return
-        }
-        
-        reloadLogs(needScrollToEnd: false, needReloadData: false)
+        // No-op — segmented control is hidden
     }
-    
+
     @objc func didTapView() {
-        if selectedSegmentIndex == 0 {
-            defaultSearchBar.resignFirstResponder()
-        } else if selectedSegmentIndex == 1 {
-            rnSearchBar.resignFirstResponder()
-        } else {
-            webSearchBar.resignFirstResponder()
-        }
+        defaultSearchBar.resignFirstResponder()
     }
-    
-    
-    //MARK: - notification
+
+    // MARK: - Notification
+
     @objc func refreshLogs_notification() {
-        if self.selectedSegmentIndex == 0 {
-            self.reloadLogs(needScrollToEnd: self.reachEndDefault , needReloadData: true)
-        } else if self.selectedSegmentIndex == 1 {
-            self.reloadLogs(needScrollToEnd: self.reachEndRN , needReloadData: true)
-        } else {
-            self.reloadLogs(needScrollToEnd: self.reachEndWeb , needReloadData: true)
-        }
+        reloadLogs(needScrollToEnd: reachEnd, needReloadData: true)
     }
 }
 
-//MARK: - UITableViewDataSource
+// MARK: - UITableViewDataSource
+
 extension LogViewController: UITableViewDataSource {
-    
+
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        if tableView == defaultTableView {
-            return defaultModels.count
-        } else if tableView == rnTableView {
-            return rnModels.count
-        } else {
-            return webModels.count
-        }
+        return allModels.count
     }
-    
+
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "LogCell", for: indexPath) as! LogCell
-        
-        if tableView == defaultTableView
-        {
-            cell.model = defaultModels[indexPath.row]
+        guard indexPath.row < allModels.count else { return cell }
+        let logModel = allModels[indexPath.row]
+        cell.index = indexPath.row
+        cell.model = logModel
+
+        // Wire "Show Full JSON" button
+        cell.onShowFull = { [weak self] in
+            guard let self = self else { return }
+            if let json = LogCell.extractJSON(from: logModel) {
+                self.pushJSONViewerOrFallback(with: json)
+            }
         }
-        else if tableView == rnTableView
-        {
-            cell.model = rnModels[indexPath.row]
-        }
-        else
-        {
-            cell.model = webModels[indexPath.row]
-        }
-        
         return cell
     }
 }
 
-//MARK: - UITableViewDelegate
+// MARK: - UITableViewDelegate
+
 extension LogViewController: UITableViewDelegate {
-    
+
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
-        
-        var logTitleString = ""
-        var models_: [_OCLogModel]?
-        
-        if tableView == defaultTableView
-        {
-            defaultSearchBar.resignFirstResponder()
-            reachEndDefault = false
-            logTitleString = "Log"
-            models_ = defaultModels
-        }
-        else if tableView == rnTableView
-        {
-            rnSearchBar.resignFirstResponder()
-            reachEndRN = false
-            logTitleString = "RN"
-            models_ = rnModels
-        }
-        else
-        {
-            webSearchBar.resignFirstResponder()
-            reachEndWeb = false
-            logTitleString = "Web"
-            models_ = webModels
-        }
-        
-        //
-        guard let models = models_ else {return}
+        defaultSearchBar.resignFirstResponder()
+        reachEnd = false
 
-        let logModel = models[indexPath.row]
+        guard indexPath.row < allModels.count else { return }
+        let logModel = allModels[indexPath.row]
 
-        // If the log content is valid JSON, open the JSON viewer (same as network request preview)
-        if let data = logModel.contentData,
-           let content = String(data: data, encoding: .utf8),
-           isValidJSON(content) {
-            // Update selection state (mirroring JsonViewController.viewWillDisappear)
-            if let prevIndex = models.firstIndex(where: { $0.isSelected }) {
-                models[prevIndex].isSelected = false
+        // Determine title from log type
+        let logTitleString: String
+        switch logModel.logType {
+        case .normal: logTitleString = "App Log"
+        case .RN:     logTitleString = "React Log"
+        case .web:    logTitleString = "Web Log"
+        @unknown default: logTitleString = "Log"
+        }
+
+        // If JSON, open JSON viewer
+        if let json = LogCell.extractJSON(from: logModel) {
+            if let prevIndex = allModels.firstIndex(where: { $0.isSelected }) {
+                allModels[prevIndex].isSelected = false
             }
             logModel.isSelected = true
-            pushJSONViewerOrFallback(with: content)
+            defaultTableView.reloadData()
+            pushJSONViewerOrFallback(with: json)
             return
         }
 
         let vc = JsonViewController.instanceFromStoryBoard()
         vc.editType = .log
         vc.logTitleString = logTitleString
-        vc.logModels = models
+        vc.logModels = allModels
         vc.logModel = logModel
 
         navigationController?.pushViewController(vc, animated: true)
@@ -616,95 +287,39 @@ extension LogViewController: UITableViewDelegate {
             tableView.reloadData()
         }
     }
-    
+
     func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
-        
-        var model: _OCLogModel
-        
-        if tableView == defaultTableView {
-            model = defaultModels[indexPath.row]
-            
-        } else if tableView == rnTableView {
-            model = rnModels[indexPath.row]
-            
-        } else {
-            model = webModels[indexPath.row]
-        }
-        
-        if let height = model.str?.height(with: UIFont.boldSystemFont(ofSize: 12), constraintToWidth: UIScreen.main.bounds.size.width) {
-            return height + 10;
-        }
-        
-        return 0
+        return UITableView.automaticDimension
     }
 }
 
-//MARK: - UIScrollViewDelegate
+// MARK: - UIScrollViewDelegate
+
 extension LogViewController: UIScrollViewDelegate {
-    
+
     func scrollViewWillBeginDragging(_ scrollView: UIScrollView) {
-        if scrollView == defaultTableView {
-            defaultSearchBar.resignFirstResponder()
-            reachEndDefault = false
-        } else if scrollView == rnTableView {
-            rnSearchBar.resignFirstResponder()
-            reachEndRN = false
-        } else {
-            webSearchBar.resignFirstResponder()
-            reachEndWeb = false
-        }
+        defaultSearchBar.resignFirstResponder()
+        reachEnd = false
     }
-    
+
     func scrollViewDidScroll(_ scrollView: UIScrollView) {
         if (scrollView.contentOffset.y + 1) >= (scrollView.contentSize.height - scrollView.frame.size.height) {
-            //bottom reached
-            if scrollView == defaultTableView {
-                reachEndDefault = true
-            } else if scrollView == rnTableView {
-                reachEndRN = true
-            } else {
-                reachEndWeb = true
-            }
+            reachEnd = true
         }
     }
 }
 
-//MARK: - UISearchBarDelegate
+// MARK: - UISearchBarDelegate
+
 extension LogViewController: UISearchBarDelegate {
-    
-    func searchBarSearchButtonClicked(_ searchBar: UISearchBar)
-    {
+
+    func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
         searchBar.resignFirstResponder()
     }
-    
-    func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String)
-    {
-        if searchBar == defaultSearchBar
-        {
-            CocoaDebugSettings.shared.logSearchWordNormal = searchText
-            searchLogic(searchText)
-            
-            //            dispatch_main_async_safe { [weak self] in
-            self.defaultTableView.reloadData()
-            //            }
-        }
-        else if searchBar == rnSearchBar
-        {
-            CocoaDebugSettings.shared.logSearchWordRN = searchText
-            searchLogic(searchText)
-            
-            //            dispatch_main_async_safe { [weak self] in
-            self.rnTableView.reloadData()
-            //            }
-        }
-        else
-        {
-            CocoaDebugSettings.shared.logSearchWordWeb = searchText
-            searchLogic(searchText)
-            
-            //            dispatch_main_async_safe { [weak self] in
-            self.webTableView.reloadData()
-            //            }
-        }
+
+    func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
+        CocoaDebugSettings.shared.logSearchWordNormal = searchText
+        searchLogic(searchText)
+        defaultTableView.reloadData()
     }
 }
