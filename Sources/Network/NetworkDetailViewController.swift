@@ -783,6 +783,8 @@ final class JSONViewerViewController: UIViewController, WKNavigationDelegate {
         let config = WKWebViewConfiguration()
         config.preferences.javaScriptEnabled = true
         config.defaultWebpagePreferences.allowsContentJavaScript = true
+        // Limit WKWebView memory: disable back-forward cache
+        config.suppressesIncrementalRendering = true
 
         webView = WKWebView(frame: .zero, configuration: config)
         webView.navigationDelegate = self
@@ -798,6 +800,31 @@ final class JSONViewerViewController: UIViewController, WKNavigationDelegate {
         ])
 
         webView.loadHTMLString(initialHTML, baseURL: nil)
+    }
+
+    override func viewDidDisappear(_ animated: Bool) {
+        super.viewDidDisappear(animated)
+        // Only tear down when actually leaving (popped/dismissed), not when pushing a child.
+        guard isMovingFromParent || isBeingDismissed else { return }
+        tearDownWebView()
+    }
+
+    deinit {
+        tearDownWebView()
+    }
+
+    /// Release WKWebView and all associated memory.
+    /// WKWebView is known for retaining large JS heaps even after the VC is gone.
+    private func tearDownWebView() {
+        pendingJSON = nil
+        guard let wv = webView else { return }
+        wv.stopLoading()
+        wv.navigationDelegate = nil
+        // Load blank page to force JS engine to release parsed JSON objects
+        wv.loadHTMLString("", baseURL: nil)
+        wv.removeFromSuperview()
+        webView = nil
+        isLoaded = false
     }
 
     // MARK: - Public API
@@ -841,7 +868,7 @@ final class JSONViewerViewController: UIViewController, WKNavigationDelegate {
             let json = String(data: data, encoding: .utf8)
         else { return }
 
-        webView.evaluateJavaScript("window.configureViewer(\(json));", completionHandler: nil)
+        webView?.evaluateJavaScript("window.configureViewer(\(json));", completionHandler: nil)
     }
 
     // MARK: - WKNavigationDelegate
@@ -859,7 +886,7 @@ final class JSONViewerViewController: UIViewController, WKNavigationDelegate {
     private func evaluateRender(jsonString: String) {
         let b64 = Data(jsonString.utf8).base64EncodedString()
         let js = "window.renderBase64('\(b64)');"
-        webView.evaluateJavaScript(js, completionHandler: nil)
+        webView?.evaluateJavaScript(js, completionHandler: nil)
     }
 }
 
