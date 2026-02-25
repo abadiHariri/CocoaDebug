@@ -195,16 +195,18 @@ class NetworkCell: UITableViewCell {
         tagsStack.axis = .horizontal
         tagsStack.spacing = 4
         tagsStack.alignment = .center
+        tagsStack.setContentCompressionResistancePriority(.required, for: .horizontal)
         tagsStack.addArrangedSubview(contentTypeTagLabel)
         tagsStack.addArrangedSubview(sizeTagLabel)
         tagsStack.addArrangedSubview(durationTagLabel)
 
-        // Timestamp (right side)
+        // Timestamp (right side) — lower priority so tags always show fully
         timeLabel.font = .monospacedDigitSystemFont(ofSize: 10, weight: .medium)
         timeLabel.textColor = Color.mainGreen
         timeLabel.textAlignment = .right
+        timeLabel.lineBreakMode = .byTruncatingTail
         timeLabel.setContentHuggingPriority(.required, for: .horizontal)
-        timeLabel.setContentCompressionResistancePriority(.required, for: .horizontal)
+        timeLabel.setContentCompressionResistancePriority(.defaultHigh, for: .horizontal)
 
         // Viewed indicator (eye icon, shown after opening request details)
         viewedIcon.isHidden = true
