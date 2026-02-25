@@ -310,11 +310,13 @@ class NetworkDetailCell: UITableViewCell {
             contentBottomConstraint.isActive = true
         }
 
-        // Force intrinsic content size recalculation so UITableView
-        // self-sizing computes the correct height on first display.
+        // Signal that the text view's size has changed.
+        // Do NOT call layoutIfNeeded() here — it forces a synchronous layout
+        // during cellForRowAt, causing UITableView to re-measure other cells
+        // while they are in the prepareForReuse() collapsed state, making
+        // sections appear to vanish on scroll. Let automaticDimension +
+        // systemLayoutSizeFitting handle height calculation instead.
         contentTextView.invalidateIntrinsicContentSize()
-        contentView.setNeedsLayout()
-        contentView.layoutIfNeeded()
     }
 
     @objc private func tapCopy() {

@@ -698,11 +698,22 @@ private extension BasicExampleViewController {
 import UIKit
 import WebKit
 
+// Bridges navigator.clipboard.writeText() from WKWebView to UIPasteboard.
+// WKWebView blocks the Clipboard API when the page origin is null (loadHTMLString).
+private final class ClipboardMessageHandler: NSObject, WKScriptMessageHandler {
+    func userContentController(_ userContentController: WKUserContentController,
+                               didReceive message: WKScriptMessage) {
+        guard let text = message.body as? String else { return }
+        UIPasteboard.general.string = text
+    }
+}
+
 // JSON Viewer using https://github.com/andypf/json-viewer (web component)
 final class JSONViewerViewController: UIViewController, WKNavigationDelegate {
     private var webView: WKWebView!
     private var isLoaded = false
     private var pendingJSON: String?
+    private let clipboardHandler = ClipboardMessageHandler()
 
     private let initialHTML: String = """
     <!doctype html>
@@ -786,6 +797,24 @@ final class JSONViewerViewController: UIViewController, WKNavigationDelegate {
         // Limit WKWebView memory: disable back-forward cache
         config.suppressesIncrementalRendering = true
 
+        // Override navigator.clipboard.writeText so the json-viewer copy button
+        // works when the page has a null origin (WKWebView blocks Clipboard API otherwise).
+        let clipboardOverride = WKUserScript(
+            source: """
+            navigator.clipboard = {
+              writeText: function(text) {
+                window.webkit.messageHandlers.nativeClipboard.postMessage(text);
+                return Promise.resolve();
+              },
+              readText: function() { return Promise.resolve(""); }
+            };
+            """,
+            injectionTime: .atDocumentStart,
+            forMainFrameOnly: true
+        )
+        config.userContentController.addUserScript(clipboardOverride)
+        config.userContentController.add(clipboardHandler, name: "nativeClipboard")
+
         webView = WKWebView(frame: .zero, configuration: config)
         webView.navigationDelegate = self
         webView.scrollView.contentInsetAdjustmentBehavior = .never
@@ -820,6 +849,7 @@ final class JSONViewerViewController: UIViewController, WKNavigationDelegate {
         guard let wv = webView else { return }
         wv.stopLoading()
         wv.navigationDelegate = nil
+        wv.configuration.userContentController.removeScriptMessageHandler(forName: "nativeClipboard")
         // Load blank page to force JS engine to release parsed JSON objects
         wv.loadHTMLString("", baseURL: nil)
         wv.removeFromSuperview()

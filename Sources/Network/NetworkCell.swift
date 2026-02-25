@@ -20,9 +20,10 @@ private class PaddedLabel: UILabel {
 
     override var intrinsicContentSize: CGSize {
         let size = super.intrinsicContentSize
+        // ceil() prevents sub-pixel rounding from clipping text when clipsToBounds = true
         return CGSize(
-            width: size.width + textInsets.left + textInsets.right,
-            height: size.height + textInsets.top + textInsets.bottom
+            width: ceil(size.width) + textInsets.left + textInsets.right,
+            height: ceil(size.height) + textInsets.top + textInsets.bottom
         )
     }
 }
@@ -437,7 +438,27 @@ class NetworkCell: UITableViewCell {
             return
         }
 
-        // No tag for app's own server
+        let fullURL = model.url?.absoluteString.lowercased() ?? ""
+
+        // 1. Custom tags ALWAYS run first — even for the main server URL.
+        //    Same matching as onlyURLs: keyword is a substring of the full URL
+        //    (scheme + host + path + query) OR the host.
+        if let customMap = CocoaDebug.networkTagMap {
+            for (keyword, label) in customMap {
+                let lowerKeyword = keyword.lowercased()
+                if fullURL.contains(lowerKeyword) || host.contains(lowerKeyword) {
+                    let color = Self.colorForTag(keyword)
+                    hostTagLabel.isHidden = false
+                    hostTagLabel.text = label
+                    hostTagLabel.backgroundColor = color.withAlphaComponent(0.25)
+                    hostTagLabel.textColor = color
+                    return
+                }
+            }
+        }
+
+        // 2. No custom tag matched — hide tag for app's own server (no label needed,
+        //    every request would show it which adds no value).
         if !serverURL.isEmpty {
             let cleanServer = serverURL.lowercased()
                 .replacingOccurrences(of: "https://", with: "")
@@ -446,20 +467,6 @@ class NetworkCell: UITableViewCell {
             if !cleanServer.isEmpty && host.contains(cleanServer) {
                 hostTagLabel.isHidden = true
                 return
-            }
-        }
-
-        // 1. Check custom tags first (user-provided via CocoaDebug.networkTagMap)
-        if let customMap = CocoaDebug.networkTagMap {
-            for (keyword, label) in customMap {
-                if host.contains(keyword.lowercased()) {
-                    let color = Self.colorForTag(keyword)
-                    hostTagLabel.isHidden = false
-                    hostTagLabel.text = label
-                    hostTagLabel.backgroundColor = color.withAlphaComponent(0.25)
-                    hostTagLabel.textColor = color
-                    return
-                }
             }
         }
 

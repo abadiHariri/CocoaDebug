@@ -13,7 +13,25 @@ private final class NetworkFilterState {
     static let shared = NetworkFilterState()
     var selectedPathFilters = Set<String>()   // onlyURL-based filters (match by URL prefix)
     var selectedHostFilters = Set<String>()   // plain host filters (match by host)
-    var selectedEndpoints = Set<String>()     // normalized endpoint patterns
+    var selectedEndpoints = Set<String>()     // full normalized path patterns used as filter keys
+}
+
+/// One row in the endpoint sub-filter list.
+private struct FilterEndpointEntry {
+    /// Relative sub-path shown in the UI (e.g. "/stores/{id}")
+    let displayPath: String
+    /// Full normalized path used as the filter key in applyFilter() (e.g. "/mahally/v2/stores/{id}")
+    let filterPath: String
+    /// Parent group label — the tag name or host (e.g. "mahally")
+    let tag: String
+}
+
+/// UITableViewCell subclass that uses the .subtitle style for 2-line display.
+private final class FilterSubtitleCell: UITableViewCell {
+    override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
+        super.init(style: .subtitle, reuseIdentifier: reuseIdentifier)
+    }
+    required init?(coder: NSCoder) { fatalError() }
 }
 
 //MARK: - Filter Sheet Controller
@@ -24,11 +42,11 @@ private class NetworkFilterSheetController: UIViewController, UITableViewDataSou
 
     // Data
     var page: Page = .hosts
-    var entries: [(display: String, filterKey: String, isPathFilter: Bool)] = []
+    var entries: [(display: String, filterKey: String, isPathFilter: Bool, isWeb: Bool)] = []
     var tempPathFilters = Set<String>()
     var tempHostFilters = Set<String>()
     var tempEndpoints = Set<String>()
-    var endpointProvider: (() -> [String])?
+    var endpointProvider: (() -> [FilterEndpointEntry])?
 
     // Callbacks
     var onApply: ((Set<String>, Set<String>, Set<String>) -> Void)?
@@ -40,7 +58,7 @@ private class NetworkFilterSheetController: UIViewController, UITableViewDataSou
     private let leftButton = UIButton(type: .system)
     private let tableView = UITableView(frame: .zero, style: .plain)
 
-    private var endpoints: [String] = []
+    private var endpoints: [FilterEndpointEntry] = []
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -105,7 +123,7 @@ private class NetworkFilterSheetController: UIViewController, UITableViewDataSou
         tableView.separatorColor = UIColor(white: 0.25, alpha: 1)
         tableView.dataSource = self
         tableView.delegate = self
-        tableView.register(UITableViewCell.self, forCellReuseIdentifier: "FilterCell")
+        tableView.register(FilterSubtitleCell.self, forCellReuseIdentifier: "FilterCell")
         view.addSubview(tableView)
 
         NSLayoutConstraint.activate([
@@ -179,12 +197,18 @@ private class NetworkFilterSheetController: UIViewController, UITableViewDataSou
 
         switch page {
         case .hosts:
+            cell.detailTextLabel?.text = nil   // clear any tag left from an endpoint cell reuse
             if indexPath.row < entries.count {
                 let entry = entries[indexPath.row]
                 let isSelected = entry.isPathFilter
                     ? tempPathFilters.contains(entry.filterKey)
                     : tempHostFilters.contains(entry.filterKey)
                 cell.textLabel?.text = entry.display
+                if entry.isWeb {
+                    cell.detailTextLabel?.text = "web"
+                    cell.detailTextLabel?.textColor = UIColor(white: 0.55, alpha: 1)
+                    cell.detailTextLabel?.font = .systemFont(ofSize: 12)
+                }
                 cell.accessoryType = isSelected ? .checkmark : .none
             } else {
                 // "Filter Endpoints..." row
@@ -194,9 +218,14 @@ private class NetworkFilterSheetController: UIViewController, UITableViewDataSou
             }
 
         case .endpoints:
-            let endpoint = endpoints[indexPath.row]
-            let isSelected = tempEndpoints.contains(endpoint)
-            cell.textLabel?.text = endpoint
+            let entry = endpoints[indexPath.row]
+            let isSelected = tempEndpoints.contains(entry.filterPath)
+            cell.textLabel?.text = entry.displayPath
+            if !entry.tag.isEmpty {
+                cell.detailTextLabel?.text = entry.tag
+                cell.detailTextLabel?.textColor = UIColor(white: 0.55, alpha: 1)
+                cell.detailTextLabel?.font = .systemFont(ofSize: 12)
+            }
             cell.accessoryType = isSelected ? .checkmark : .none
         }
 
@@ -234,11 +263,11 @@ private class NetworkFilterSheetController: UIViewController, UITableViewDataSou
             }
 
         case .endpoints:
-            let endpoint = endpoints[indexPath.row]
-            if tempEndpoints.contains(endpoint) {
-                tempEndpoints.remove(endpoint)
+            let entry = endpoints[indexPath.row]
+            if tempEndpoints.contains(entry.filterPath) {
+                tempEndpoints.remove(entry.filterPath)
             } else {
-                tempEndpoints.insert(endpoint)
+                tempEndpoints.insert(entry.filterPath)
             }
             tableView.reloadRows(at: [indexPath], with: .none)
         }
@@ -285,11 +314,11 @@ class NetworkViewController: UIViewController {
 
     //MARK: - Filter entry building
 
-    private func buildFilterEntries() -> [(display: String, filterKey: String, isPathFilter: Bool)] {
+    private func buildFilterEntries() -> [(display: String, filterKey: String, isPathFilter: Bool, isWeb: Bool)] {
         guard let allModels = cacheModels, !allModels.isEmpty else { return [] }
 
         let onlyURLs = (_NetworkHelper.shared().onlyURLs as? [String]) ?? []
-        var entries: [(display: String, filterKey: String, isPathFilter: Bool)] = []
+        var entries: [(display: String, filterKey: String, isPathFilter: Bool, isWeb: Bool)] = []
         var coveredHosts = Set<String>()
 
         for urlString in onlyURLs {
@@ -298,14 +327,20 @@ class NetworkViewController: UIViewController {
 
             let host = stripped.components(separatedBy: "/").first ?? stripped
 
-            let hasMatch = allModels.contains { model in
+            var hasMatch = false
+            var pathIsWeb = false
+            for model in allModels {
                 let modelURL = stripScheme(model.url?.absoluteString ?? "").lowercased()
                 let key = stripped.lowercased()
-                return modelURL.hasPrefix(key + "/") || modelURL == key
+                if modelURL.hasPrefix(key + "/") || modelURL == key {
+                    hasMatch = true
+                    if model.isWebViewRequest { pathIsWeb = true }
+                }
             }
 
             if hasMatch {
-                entries.append((display: stripped, filterKey: stripped, isPathFilter: true))
+                let display = tagLabel(forURLString: urlString) ?? stripped
+                entries.append((display: display, filterKey: stripped, isPathFilter: true, isWeb: pathIsWeb))
                 coveredHosts.insert(host.lowercased())
             }
         }
@@ -318,40 +353,165 @@ class NetworkViewController: UIViewController {
             seenHosts.insert(lowerHost)
 
             if !coveredHosts.contains(lowerHost) {
-                entries.append((display: host, filterKey: host, isPathFilter: false))
+                let display = tagLabel(forHost: lowerHost) ?? host
+                let isWeb = allModels.contains { m in
+                    m.isWebViewRequest && m.url?.host?.lowercased() == lowerHost
+                }
+                entries.append((display: display, filterKey: host, isPathFilter: false, isWeb: isWeb))
             }
         }
 
-        return entries.sorted { $0.display.lowercased() < $1.display.lowercased() }
+        return entries.sorted {
+            let priorityA = $0.isPathFilter ? 0 : ($0.isWeb ? 1 : 2)
+            let priorityB = $1.isPathFilter ? 0 : ($1.isWeb ? 1 : 2)
+            if priorityA != priorityB { return priorityA < priorityB }
+            return $0.display.lowercased() < $1.display.lowercased()
+        }
     }
 
-    private func uniqueEndpointsForFilters(pathFilters: Set<String>, hostFilters: Set<String>) -> [String] {
+    /// Returns the tag label from networkTagMap whose key is a substring of the full URL,
+    /// or nil if no custom tag matches.
+    private func tagLabel(forURLString urlString: String) -> String? {
+        guard let map = CocoaDebug.networkTagMap else { return nil }
+        let lower = urlString.lowercased()
+        // Direct key lookup first (most common case: onlyURLs key == networkTagMap key)
+        if let label = map[urlString] { return label }
+        // Substring match fallback
+        for (keyword, label) in map where lower.contains(keyword.lowercased()) {
+            return label
+        }
+        return nil
+    }
+
+    /// Returns the tag label from networkTagMap whose key matches the given host, or nil.
+    private func tagLabel(forHost host: String) -> String? {
+        guard let map = CocoaDebug.networkTagMap else { return nil }
+        for (keyword, label) in map where host.contains(keyword.lowercased()) {
+            return label
+        }
+        return nil
+    }
+
+    private func uniqueEndpointsForFilters(pathFilters: Set<String>, hostFilters: Set<String>) -> [FilterEndpointEntry] {
         guard let models = cacheModels else { return [] }
         if pathFilters.isEmpty && hostFilters.isEmpty { return [] }
-        var seen = Set<String>()
-        var result = [String]()
+
+        let onlyURLs = (_NetworkHelper.shared().onlyURLs as? [String]) ?? []
+
+        // Build set of onlyURLs paths (for exclusion — already top-level filter entries).
+        // Also map: lowercased stripped key → original full URL (for tag lookup).
+        var onlyURLPaths = Set<String>()
+        var strippedToOriginalURL: [String: String] = [:]
+        for urlString in onlyURLs {
+            var stripped = stripScheme(urlString)
+            if stripped.hasSuffix("/") { stripped = String(stripped.dropLast()) }
+            strippedToOriginalURL[stripped.lowercased()] = urlString
+            if let url = URL(string: urlString) {
+                var path = url.path
+                if path.hasSuffix("/") && path.count > 1 { path = String(path.dropLast()) }
+                if !path.isEmpty && path != "/" {
+                    onlyURLPaths.insert(normalizeEndpoint(path).lowercased())
+                }
+            }
+        }
+
+        // Tag label for each selected path filter.
+        var pathFilterTagMap: [String: String] = [:]
+        for pf in pathFilters {
+            let key = pf.lowercased()
+            if let original = strippedToOriginalURL[key] {
+                pathFilterTagMap[key] = tagLabel(forURLString: original) ?? pf
+            } else {
+                pathFilterTagMap[key] = tagLabel(forURLString: pf) ?? pf
+            }
+        }
+
+        // Tag label for each selected host filter.
+        var hostFilterTagMap: [String: String] = [:]
+        for hf in hostFilters {
+            hostFilterTagMap[hf.lowercased()] = tagLabel(forHost: hf.lowercased()) ?? hf
+        }
+
+        // Path prefix to strip per path filter so we show relative sub-paths.
+        // e.g. "api.salla.dev/mahally/v2" → "/mahally/v2"
+        var pathPrefixMap: [String: String] = [:]
+        for pf in pathFilters {
+            let subParts = Array(pf.components(separatedBy: "/").dropFirst())
+            if !subParts.isEmpty {
+                pathPrefixMap[pf.lowercased()] = "/" + subParts.joined(separator: "/")
+            }
+        }
+
+        // Pre-build set of filterPaths that have at least one web request, so
+        // we can show "· web" in the tag regardless of which model is processed first.
+        var webFilterPaths = Set<String>()
+        for model in models where model.isWebViewRequest {
+            let fp = normalizeEndpoint(model.url?.path ?? "")
+            if !fp.isEmpty { webFilterPaths.insert(fp) }
+        }
+
+        var seen = Set<String>()   // dedup by filterPath (full normalized path)
+        var result = [FilterEndpointEntry]()
         for model in models {
             let modelURL = stripScheme(model.url?.absoluteString ?? "").lowercased()
             let host = (model.url?.host ?? "").lowercased()
+            let fullPath = model.url?.path ?? ""
 
+            var matchedPrefix: String? = nil
+            var matchedTag = ""
             var matches = false
             for pf in pathFilters {
                 let key = pf.lowercased()
-                if modelURL.hasPrefix(key + "/") || modelURL == key { matches = true; break }
+                if modelURL.hasPrefix(key + "/") || modelURL == key {
+                    matches = true
+                    matchedPrefix = pathPrefixMap[key]
+                    matchedTag = pathFilterTagMap[key] ?? pf
+                    break
+                }
             }
             if !matches {
                 for hf in hostFilters {
-                    if host == hf.lowercased() { matches = true; break }
+                    if host == hf.lowercased() {
+                        matches = true
+                        matchedTag = hostFilterTagMap[hf.lowercased()] ?? hf
+                        break
+                    }
                 }
             }
             if !matches { continue }
 
-            let normalized = normalizeEndpoint(model.url?.path ?? "")
-            if !normalized.isEmpty, seen.insert(normalized).inserted {
-                result.append(normalized)
+            // Skip models whose full path is itself an onlyURLs entry (already a top-level filter)
+            let fullNormalized = normalizeEndpoint(fullPath).lowercased()
+            if fullNormalized.isEmpty || onlyURLPaths.contains(fullNormalized) { continue }
+
+            // filterPath = full normalized path (used as key in applyFilter)
+            let filterPath = normalizeEndpoint(fullPath)
+            if filterPath.isEmpty { continue }
+            guard seen.insert(filterPath).inserted else { continue }
+
+            // displayPath = relative sub-path (strip the onlyURLs base prefix for readability)
+            var displayPath = fullPath
+            if let prefix = matchedPrefix, fullPath.lowercased().hasPrefix(prefix.lowercased()) {
+                let relative = String(fullPath.dropFirst(prefix.count))
+                displayPath = relative.isEmpty ? "/" : relative
             }
+            let normalizedDisplay = normalizeEndpoint(displayPath)
+            if normalizedDisplay.isEmpty || normalizedDisplay == "/" { continue }
+
+            let isWebEndpoint = webFilterPaths.contains(filterPath)
+            let endpointTag: String
+            if isWebEndpoint {
+                endpointTag = matchedTag.isEmpty ? "web" : "\(matchedTag) · web"
+            } else {
+                endpointTag = matchedTag
+            }
+            result.append(FilterEndpointEntry(
+                displayPath: normalizedDisplay,
+                filterPath: filterPath,
+                tag: endpointTag
+            ))
         }
-        return result.sorted()
+        return result.sorted { $0.displayPath < $1.displayPath }
     }
 
     private func normalizeEndpoint(_ path: String) -> String {
