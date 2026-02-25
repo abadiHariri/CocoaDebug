@@ -138,6 +138,10 @@ typedef void (^_ChallengeCompletionHandler)(NSURLSessionAuthChallengeDisposition
 @property (atomic, strong) NSMutableData         *data;
 @property (atomic, strong) NSError               *error;
 @property (atomic, assign) BOOL                  responseTruncated;
+/// Request body captured from HTTPBodyStream in startLoading.
+/// self.request.HTTPBody is nil when the body was sent via a stream,
+/// so we must capture it from the recursiveRequest after reading the stream.
+@property (atomic, strong) NSData                *capturedRequestBody;
 
 @end
 
@@ -422,6 +426,11 @@ static NSString * kOurRecursiveRequestFlagProperty = @"com.apple.dts.CustomHTTPP
         }
     }
 
+    // Capture the request body for the debug model.
+    // The original request's HTTPBody may be nil when the body was sent via
+    // HTTPBodyStream. recursiveRequest now has the stream data converted to HTTPBody.
+    self.capturedRequestBody = recursiveRequest.HTTPBody;
+
     //liman
     self.startTime = [[NSDate date] timeIntervalSince1970];
     self.data = [NSMutableData data];
@@ -476,13 +485,15 @@ static NSString * kOurRecursiveRequestFlagProperty = @"com.apple.dts.CustomHTTPP
     model.url = self.request.URL;
     model.method = self.request.HTTPMethod;
     model.mineType = self.response.MIMEType;
-    if (self.request.HTTPBody) {
-        // Cap stored request body to maxRequestBodySize for the debug model.
+    // Use capturedRequestBody which includes stream-based bodies
+    // (self.request.HTTPBody is nil when the body was sent via HTTPBodyStream)
+    NSData *reqBody = self.capturedRequestBody;
+    if (reqBody && reqBody.length > 0) {
         NSUInteger maxBodySize = [_NetworkHelper shared].maxRequestBodySize;
-        if (self.request.HTTPBody.length <= maxBodySize) {
-            model.requestData = self.request.HTTPBody;
+        if (reqBody.length <= maxBodySize) {
+            model.requestData = reqBody;
         } else {
-            model.requestData = [self.request.HTTPBody subdataWithRange:NSMakeRange(0, maxBodySize)];
+            model.requestData = [reqBody subdataWithRange:NSMakeRange(0, maxBodySize)];
             model.isRequestBodyTruncated = YES;
         }
     }

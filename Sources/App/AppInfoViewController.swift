@@ -9,7 +9,8 @@
 import UIKit
 
 class AppInfoViewController: UITableViewController {
-    
+
+    // Keep storyboard outlets connected to avoid crashes (unused)
     @IBOutlet weak var labelVersionNumber: UILabel!
     @IBOutlet weak var labelBuildNumber: UILabel!
     @IBOutlet weak var labelBundleName: UILabel!
@@ -28,190 +29,522 @@ class AppInfoViewController: UITableViewController {
     @IBOutlet weak var naviItem: UINavigationItem!
     @IBOutlet weak var rnSwitch: UISwitch!
     @IBOutlet weak var uiBlockingSwitch: UISwitch!
-    
-    var naviItemTitleLabel: UILabel?
-    
-    //MARK: - init
+
+    // MARK: - Data
+
+    /// Section 0: App info key-value pairs
+    private var infoItems: [(key: String, value: String)] = []
+
+    /// Section 1: Unique captured URLs with tag info
+    private var capturedURLs: [URLItem] = []
+
+    struct URLItem {
+        let url: String
+        let hostTag: (label: String, color: UIColor)?
+        let versionTag: String?   // e.g. "v1", "v2"
+        let isBeta: Bool
+    }
+
+    // MARK: - Init
+
     override func viewDidLoad() {
         super.viewDidLoad()
-        
-        naviItemTitleLabel = UILabel.init(frame: CGRect(x: 0, y: 0, width: 80, height: 40))
-        naviItemTitleLabel?.textAlignment = .center
-        naviItemTitleLabel?.textColor = Color.mainGreen
-        naviItemTitleLabel?.font = .boldSystemFont(ofSize: 20)
-        naviItemTitleLabel?.text = "App"
-        naviItem.titleView = naviItemTitleLabel
-        
-        labelCrashCount.frame.size = CGSize(width: 30, height: 20)
-        
-        labelVersionNumber.text = CocoaDebugDeviceInfo.sharedInstance().appVersion
-        labelBuildNumber.text = CocoaDebugDeviceInfo.sharedInstance().appBuiltVersion
-        labelBundleName.text = CocoaDebugDeviceInfo.sharedInstance().appBundleName
-        
-        labelScreenResolution.text = "\(Int(CocoaDebugDeviceInfo.sharedInstance().resolution.width))" + "*" + "\(Int(CocoaDebugDeviceInfo.sharedInstance().resolution.height))"
-        labelDeviceModel.text = "\(CocoaDebugDeviceInfo.sharedInstance().getPlatformString)"
-        
-        labelBundleID.text = CocoaDebugDeviceInfo.sharedInstance().appBundleID
-        
-        labelserverURL.text = CocoaDebugSettings.shared.serverURL
-        labelIOSVersion.text = UIDevice.current.systemVersion
-        
-        if UIScreen.main.bounds.size.width == 320 {
-            labelHtml.font = UIFont.systemFont(ofSize: 15)
-        }
-        
-        logSwitch.isOn = CocoaDebugSettings.shared.enableLogMonitoring
-        networkSwitch.isOn = !CocoaDebugSettings.shared.disableNetworkMonitoring
-        rnSwitch.isOn = CocoaDebugSettings.shared.enableRNMonitoring
-        webViewSwitch.isOn = CocoaDebugSettings.shared.enableWKWebViewMonitoring
-        slowAnimationsSwitch.isOn = CocoaDebugSettings.shared.slowAnimations
-        crashSwitch.isOn = CocoaDebugSettings.shared.enableCrashRecording
-        uiBlockingSwitch.isOn = CocoaDebugSettings.shared.enableUIBlockingMonitoring
 
-        logSwitch.addTarget(self, action: #selector(logSwitchChanged), for: UIControl.Event.valueChanged)
-        networkSwitch.addTarget(self, action: #selector(networkSwitchChanged), for: UIControl.Event.valueChanged)
-        rnSwitch.addTarget(self, action: #selector(rnSwitchChanged), for: UIControl.Event.valueChanged)
-        webViewSwitch.addTarget(self, action: #selector(webViewSwitchChanged), for: UIControl.Event.valueChanged)
-        slowAnimationsSwitch.addTarget(self, action: #selector(slowAnimationsSwitchChanged), for: UIControl.Event.valueChanged)
-        crashSwitch.addTarget(self, action: #selector(crashSwitchChanged), for: UIControl.Event.valueChanged)
-        uiBlockingSwitch.addTarget(self, action: #selector(uiBlockingSwitchChanged), for: UIControl.Event.valueChanged)
+        // Title
+        let titleLabel = UILabel(frame: CGRect(x: 0, y: 0, width: 80, height: 40))
+        titleLabel.textAlignment = .center
+        titleLabel.textColor = Color.mainGreen
+        titleLabel.font = .boldSystemFont(ofSize: 20)
+        titleLabel.text = "App"
+        naviItem.titleView = titleLabel
+
+        // Replace the storyboard's static table view with a fresh dynamic one
+        let dynamicTable = UITableView(frame: .zero, style: .grouped)
+        dynamicTable.dataSource = self
+        dynamicTable.delegate = self
+        self.tableView = dynamicTable
+
+        // Register cells
+        tableView.register(AppInfoCell.self, forCellReuseIdentifier: "AppInfoCell")
+        tableView.register(AppURLCell.self, forCellReuseIdentifier: "AppURLCell")
+
+        // Table styling
+        tableView.backgroundColor = .black
+        tableView.separatorStyle = .none
+        tableView.rowHeight = UITableView.automaticDimension
+        tableView.estimatedRowHeight = 44
+        tableView.contentInset = UIEdgeInsets(top: 0, left: 0, bottom: 80, right: 0)
+        tableView.showsVerticalScrollIndicator = false
+
+        // Build info items
+        buildInfoItems()
+
+        // Notification for network updates
+        NotificationCenter.default.addObserver(
+            forName: NSNotification.Name(rawValue: "reloadHttp_CocoaDebug"),
+            object: nil, queue: .main
+        ) { [weak self] _ in
+            self?.reloadURLs()
+        }
     }
-    
+
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        let count = UserDefaults.standard.integer(forKey: "crashCount_CocoaDebug")
-        labelCrashCount.text = "\(count)"
-        labelCrashCount.textColor = count > 0 ? .red : .white
+        reloadURLs()
     }
-    
-    //MARK: - alert
-    func showAlert() {
-        let alert = UIAlertController.init(title: nil, message: "You must restart APP to ensure the changes take effect", preferredStyle: .alert)
-        let cancelAction = UIAlertAction.init(title: "Restart later", style: .cancel, handler: nil)
-        let okAction = UIAlertAction.init(title: "Restart now", style: .destructive) { _ in
-            exit(0)
+
+    deinit {
+        NotificationCenter.default.removeObserver(self)
+    }
+
+    // MARK: - Build Data
+
+    private func buildInfoItems() {
+        let device = CocoaDebugDeviceInfo.sharedInstance()
+
+        infoItems = [
+            ("App Name",       device.appBundleName ?? "—"),
+            ("Version",        device.appVersion ?? "—"),
+            ("Build",          device.appBuiltVersion ?? "—"),
+            ("Bundle ID",      device.appBundleID ?? "—"),
+            ("iOS Version",    UIDevice.current.systemVersion),
+            ("Device",         device.getPlatformString ?? "—"),
+            ("Screen",         "\(Int(device.resolution.width))×\(Int(device.resolution.height))"),
+        ]
+
+        if let serverURL = CocoaDebugSettings.shared.serverURL, !serverURL.isEmpty {
+            infoItems.append(("Server URL", serverURL))
         }
-        
-        alert.addAction(cancelAction)
-        alert.addAction(okAction)
-        
-        alert.popoverPresentationController?.permittedArrowDirections = .init(rawValue: 0)
-        alert.popoverPresentationController?.sourceView = self.view
-        alert.popoverPresentationController?.sourceRect = CGRect(x: self.view.bounds.midX, y: self.view.bounds.midY, width: 0, height: 0)
-        
-        self.present(alert, animated: true, completion: nil)
     }
-    
-    //MARK: - target action
-    @objc func slowAnimationsSwitchChanged(sender: UISwitch) {
-        CocoaDebugSettings.shared.slowAnimations = slowAnimationsSwitch.isOn
-        //        self.showAlert()
+
+    private func reloadURLs() {
+        var seen = Set<String>()
+        var items: [URLItem] = []
+        let serverURL = CocoaDebugSettings.shared.serverURL ?? ""
+
+        if let models = _HttpDatasource.shared()?.httpModels as? [_HttpModel] {
+            for model in models {
+                if let url = model.url, var components = URLComponents(url: url, resolvingAgainstBaseURL: false) {
+                    components.query = nil
+                    components.fragment = nil
+                    guard let clean = components.string, !seen.contains(clean) else { continue }
+                    seen.insert(clean)
+
+                    let host = url.host?.lowercased() ?? ""
+                    let path = url.path.lowercased()
+
+                    // Host tag
+                    let hostTag = Self.detectHostTag(host: host, path: path, serverURL: serverURL, isWebView: model.isWebViewRequest)
+
+                    // Version tag — detect /v1/, /v2/, etc. in path
+                    let versionTag = Self.detectVersion(path: path)
+
+                    // Beta tag
+                    let isBeta = host.contains(".beta.") || host.hasPrefix("beta.")
+
+                    items.append(URLItem(url: clean, hostTag: hostTag, versionTag: versionTag, isBeta: isBeta))
+                }
+            }
+        }
+        capturedURLs = items.sorted { $0.url < $1.url }
+        tableView.reloadData()
     }
-    
-    @objc func uiBlockingSwitchChanged(sender: UISwitch) {
-        CocoaDebugSettings.shared.enableUIBlockingMonitoring = uiBlockingSwitch.isOn
-        if uiBlockingSwitch.isOn == true {
-            WindowHelper.shared.startUIBlockingMonitoring()
+
+    // MARK: - Tag Detection
+
+    private static func detectHostTag(host: String, path: String, serverURL: String, isWebView: Bool) -> (label: String, color: UIColor)? {
+        // Skip app's own server
+        if !serverURL.isEmpty {
+            let cleanServer = serverURL.lowercased()
+                .replacingOccurrences(of: "https://", with: "")
+                .replacingOccurrences(of: "http://", with: "")
+                .components(separatedBy: "/").first ?? ""
+            if !cleanServer.isEmpty && host.contains(cleanServer) {
+                return nil
+            }
+        }
+
+        // Custom tags
+        if let customMap = CocoaDebug.networkTagMap {
+            for (keyword, label) in customMap {
+                if host.contains(keyword.lowercased()) {
+                    return (label, colorForTag(keyword))
+                }
+            }
+        }
+
+        // WebView
+        if isWebView {
+            return ("web", colorForTag("web"))
+        }
+
+        // Known third-party
+        let knownTags: [(keyword: String, label: String)] = [
+            ("algolia",   "algolia"),
+            ("onesignal", "one signal"),
+            ("jitsu",     "jitsu"),
+        ]
+        for tag in knownTags {
+            if host.contains(tag.keyword) {
+                return (tag.label, colorForTag(tag.keyword))
+            }
+        }
+
+        // Unknown third-party: abbreviated host
+        return (abbreviateHost(host), colorForTag(host))
+    }
+
+    private static func detectVersion(path: String) -> String? {
+        // Match /v1/, /v2/, /v1.2/, etc. in path
+        let pattern = #"/v(\d+(?:\.\d+)?)(?:/|$)"#
+        guard let regex = try? NSRegularExpression(pattern: pattern, options: .caseInsensitive),
+              let match = regex.firstMatch(in: path, range: NSRange(path.startIndex..., in: path)),
+              let range = Range(match.range(at: 1), in: path) else {
+            return nil
+        }
+        return "v\(path[range])"
+    }
+
+    /// Deterministic color from a string key (djb2 hash → hue)
+    private static func colorForTag(_ key: String) -> UIColor {
+        var hash: UInt64 = 5381
+        for byte in key.lowercased().utf8 {
+            hash = ((hash &<< 5) &+ hash) &+ UInt64(byte)
+        }
+        let hue = CGFloat(hash % 360) / 360.0
+        return UIColor(hue: hue, saturation: 0.6, brightness: 0.85, alpha: 1)
+    }
+
+    private static func abbreviateHost(_ host: String) -> String {
+        var short = host
+        for prefix in ["www.", "api.", "cdn.", "m."] {
+            if short.hasPrefix(prefix) {
+                short = String(short.dropFirst(prefix.count))
+                break
+            }
+        }
+        for suffix in [".com", ".io", ".net", ".org", ".co"] {
+            if short.hasSuffix(suffix) {
+                short = String(short.dropLast(suffix.count))
+                break
+            }
+        }
+        if short.count > 12 {
+            short = String(short.prefix(10)) + ".."
+        }
+        return short
+    }
+
+    // MARK: - UITableViewDataSource
+
+    override func numberOfSections(in tableView: UITableView) -> Int {
+        return 2
+    }
+
+    override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        if section == 0 { return infoItems.count }
+        return capturedURLs.count
+    }
+
+    override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        if indexPath.section == 0 {
+            let cell = tableView.dequeueReusableCell(withIdentifier: "AppInfoCell", for: indexPath) as! AppInfoCell
+            let item = infoItems[indexPath.row]
+            cell.configure(key: item.key, value: item.value)
+            return cell
         } else {
-            WindowHelper.shared.stopUIBlockingMonitoring()
+            let cell = tableView.dequeueReusableCell(withIdentifier: "AppURLCell", for: indexPath) as! AppURLCell
+            if indexPath.row < capturedURLs.count {
+                cell.configure(item: capturedURLs[indexPath.row])
+            }
+            return cell
         }
     }
-    
-    @objc func crashSwitchChanged(sender: UISwitch) {
-        CocoaDebugSettings.shared.enableCrashRecording = crashSwitch.isOn
-        self.showAlert()
+
+    // MARK: - UITableViewDelegate
+
+    override func tableView(_ tableView: UITableView, viewForHeaderInSection section: Int) -> UIView? {
+        let header = UIView()
+        header.backgroundColor = .clear
+
+        let label = UILabel()
+        label.font = .systemFont(ofSize: 13, weight: .bold)
+        label.textColor = Color.mainGreen
+        label.translatesAutoresizingMaskIntoConstraints = false
+        header.addSubview(label)
+
+        NSLayoutConstraint.activate([
+            label.leadingAnchor.constraint(equalTo: header.leadingAnchor, constant: 16),
+            label.trailingAnchor.constraint(equalTo: header.trailingAnchor, constant: -16),
+            label.bottomAnchor.constraint(equalTo: header.bottomAnchor, constant: -4),
+        ])
+
+        if section == 0 {
+            label.text = "APP INFO"
+        } else {
+            label.text = "CAPTURED URLS (\(capturedURLs.count))"
+        }
+
+        return header
     }
-    
-    @objc func networkSwitchChanged(sender: UISwitch) {
-        CocoaDebugSettings.shared.disableNetworkMonitoring = !networkSwitch.isOn
-        self.showAlert()
+
+    override func tableView(_ tableView: UITableView, heightForHeaderInSection section: Int) -> CGFloat {
+        if section == 0 { return 40 }
+        return capturedURLs.isEmpty ? 0 : 36
     }
-    
-    @objc func logSwitchChanged(sender: UISwitch) {
-        CocoaDebugSettings.shared.enableLogMonitoring = logSwitch.isOn
-        self.showAlert()
+
+    override func tableView(_ tableView: UITableView, heightForFooterInSection section: Int) -> CGFloat {
+        return 0
     }
-    
-    @objc func rnSwitchChanged(sender: UISwitch) {
-        CocoaDebugSettings.shared.enableRNMonitoring = rnSwitch.isOn
-        self.showAlert()
+
+    override func tableView(_ tableView: UITableView, viewForFooterInSection section: Int) -> UIView? {
+        return nil
     }
-    
-    @objc func webViewSwitchChanged(sender: UISwitch) {
-        CocoaDebugSettings.shared.enableWKWebViewMonitoring = webViewSwitch.isOn
-        self.showAlert()
+
+    override func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
+        return UITableView.automaticDimension
+    }
+
+    override func tableView(_ tableView: UITableView, indentationLevelForRowAt indexPath: IndexPath) -> Int {
+        return 0
+    }
+
+    override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        tableView.deselectRow(at: indexPath, animated: true)
+
+        // Copy value to clipboard on tap
+        let text: String
+        if indexPath.section == 0 {
+            text = infoItems[indexPath.row].value
+        } else {
+            guard indexPath.row < capturedURLs.count else { return }
+            text = capturedURLs[indexPath.row].url
+        }
+
+        UIPasteboard.general.string = text
+
+        let alert = UIAlertController(title: "Copied to clipboard", message: text, preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: "OK", style: .cancel))
+        alert.popoverPresentationController?.sourceView = view
+        alert.popoverPresentationController?.sourceRect = CGRect(x: view.bounds.midX, y: view.bounds.midY, width: 0, height: 0)
+        alert.popoverPresentationController?.permittedArrowDirections = .init(rawValue: 0)
+        present(alert, animated: true)
     }
 }
 
+// MARK: - AppInfoCell
 
-//MARK: - UITableViewDelegate
-extension AppInfoViewController {
-    
-    override func tableView(_ tableView: UITableView, heightForHeaderInSection section: Int) -> CGFloat
-    {
-        if section == 0 {
-            return 56
-        }
-        return 38
+private class AppInfoCell: UITableViewCell {
+
+    private let cardView = UIView()
+    private let keyLabel = UILabel()
+    private let valueLabel = UILabel()
+
+    override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
+        super.init(style: style, reuseIdentifier: reuseIdentifier)
+        setup()
     }
-    
-    override func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat
-    {
-        if indexPath.section == 1 && indexPath.row == 4 {
-            if labelserverURL.text == nil || labelserverURL.text == "" {
-                return 0
-            }
-        }
-        
-        return 44
+
+    required init?(coder: NSCoder) {
+        super.init(coder: coder)
+        setup()
     }
-    
-    override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath)
-    {
-        tableView.deselectRow(at: indexPath, animated: true)
-        
-        if indexPath.section == 1 && indexPath.row == 2 {
-            UIPasteboard.general.string = CocoaDebugDeviceInfo.sharedInstance().appBundleName
-            
-            let alert = UIAlertController.init(title: "copied bundle name to clipboard", message: nil, preferredStyle: .alert)
-            let action = UIAlertAction.init(title: "OK", style: .cancel, handler: nil)
-            alert.addAction(action)
-            
-            alert.popoverPresentationController?.permittedArrowDirections = .init(rawValue: 0)
-            alert.popoverPresentationController?.sourceView = self.view
-            alert.popoverPresentationController?.sourceRect = CGRect(x: self.view.bounds.midX, y: self.view.bounds.midY, width: 0, height: 0)
-            
-            self.present(alert, animated: true, completion: nil)
+
+    private func setup() {
+        selectionStyle = .none
+        backgroundColor = .clear
+        contentView.backgroundColor = .clear
+
+        cardView.backgroundColor = UIColor(white: 0.11, alpha: 1)
+        cardView.layer.cornerRadius = 10
+        cardView.clipsToBounds = true
+        cardView.translatesAutoresizingMaskIntoConstraints = false
+        contentView.addSubview(cardView)
+
+        keyLabel.font = .systemFont(ofSize: 12, weight: .medium)
+        keyLabel.textColor = UIColor(white: 0.50, alpha: 1)
+        keyLabel.translatesAutoresizingMaskIntoConstraints = false
+        keyLabel.setContentHuggingPriority(.required, for: .horizontal)
+        cardView.addSubview(keyLabel)
+
+        valueLabel.font = .systemFont(ofSize: 13, weight: .semibold)
+        valueLabel.textColor = UIColor(white: 0.90, alpha: 1)
+        valueLabel.textAlignment = .right
+        valueLabel.numberOfLines = 1
+        valueLabel.lineBreakMode = .byTruncatingMiddle
+        valueLabel.translatesAutoresizingMaskIntoConstraints = false
+        cardView.addSubview(valueLabel)
+
+        NSLayoutConstraint.activate([
+            cardView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 8),
+            cardView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -8),
+            cardView.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 2),
+            cardView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -2),
+
+            keyLabel.leadingAnchor.constraint(equalTo: cardView.leadingAnchor, constant: 12),
+            keyLabel.centerYAnchor.constraint(equalTo: cardView.centerYAnchor),
+            keyLabel.topAnchor.constraint(equalTo: cardView.topAnchor, constant: 10),
+            keyLabel.bottomAnchor.constraint(equalTo: cardView.bottomAnchor, constant: -10),
+
+            valueLabel.trailingAnchor.constraint(equalTo: cardView.trailingAnchor, constant: -12),
+            valueLabel.centerYAnchor.constraint(equalTo: cardView.centerYAnchor),
+            valueLabel.leadingAnchor.constraint(greaterThanOrEqualTo: keyLabel.trailingAnchor, constant: 16),
+        ])
+    }
+
+    func configure(key: String, value: String) {
+        keyLabel.text = key
+        valueLabel.text = value
+    }
+}
+
+// MARK: - URLPaddedLabel (pill-shaped tag)
+
+private class URLPaddedLabel: UILabel {
+    var textInsets = UIEdgeInsets(top: 2, left: 6, bottom: 2, right: 6)
+
+    override func drawText(in rect: CGRect) {
+        super.drawText(in: rect.inset(by: textInsets))
+    }
+
+    override var intrinsicContentSize: CGSize {
+        let size = super.intrinsicContentSize
+        return CGSize(
+            width: size.width + textInsets.left + textInsets.right,
+            height: size.height + textInsets.top + textInsets.bottom
+        )
+    }
+}
+
+// MARK: - AppURLCell
+
+private class AppURLCell: UITableViewCell {
+
+    private let cardView = UIView()
+    private let tagsStack = UIStackView()
+    private let hostTagLabel = URLPaddedLabel()
+    private let versionTagLabel = URLPaddedLabel()
+    private let betaTagLabel = URLPaddedLabel()
+    private let urlLabel = UILabel()
+
+    /// URL top → below tags (active when tags visible)
+    private var urlBelowTagsConstraint: NSLayoutConstraint!
+    /// URL top → card top (active when no tags)
+    private var urlToCardTopConstraint: NSLayoutConstraint!
+
+    override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
+        super.init(style: style, reuseIdentifier: reuseIdentifier)
+        setup()
+    }
+
+    required init?(coder: NSCoder) {
+        super.init(coder: coder)
+        setup()
+    }
+
+    private func setup() {
+        selectionStyle = .none
+        backgroundColor = .clear
+        contentView.backgroundColor = .clear
+
+        // Card
+        cardView.backgroundColor = UIColor(white: 0.11, alpha: 1)
+        cardView.layer.cornerRadius = 10
+        cardView.clipsToBounds = true
+        cardView.translatesAutoresizingMaskIntoConstraints = false
+        contentView.addSubview(cardView)
+
+        // Tags row
+        tagsStack.axis = .horizontal
+        tagsStack.spacing = 4
+        tagsStack.alignment = .center
+        tagsStack.translatesAutoresizingMaskIntoConstraints = false
+        cardView.addSubview(tagsStack)
+
+        // Host tag pill
+        configurePill(hostTagLabel)
+        tagsStack.addArrangedSubview(hostTagLabel)
+
+        // Version tag pill
+        configurePill(versionTagLabel)
+        tagsStack.addArrangedSubview(versionTagLabel)
+
+        // Beta tag pill
+        configurePill(betaTagLabel)
+        betaTagLabel.backgroundColor = UIColor.systemOrange.withAlphaComponent(0.25)
+        betaTagLabel.textColor = .systemOrange
+        betaTagLabel.text = "beta"
+        tagsStack.addArrangedSubview(betaTagLabel)
+
+        // URL
+        urlLabel.font = UIFont(name: "Menlo", size: 11) ?? .systemFont(ofSize: 11)
+        urlLabel.textColor = UIColor(white: 0.82, alpha: 1)
+        urlLabel.numberOfLines = 0
+        urlLabel.lineBreakMode = .byCharWrapping
+        urlLabel.translatesAutoresizingMaskIntoConstraints = false
+        cardView.addSubview(urlLabel)
+
+        // Switchable top constraints for URL
+        urlBelowTagsConstraint = urlLabel.topAnchor.constraint(equalTo: tagsStack.bottomAnchor, constant: 6)
+        urlToCardTopConstraint = urlLabel.topAnchor.constraint(equalTo: cardView.topAnchor, constant: 8)
+
+        NSLayoutConstraint.activate([
+            cardView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 8),
+            cardView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -8),
+            cardView.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 2),
+            cardView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -2),
+
+            tagsStack.topAnchor.constraint(equalTo: cardView.topAnchor, constant: 8),
+            tagsStack.leadingAnchor.constraint(equalTo: cardView.leadingAnchor, constant: 12),
+            tagsStack.trailingAnchor.constraint(lessThanOrEqualTo: cardView.trailingAnchor, constant: -12),
+
+            urlLabel.leadingAnchor.constraint(equalTo: cardView.leadingAnchor, constant: 12),
+            urlLabel.trailingAnchor.constraint(equalTo: cardView.trailingAnchor, constant: -12),
+            urlLabel.bottomAnchor.constraint(equalTo: cardView.bottomAnchor, constant: -8),
+        ])
+    }
+
+    private func configurePill(_ label: URLPaddedLabel) {
+        label.font = .systemFont(ofSize: 9, weight: .bold)
+        label.textColor = .white
+        label.textAlignment = .center
+        label.layer.cornerRadius = 4
+        label.clipsToBounds = true
+        label.setContentHuggingPriority(.required, for: .horizontal)
+        label.setContentCompressionResistancePriority(.required, for: .horizontal)
+    }
+
+    func configure(item: AppInfoViewController.URLItem) {
+        urlLabel.text = item.url
+
+        // Host tag
+        if let tag = item.hostTag {
+            hostTagLabel.isHidden = false
+            hostTagLabel.text = tag.label
+            hostTagLabel.backgroundColor = tag.color.withAlphaComponent(0.25)
+            hostTagLabel.textColor = tag.color
+        } else {
+            hostTagLabel.isHidden = true
         }
-        
-        if indexPath.section == 1 && indexPath.row == 3 {
-            UIPasteboard.general.string = CocoaDebugDeviceInfo.sharedInstance().appBundleID
-            
-            let alert = UIAlertController.init(title: "copied bundle id to clipboard", message: nil, preferredStyle: .alert)
-            let action = UIAlertAction.init(title: "OK", style: .cancel, handler: nil)
-            alert.addAction(action)
-            
-            alert.popoverPresentationController?.permittedArrowDirections = .init(rawValue: 0)
-            alert.popoverPresentationController?.sourceView = self.view
-            alert.popoverPresentationController?.sourceRect = CGRect(x: self.view.bounds.midX, y: self.view.bounds.midY, width: 0, height: 0)
-            
-            self.present(alert, animated: true, completion: nil)
+
+        // Version tag
+        if let version = item.versionTag {
+            versionTagLabel.isHidden = false
+            versionTagLabel.text = version
+            let color = UIColor(red: 0.40, green: 0.70, blue: 1.0, alpha: 1)
+            versionTagLabel.backgroundColor = color.withAlphaComponent(0.25)
+            versionTagLabel.textColor = color
+        } else {
+            versionTagLabel.isHidden = true
         }
-        
-        if indexPath.section == 1 && indexPath.row == 4 {
-            if labelserverURL.text == nil || labelserverURL.text == "" {return}
-            
-            UIPasteboard.general.string = CocoaDebugSettings.shared.serverURL
-            
-            let alert = UIAlertController.init(title: "copied server to clipboard", message: nil, preferredStyle: .alert)
-            let action = UIAlertAction.init(title: "OK", style: .cancel, handler: nil)
-            alert.addAction(action)
-            
-            alert.popoverPresentationController?.permittedArrowDirections = .init(rawValue: 0)
-            alert.popoverPresentationController?.sourceView = self.view
-            alert.popoverPresentationController?.sourceRect = CGRect(x: self.view.bounds.midX, y: self.view.bounds.midY, width: 0, height: 0)
-            
-            self.present(alert, animated: true, completion: nil)
-        }
+
+        // Beta tag
+        betaTagLabel.isHidden = !item.isBeta
+
+        // Toggle tags row and URL top constraint
+        let hasTags = !(hostTagLabel.isHidden && versionTagLabel.isHidden && betaTagLabel.isHidden)
+        tagsStack.isHidden = !hasTags
+        urlBelowTagsConstraint.isActive = hasTags
+        urlToCardTopConstraint.isActive = !hasTags
     }
 }

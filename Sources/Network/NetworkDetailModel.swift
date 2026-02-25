@@ -23,6 +23,10 @@ struct NetworkDetailModel {
     var httpModel: _HttpModel?
     var heigth:Double = 0
     var mustInPreview:Bool = false
+    /// Show "Preview JSON" button for this section
+    var showPreview: Bool = false
+    /// Info-only section (e.g. ERROR) — uses dimmer styling, no preview
+    var isInfoOnly: Bool = false
 
     
     init(title: String? = nil, content: String? = "", url: String? = "", image: UIImage? = nil, httpModel: _HttpModel? = nil) {
@@ -34,7 +38,7 @@ struct NetworkDetailModel {
         
         mustInPreview = (content?.count ?? 0 > 10000)
         self.heigth = mustInPreview ? 100 : Double(self.content?.height(with: UIFont.systemFont(ofSize: 13), constraintToWidth: (UIScreen.main.bounds.size.width - 30)) ?? 0.0)
-        print("Estimated size of label: \(heigth)")
+        // print("Estimated size of label: \(heigth)")
       
 
       //  let estimatedSize = estimatedSizeOfLabel(text:  self.content ?? "", font: labelFont, maxWidth: maxWidth)

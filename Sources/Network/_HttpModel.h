@@ -40,6 +40,7 @@ typedef NS_ENUM(NSUInteger, RequestSerializer) {
 @property (nonatomic,copy)NSDictionary<NSString*, id>           *responseHeaderFields;
 @property (nonatomic,assign)BOOL                                isTag;
 @property (nonatomic,assign)BOOL                                isSelected;
+@property (nonatomic,assign)BOOL                                isViewed;
 @property (nonatomic,assign)RequestSerializer                   requestSerializer;//default JSON format
 @property (nonatomic,copy)NSString                              *errorDescription;
 @property (nonatomic,copy)NSString                              *errorLocalizedDescription;

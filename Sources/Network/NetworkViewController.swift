@@ -548,10 +548,17 @@ class NetworkViewController: UIViewController {
         tableView.tableFooterView = UIView()
         tableView.dataSource = self
         tableView.delegate = self
+        tableView.backgroundColor = .black
+        tableView.separatorStyle = .none
 
-        tableView.estimatedRowHeight = 0
+        // Register programmatic cell (overrides storyboard prototype)
+        tableView.register(NetworkCell.self, forCellReuseIdentifier: "NetworkCell")
+        tableView.rowHeight = UITableView.automaticDimension
+        tableView.estimatedRowHeight = 80
         tableView.estimatedSectionHeaderHeight = 0
         tableView.estimatedSectionFooterHeight = 0
+        tableView.contentInset = UIEdgeInsets(top: 8, left: 0, bottom: 80, right: 0)
+        tableView.showsVerticalScrollIndicator = false
 
         reloadHttp(needScrollToEnd: true)
 
@@ -643,8 +650,9 @@ extension NetworkViewController: UITableViewDataSource {
         let cell = tableView.dequeueReusableCell(withIdentifier: "NetworkCell", for: indexPath)
             as! NetworkCell
 
-        cell.httpModel = models?[indexPath.row]
+        guard let models = models, indexPath.row < models.count else { return cell }
         cell.index = indexPath.row
+        cell.httpModel = models[indexPath.row]
         return cell
     }
 }
@@ -653,33 +661,7 @@ extension NetworkViewController: UITableViewDataSource {
 extension NetworkViewController: UITableViewDelegate {
 
     func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
-
-        guard let serverURL = CocoaDebugSettings.shared.serverURL else { return 0 }
-        let model = models?[indexPath.row]
-        var height: CGFloat = 0.0
-
-        if let cString = model?.url.absoluteString.cString(using: String.Encoding.utf8) {
-            if let content_ = NSString(cString: cString, encoding: String.Encoding.utf8.rawValue) {
-
-                if model?.url.absoluteString.contains(serverURL) == true {
-                    if #available(iOS 8.2, *) {
-                        height = content_.height(with: UIFont.systemFont(ofSize: 13, weight: .heavy), constraintToWidth: (UIScreen.main.bounds.size.width - 92))
-                    } else {
-                        height = content_.height(with: UIFont.boldSystemFont(ofSize: 13), constraintToWidth: (UIScreen.main.bounds.size.width - 92))
-                    }
-                } else {
-                    if #available(iOS 8.2, *) {
-                        height = content_.height(with: UIFont.systemFont(ofSize: 13, weight: .regular), constraintToWidth: (UIScreen.main.bounds.size.width - 92))
-                    } else {
-                        height = content_.height(with: UIFont.systemFont(ofSize: 13), constraintToWidth: (UIScreen.main.bounds.size.width - 92))
-                    }
-                }
-
-                return height + 57
-            }
-        }
-
-        return 0
+        return UITableView.automaticDimension
     }
 
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath)
@@ -687,7 +669,11 @@ extension NetworkViewController: UITableViewDelegate {
         tableView.deselectRow(at: indexPath, animated: true)
         reachEnd = false
 
-        guard let models = models else { return }
+        guard let models = models, indexPath.row < models.count else { return }
+
+        // Mark as viewed so the list cell shows a "viewed" indicator
+        models[indexPath.row].isViewed = true
+        tableView.reloadRows(at: [indexPath], with: .none)
 
         let vc: NetworkDetailViewController = NetworkDetailViewController.instanceFromStoryBoard()
         vc.httpModels = models

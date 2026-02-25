@@ -22,7 +22,12 @@ class NetworkDetailViewController: UITableViewController, MFMailComposeViewContr
     var httpModels: [_HttpModel]?
     
     var detailModels: [NetworkDetailModel] = [NetworkDetailModel]()
-    
+
+    /// Raw cURL string — stored separately because NetworkDetailModel.init
+    /// applies replacingOccurrences(of: "\\/", with: "/") which corrupts
+    /// JSON body data inside the cURL command.
+    private var rawCurlString: String = ""
+
     var requestDictionary: [String: Any]? = Dictionary()
     
     var headerCell: NetworkCell?
@@ -118,71 +123,94 @@ class NetworkDetailViewController: UITableViewController, MFMailComposeViewContr
         // Load response data from disk ONCE - single disk read
         let cachedResponseData: Data? = httpModel?.responseData
 
+        let urlStr = httpModel?.url.absoluteString
+
+        // URL (hidden row placeholder)
+        let model_1 = NetworkDetailModel(title: "URL", content: "https://github.com/CocoaDebug/CocoaDebug", url: urlStr, httpModel: httpModel)
+
+        // Request parameters (extracted from URL query string)
+        var modelParams = NetworkDetailModel(title: "REQUEST PARAMETERS", content: nil, url: urlStr, httpModel: httpModel)
+        if let url = httpModel?.url, let components = URLComponents(url: url, resolvingAgainstBaseURL: false),
+           let queryItems = components.queryItems, !queryItems.isEmpty {
+            var dict: [String: Any] = [:]
+            for item in queryItems {
+                dict[item.name] = item.value ?? ""
+            }
+            if let jsonData = try? JSONSerialization.data(withJSONObject: dict, options: [.prettyPrinted, .sortedKeys]),
+               let jsonString = String(data: jsonData, encoding: .utf8) {
+                modelParams.content = jsonString
+            }
+        }
+        modelParams.showPreview = true
+
+        // Request header
+        var model_2 = NetworkDetailModel(title: "REQUEST HEADER", content: nil, url: urlStr, httpModel: httpModel)
+        if let requestHeaderFields = httpModel?.requestHeaderFields, !requestHeaderFields.isEmpty {
+            model_2 = NetworkDetailModel(title: "REQUEST HEADER", content: requestHeaderFields.description, url: urlStr, httpModel: httpModel)
+            model_2.requestHeaderFields = requestHeaderFields
+            if let data = try? JSONSerialization.data(withJSONObject: requestHeaderFields, options: [.prettyPrinted]),
+               let jsonString = String(data: data, encoding: .utf8) {
+                model_2.content = jsonString
+            }
+        }
+        model_2.showPreview = true
+
+        // Request body
+        var model_3 = NetworkDetailModel(title: "REQUEST", content: requestContent, url: urlStr, httpModel: httpModel)
+        model_3.showPreview = true
+
+        // Response header
+        var model_4 = NetworkDetailModel(title: "RESPONSE HEADER", content: nil, url: urlStr, httpModel: httpModel)
+        if let responseHeaderFields = httpModel?.responseHeaderFields, !responseHeaderFields.isEmpty {
+            model_4 = NetworkDetailModel(title: "RESPONSE HEADER", content: responseHeaderFields.description, url: urlStr, httpModel: httpModel)
+            model_4.responseHeaderFields = responseHeaderFields
+            if let data = try? JSONSerialization.data(withJSONObject: responseHeaderFields, options: [.prettyPrinted]),
+               let jsonString = String(data: data, encoding: .utf8) {
+                model_4.content = jsonString
+            }
+        }
+        model_4.showPreview = true
+
+        // Response body
+        var model_5: NetworkDetailModel
         if httpModel?.isImage == true {
-            let model_1 = NetworkDetailModel(title: "URL", content: "https://github.com/CocoaDebug/CocoaDebug", url: httpModel?.url.absoluteString, httpModel: httpModel)
-            let model_3 = NetworkDetailModel(title: "REQUEST", content: requestContent, url: httpModel?.url.absoluteString, httpModel: httpModel)
-            var model_5 = NetworkDetailModel(title: "RESPONSE", content: nil, url: httpModel?.url.absoluteString, httpModel: httpModel)
-            let model_6 = NetworkDetailModel(title: "ERROR", content: httpModel?.errorLocalizedDescription, url: httpModel?.url.absoluteString, httpModel: httpModel)
-            let model_7 = NetworkDetailModel(title: "ERROR DESCRIPTION", content: httpModel?.errorDescription, url: httpModel?.url.absoluteString, httpModel: httpModel)
             if let responseData = cachedResponseData {
-                model_5 = NetworkDetailModel(title: "RESPONSE", content: nil, url: httpModel?.url.absoluteString, image: UIImage(gifData: responseData), httpModel: httpModel)
+                model_5 = NetworkDetailModel(title: "RESPONSE", content: nil, url: urlStr, image: UIImage(gifData: responseData), httpModel: httpModel)
+            } else {
+                model_5 = NetworkDetailModel(title: "RESPONSE", content: nil, url: urlStr, httpModel: httpModel)
             }
-            let model_8 = NetworkDetailModel(title: "TOTAL TIME", content: httpModel?.totalDuration, url: httpModel?.url.absoluteString, httpModel: httpModel)
-            let model_9 = NetworkDetailModel(title: "MIME TYPE", content: httpModel?.mineType, url: httpModel?.url.absoluteString, httpModel: httpModel)
-
-            var model_2 = NetworkDetailModel(title: "REQUEST HEADER", content: nil, url: httpModel?.url.absoluteString, httpModel: httpModel)
-            if let requestHeaderFields = httpModel?.requestHeaderFields, !requestHeaderFields.isEmpty {
-                model_2 = NetworkDetailModel(title: "REQUEST HEADER", content: requestHeaderFields.description, url: httpModel?.url.absoluteString, httpModel: httpModel)
-                model_2.requestHeaderFields = requestHeaderFields
-                if let data = try? JSONSerialization.data(withJSONObject: requestHeaderFields, options: [.prettyPrinted]),
-                   let jsonString = String(data: data, encoding: .utf8) {
-                    model_2.content = jsonString
-                }
-            }
-
-            var model_4 = NetworkDetailModel(title: "RESPONSE HEADER", content: nil, url: httpModel?.url.absoluteString, httpModel: httpModel)
-            if let responseHeaderFields = httpModel?.responseHeaderFields, !responseHeaderFields.isEmpty {
-                model_4 = NetworkDetailModel(title: "RESPONSE HEADER", content: responseHeaderFields.description, url: httpModel?.url.absoluteString, httpModel: httpModel)
-                model_4.responseHeaderFields = responseHeaderFields
-                if let data = try? JSONSerialization.data(withJSONObject: responseHeaderFields, options: [.prettyPrinted]),
-                   let jsonString = String(data: data, encoding: .utf8) {
-                    model_4.content = jsonString
-                }
-            }
-
-            let model_0 = NetworkDetailModel(title: "RESPONSE SIZE", content: httpModel?.size, url: httpModel?.url.absoluteString, httpModel: httpModel)
-            detailModels.append(contentsOf: [model_1, model_2, model_3, model_4, model_5, model_6, model_7, model_0, model_8, model_9])
         } else {
-            let model_1 = NetworkDetailModel(title: "URL", content: "https://github.com/CocoaDebug/CocoaDebug", url: httpModel?.url.absoluteString, httpModel: httpModel)
-            let model_3 = NetworkDetailModel(title: "REQUEST", content: requestContent, url: httpModel?.url.absoluteString, httpModel: httpModel)
-            let model_5 = NetworkDetailModel(title: "RESPONSE", content: cachedResponseData?.dataToPrettyPrintString(), url: httpModel?.url.absoluteString, httpModel: httpModel)
-            let model_6 = NetworkDetailModel(title: "ERROR", content: httpModel?.errorLocalizedDescription, url: httpModel?.url.absoluteString, httpModel: httpModel)
-            let model_7 = NetworkDetailModel(title: "ERROR DESCRIPTION", content: httpModel?.errorDescription, url: httpModel?.url.absoluteString, httpModel: httpModel)
-            let model_8 = NetworkDetailModel(title: "TOTAL TIME", content: httpModel?.totalDuration, url: httpModel?.url.absoluteString, httpModel: httpModel)
-            let model_9 = NetworkDetailModel(title: "MIME TYPE", content: httpModel?.mineType, url: httpModel?.url.absoluteString, httpModel: httpModel)
+            model_5 = NetworkDetailModel(title: "RESPONSE", content: cachedResponseData?.dataToPrettyPrintString(), url: urlStr, httpModel: httpModel)
+        }
+        model_5.showPreview = true
 
-            var model_2 = NetworkDetailModel(title: "REQUEST HEADER", content: nil, url: httpModel?.url.absoluteString, httpModel: httpModel)
-            if let requestHeaderFields = httpModel?.requestHeaderFields, !requestHeaderFields.isEmpty {
-                model_2 = NetworkDetailModel(title: "REQUEST HEADER", content: requestHeaderFields.description, url: httpModel?.url.absoluteString, httpModel: httpModel)
-                model_2.requestHeaderFields = requestHeaderFields
-                if let data = try? JSONSerialization.data(withJSONObject: requestHeaderFields, options: [.prettyPrinted]),
-                   let jsonString = String(data: data, encoding: .utf8) {
-                    model_2.content = jsonString
-                }
+        // Errors (info-only sections — different styling, no preview)
+        var model_6 = NetworkDetailModel(title: "ERROR", content: httpModel?.errorLocalizedDescription, url: urlStr, httpModel: httpModel)
+        model_6.isInfoOnly = true
+        var model_7 = NetworkDetailModel(title: "ERROR DESCRIPTION", content: httpModel?.errorDescription, url: urlStr, httpModel: httpModel)
+        model_7.isInfoOnly = true
+
+        // cURL command (pass cached data to avoid redundant disk read)
+        rawCurlString = httpModel?.cURLDescription(cachedRequestData: cachedRequestData) ?? ""
+        var modelCurl = NetworkDetailModel(title: "REQUEST CURL", content: rawCurlString, url: urlStr, httpModel: httpModel)
+        modelCurl.showPreview = true
+
+        // Build final list — only include sections that have content.
+        // URL is always included (hidden placeholder row).
+        // REQUEST CURL is always included (useful even with just URL + method).
+        // Everything else is filtered out when empty.
+        let alwaysInclude: Set<String> = ["URL", "REQUEST CURL"]
+
+        let allSections = [model_1, modelParams, model_2, model_3, model_4, model_5, model_6, model_7, modelCurl]
+        for section in allSections {
+            let title = section.title ?? ""
+            if alwaysInclude.contains(title) {
+                detailModels.append(section)
+            } else if section.image != nil {
+                detailModels.append(section)
+            } else if let content = section.content, !content.isEmpty {
+                detailModels.append(section)
             }
-
-            var model_4 = NetworkDetailModel(title: "RESPONSE HEADER", content: nil, url: httpModel?.url.absoluteString, httpModel: httpModel)
-            if let responseHeaderFields = httpModel?.responseHeaderFields, !responseHeaderFields.isEmpty {
-                model_4 = NetworkDetailModel(title: "RESPONSE HEADER", content: responseHeaderFields.description, url: httpModel?.url.absoluteString, httpModel: httpModel)
-                model_4.responseHeaderFields = responseHeaderFields
-                if let data = try? JSONSerialization.data(withJSONObject: responseHeaderFields, options: [.prettyPrinted]),
-                   let jsonString = String(data: data, encoding: .utf8) {
-                    model_4.content = jsonString
-                }
-            }
-
-            let model_0 = NetworkDetailModel(title: "RESPONSE SIZE", content: httpModel?.size, url: httpModel?.url.absoluteString, httpModel: httpModel)
-            detailModels.append(contentsOf: [model_1, model_2, model_3, model_4, model_5, model_6, model_7, model_0, model_8, model_9])
         }
     }
     
@@ -350,18 +378,59 @@ class NetworkDetailViewController: UITableViewController, MFMailComposeViewContr
             detailModels.append(lastModel)
         }
         
-        //Use a separate xib-cell file, must be registered, otherwise it will crash
-        let bundle = Bundle(for: type(of: self))
-        let nib = UINib(nibName: "NetworkCell", bundle: bundle)
-        tableView.register(nib, forCellReuseIdentifier: "NetworkCell")
-        
+        //Register programmatic cells (overrides storyboard prototypes)
+        tableView.register(NetworkCell.self, forCellReuseIdentifier: "NetworkCell")
+        tableView.register(NetworkDetailCell.self, forCellReuseIdentifier: "NetworkDetailCell")
+
+        // Table styling
+        tableView.backgroundColor = .black
+        tableView.separatorStyle = .none
+        tableView.rowHeight = UITableView.automaticDimension
+        tableView.estimatedRowHeight = 100
+        tableView.contentInset.bottom = 80  // padding so sticky header doesn't cover last row
+        tableView.showsVerticalScrollIndicator = false
+
+        // Nav bar: close only
+        naviItem.rightBarButtonItems = [closeItem]
+
         //header
-        headerCell = bundle.loadNibNamed(String(describing: NetworkCell.self), owner: nil, options: nil)?.first as? NetworkCell
+        headerCell = NetworkCell(style: .default, reuseIdentifier: "NetworkCell")
         headerCell?.httpModel = httpModel
+        headerCell?.showCurlButton = true
+        headerCell?.onCurlTapped = { [weak self] in
+            guard let self = self else { return }
+            // Use rawCurlString — NOT detailModel.content which has \/ replaced
+            let curl = self.rawCurlString
+            UIPasteboard.general.string = curl
+
+            let activity = UIActivityViewController(activityItems: [curl], applicationActivities: nil)
+            if UI_USER_INTERFACE_IDIOM() == .pad {
+                activity.popoverPresentationController?.sourceView = self.view
+                activity.popoverPresentationController?.sourceRect = CGRect(
+                    x: self.view.bounds.midX, y: self.view.bounds.midY, width: 0, height: 0
+                )
+            }
+            self.present(activity, animated: true)
+        }
     }
     
+    private var hasPerformedInitialReload = false
+
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        // After the table gets its correct width, reload once so
+        // self-sizing cells and the sticky header compute correct heights.
+        if !hasPerformedInitialReload {
+            hasPerformedInitialReload = true
+            tableView.reloadData()
+        }
+    }
+
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
+
+        // Only run cleanup when actually going back (popped), not when pushing a child VC
+        guard isMovingFromParent || isBeingDismissed else { return }
 
         if let index = httpModels?.firstIndex(where: { (model) -> Bool in
             return model.isSelected == true
@@ -381,6 +450,7 @@ class NetworkDetailViewController: UITableViewController, MFMailComposeViewContr
     }
     
     //MARK: - target action
+
     @IBAction func close(_ sender: UIBarButtonItem) {
         (self.navigationController as! CocoaDebugNavigationController).exit()
     }
@@ -451,21 +521,23 @@ extension NetworkDetailViewController {
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "NetworkDetailCell", for: indexPath)
             as! NetworkDetailCell
+        guard indexPath.row < detailModels.count else { return cell }
         cell.detailModel = detailModels[indexPath.row]
         
         //2.click edit view
         cell.tapEditViewCallback = { [weak self] detailModel in
-            
-//            let fallback = BasicExampleViewController()
-//            fallback.json = detailModel?.content ?? ""
-//            self?.navigationController?.pushViewController(fallback, animated: true)
-//
-//            let vc = DemoJSONViewerHostController()
-//            vc.jsonString = detailModel?.content ?? ""
-//            self?.navigationController?.pushViewController(vc, animated: true)
-            
-            self?.pushJSONViewerOrFallback(with: detailModel?.content ?? "")
-            
+            guard let self = self else { return }
+            let content = detailModel?.content ?? ""
+
+            // cURL section → open cURL preview with RAW string (not processed by NetworkDetailModel)
+            if detailModel?.title == "REQUEST CURL" {
+                let vc = CurlPreviewViewController()
+                vc.curlString = self.rawCurlString
+                self.navigationController?.pushViewController(vc, animated: true)
+                return
+            }
+
+            self.pushJSONViewerOrFallback(with: content)
         }
         
         return cell
@@ -476,33 +548,12 @@ extension NetworkDetailViewController {
 extension NetworkDetailViewController {
     
     override func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
-        
-        let detailModel = detailModels[indexPath.row]
-        
-        if detailModel.blankContent == "..." {
-            if detailModel.isLast == true {
-                return 50.5
-            }
-            return 50
-        }
-        
-        if indexPath.row == 0 {
-            return 0
-        }
-        
-        if detailModel.image == nil {
-            if let content = detailModel.content {
-                if content == "" {
-                    return 0
-                }
-                //Calculate NSString height
-                let height = detailModel.heigth
-                return height + 70
-            }
-            return 0
-        }
-        
-        return UIScreen.main.bounds.size.width + 50
+        guard indexPath.row < detailModels.count else { return 0 }
+
+        // Row 0 (URL placeholder) — hidden
+        if detailModels[indexPath.row].title == "URL" { return 0 }
+
+        return UITableView.automaticDimension
     }
     
     
@@ -512,35 +563,14 @@ extension NetworkDetailViewController {
     
     
     override func tableView(_ tableView: UITableView, heightForHeaderInSection section: Int) -> CGFloat {
-        guard let serverURL = CocoaDebugSettings.shared.serverURL else {return 0}
-        
-        var height: CGFloat = 0.0
-        
-        if let cString = httpModel?.url.absoluteString.cString(using: String.Encoding.utf8) {
-            if let content_ = NSString(cString: cString, encoding: String.Encoding.utf8.rawValue) {
-                
-                if httpModel?.url.absoluteString.contains(serverURL) == true {
-                    //Calculate NSString height
-                    if #available(iOS 8.2, *) {
-                        height = content_.height(with: UIFont.systemFont(ofSize: 13, weight: .heavy), constraintToWidth: (UIScreen.main.bounds.size.width - 92))
-                    } else {
-                        // Fallback on earlier versions
-                        height = content_.height(with: UIFont.boldSystemFont(ofSize: 13), constraintToWidth: (UIScreen.main.bounds.size.width - 92))
-                    }
-                } else {
-                    //Calculate NSString height
-                    if #available(iOS 8.2, *) {
-                        height = content_.height(with: UIFont.systemFont(ofSize: 13, weight: .regular), constraintToWidth: (UIScreen.main.bounds.size.width - 92))
-                    } else {
-                        // Fallback on earlier versions
-                        height = content_.height(with: UIFont.systemFont(ofSize: 13), constraintToWidth: (UIScreen.main.bounds.size.width - 92))
-                    }
-                }
-                return height + 57
-            }
-        }
-        
-        return 0
+        guard let cell = headerCell else { return 0 }
+        let targetSize = CGSize(width: tableView.bounds.width, height: UIView.layoutFittingCompressedSize.height)
+        let size = cell.contentView.systemLayoutSizeFitting(
+            targetSize,
+            withHorizontalFittingPriority: .required,
+            verticalFittingPriority: .fittingSizeLevel
+        )
+        return size.height
     }
 }
 
@@ -862,9 +892,205 @@ final class DemoJSONViewerHostController: UIViewController {
                          showSize: true)
 
         // Render JSON passed as STRING
- 
+
         viewer.render(jsonString: jsonString)
     }
 }
- 
- 
+
+// MARK: - CurlPreviewViewController
+
+final class CurlPreviewViewController: UIViewController {
+
+    var curlString: String = ""
+
+    private let scrollView = UIScrollView()
+    private let cardView = UIView()
+    private let titleLabel = UILabel()
+    private let textView = UITextView()
+    private let copyButton = UIButton(type: .system)
+    private let shareButton = UIButton(type: .system)
+
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        view.backgroundColor = .black
+
+        // Nav title
+        let navTitle = UILabel()
+        navTitle.text = "cURL"
+        navTitle.font = .boldSystemFont(ofSize: 20)
+        navTitle.textColor = Color.mainGreen
+        navigationItem.titleView = navTitle
+
+        // Scroll view
+        scrollView.translatesAutoresizingMaskIntoConstraints = false
+        scrollView.showsVerticalScrollIndicator = false
+        scrollView.contentInset = UIEdgeInsets(top: 0, left: 0, bottom: 80, right: 0)
+        view.addSubview(scrollView)
+
+        // Card (same as NetworkDetailCell)
+        cardView.backgroundColor = UIColor(white: 0.11, alpha: 1)
+        cardView.layer.cornerRadius = 10
+        cardView.clipsToBounds = true
+        cardView.translatesAutoresizingMaskIntoConstraints = false
+        scrollView.addSubview(cardView)
+
+        // Section title (same style as detail sections)
+        titleLabel.text = "cURL COMMAND"
+        titleLabel.font = .systemFont(ofSize: 11, weight: .bold)
+        titleLabel.textColor = UIColor(red: 0.29, green: 0.76, blue: 0.76, alpha: 1)
+        titleLabel.translatesAutoresizingMaskIntoConstraints = false
+        cardView.addSubview(titleLabel)
+
+        // cURL text
+        textView.isEditable = false
+        textView.isScrollEnabled = false
+        textView.backgroundColor = .clear
+        textView.textContainerInset = .zero
+        textView.textContainer.lineFragmentPadding = 0
+        textView.attributedText = highlightCurl(curlString)
+        textView.translatesAutoresizingMaskIntoConstraints = false
+        cardView.addSubview(textView)
+
+        // Buttons row
+        let buttonsStack = UIStackView()
+        buttonsStack.axis = .horizontal
+        buttonsStack.spacing = 8
+        buttonsStack.distribution = .fillEqually
+        buttonsStack.translatesAutoresizingMaskIntoConstraints = false
+        cardView.addSubview(buttonsStack)
+
+        // Copy button (same style as "Copy cURL" in NetworkCell)
+        copyButton.backgroundColor = UIColor(white: 0.18, alpha: 1)
+        copyButton.layer.cornerRadius = 6
+        copyButton.clipsToBounds = true
+        copyButton.titleLabel?.font = .systemFont(ofSize: 12, weight: .semibold)
+        copyButton.setTitleColor(Color.mainGreen, for: .normal)
+        copyButton.contentEdgeInsets = UIEdgeInsets(top: 8, left: 12, bottom: 8, right: 12)
+        copyButton.addTarget(self, action: #selector(copyTapped), for: .touchUpInside)
+        if let icon = UIImage(systemName: "doc.on.doc")?.withRenderingMode(.alwaysTemplate) {
+            copyButton.setImage(icon, for: .normal)
+            copyButton.tintColor = Color.mainGreen
+            copyButton.imageEdgeInsets = UIEdgeInsets(top: 0, left: -4, bottom: 0, right: 4)
+        }
+        copyButton.setTitle("Copy", for: .normal)
+        buttonsStack.addArrangedSubview(copyButton)
+
+        // Share button
+        shareButton.backgroundColor = UIColor(white: 0.18, alpha: 1)
+        shareButton.layer.cornerRadius = 6
+        shareButton.clipsToBounds = true
+        shareButton.titleLabel?.font = .systemFont(ofSize: 12, weight: .semibold)
+        shareButton.setTitleColor(Color.mainGreen, for: .normal)
+        shareButton.contentEdgeInsets = UIEdgeInsets(top: 8, left: 12, bottom: 8, right: 12)
+        shareButton.addTarget(self, action: #selector(shareTapped), for: .touchUpInside)
+        if let icon = UIImage(systemName: "square.and.arrow.up")?.withRenderingMode(.alwaysTemplate) {
+            shareButton.setImage(icon, for: .normal)
+            shareButton.tintColor = Color.mainGreen
+            shareButton.imageEdgeInsets = UIEdgeInsets(top: 0, left: -4, bottom: 0, right: 4)
+        }
+        shareButton.setTitle("Share", for: .normal)
+        buttonsStack.addArrangedSubview(shareButton)
+
+        NSLayoutConstraint.activate([
+            scrollView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
+            scrollView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            scrollView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            scrollView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+
+            cardView.topAnchor.constraint(equalTo: scrollView.topAnchor, constant: 12),
+            cardView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 8),
+            cardView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -8),
+            cardView.bottomAnchor.constraint(equalTo: scrollView.bottomAnchor),
+
+            titleLabel.topAnchor.constraint(equalTo: cardView.topAnchor, constant: 12),
+            titleLabel.leadingAnchor.constraint(equalTo: cardView.leadingAnchor, constant: 12),
+            titleLabel.trailingAnchor.constraint(equalTo: cardView.trailingAnchor, constant: -12),
+
+            textView.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 10),
+            textView.leadingAnchor.constraint(equalTo: cardView.leadingAnchor, constant: 12),
+            textView.trailingAnchor.constraint(equalTo: cardView.trailingAnchor, constant: -12),
+
+            buttonsStack.topAnchor.constraint(equalTo: textView.bottomAnchor, constant: 14),
+            buttonsStack.leadingAnchor.constraint(equalTo: cardView.leadingAnchor, constant: 12),
+            buttonsStack.trailingAnchor.constraint(equalTo: cardView.trailingAnchor, constant: -12),
+            buttonsStack.bottomAnchor.constraint(equalTo: cardView.bottomAnchor, constant: -12),
+            buttonsStack.heightAnchor.constraint(equalToConstant: 36),
+        ])
+    }
+
+    @objc private func copyTapped() {
+        UIPasteboard.general.string = curlString
+
+        let originalTitle = copyButton.title(for: .normal)
+        copyButton.setTitle("Copied!", for: .normal)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) { [weak self] in
+            self?.copyButton.setTitle(originalTitle, for: .normal)
+        }
+    }
+
+    @objc private func shareTapped() {
+        let activity = UIActivityViewController(activityItems: [curlString], applicationActivities: nil)
+        if UI_USER_INTERFACE_IDIOM() == .pad {
+            activity.popoverPresentationController?.sourceView = view
+            activity.popoverPresentationController?.sourceRect = CGRect(
+                x: view.bounds.midX, y: view.bounds.midY, width: 0, height: 0
+            )
+        }
+        present(activity, animated: true)
+    }
+
+    // MARK: - cURL Syntax Highlighting
+
+    private func highlightCurl(_ text: String) -> NSAttributedString {
+        let font = UIFont(name: "Menlo", size: 12) ?? .monospacedSystemFont(ofSize: 12, weight: .regular)
+        let attr = NSMutableAttributedString(string: text, attributes: [
+            .font: font,
+            .foregroundColor: UIColor(white: 0.82, alpha: 1)
+        ])
+
+        let nsText = text as NSString
+        let fullRange = NSRange(location: 0, length: nsText.length)
+
+        let flagColor = UIColor(red: 0.40, green: 0.70, blue: 1.0, alpha: 1)       // blue
+        let urlColor = UIColor(red: 0.26, green: 0.83, blue: 0.35, alpha: 1)        // green
+        let stringColor = UIColor(red: 0.82, green: 0.60, blue: 0.34, alpha: 1)     // orange
+        let cmdColor = UIColor(red: 0.70, green: 0.50, blue: 0.88, alpha: 1)        // purple
+
+        // "curl" command keyword
+        if let regex = try? NSRegularExpression(pattern: "^curl\\b", options: []) {
+            for match in regex.matches(in: text, range: fullRange) {
+                attr.addAttribute(.foregroundColor, value: cmdColor, range: match.range)
+                attr.addAttribute(.font, value: UIFont(name: "Menlo-Bold", size: 12) ?? .monospacedSystemFont(ofSize: 12, weight: .bold), range: match.range)
+            }
+        }
+
+        // Flags: -X, -H, -d, --data-binary
+        if let regex = try? NSRegularExpression(pattern: "(?:^|\\s)(-X|-H|-d|--data-binary)\\b", options: .anchorsMatchLines) {
+            for match in regex.matches(in: text, range: fullRange) {
+                attr.addAttribute(.foregroundColor, value: flagColor, range: match.range(at: 1))
+            }
+        }
+
+        // Single-quoted strings: '...'
+        if let regex = try? NSRegularExpression(pattern: "'[^']*'", options: []) {
+            for match in regex.matches(in: text, range: fullRange) {
+                let matchStr = nsText.substring(with: match.range)
+                if matchStr.contains("://") {
+                    attr.addAttribute(.foregroundColor, value: urlColor, range: match.range)
+                } else {
+                    attr.addAttribute(.foregroundColor, value: stringColor, range: match.range)
+                }
+            }
+        }
+
+        // Line continuation backslash
+        if let regex = try? NSRegularExpression(pattern: "\\\\$", options: .anchorsMatchLines) {
+            for match in regex.matches(in: text, range: fullRange) {
+                attr.addAttribute(.foregroundColor, value: UIColor(white: 0.40, alpha: 1), range: match.range)
+            }
+        }
+
+        return attr
+    }
+}
+
