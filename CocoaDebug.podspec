@@ -13,7 +13,7 @@ Pod::Spec.new do |s|
   s.swift_version       = '5.0'
   s.source              = { :git => "https://github.com/CocoaDebug/CocoaDebug.git", :branch => 'master', :tag => s.version.to_s }
   s.requires_arc        = false
-  s.requires_arc        = 
+  s.requires_arc        =
                           [
                           'Sources/App/**/*.m',
                           'Sources/Categories/**/*.m',
@@ -21,7 +21,6 @@ Pod::Spec.new do |s|
                           'Sources/CustomHTTPProtocol/**/*.m',
                           'Sources/Logs/**/*.m',
                           'Sources/Network/**/*.m',
-                          'Sources/Sandbox/**/*.m',
                           'Sources/Swizzling/**/*.m',
                           'Sources/Window/**/*.m',
                           'Sources/fishhook/**/*.c',
@@ -30,7 +29,6 @@ Pod::Spec.new do |s|
   # s.dependency "React/Core"
   # s.dependency "Protobuf"
  s.static_framework = true
-  s.dependency 'JSONPreview',  '~> 2.3.2'
 
 
  

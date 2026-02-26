@@ -356,9 +356,6 @@ extension CocoaDebug {
         //color
         CocoaDebugSettings.shared.mainColor = mainColor ?? "#42d459"
         
-        //slow animations
-        CocoaDebugSettings.shared.slowAnimations = false
-        
         //log
         let enableLogMonitoring = UserDefaults.standard.bool(forKey: "enableLogMonitoring_CocoaDebug")
         if enableLogMonitoring == false {
@@ -384,7 +381,6 @@ extension CocoaDebug {
         _NetworkHelper.shared().disable()
         _SwiftLogHelper.shared.enable = false
 //        _OCLogHelper.shared()?.enable = false
-        CrashLogger.shared.enable = false
         CocoaDebugSettings.shared.responseShake = false
     }
 }

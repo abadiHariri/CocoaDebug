@@ -9,7 +9,6 @@
 import Foundation
 import UIKit
 import MessageUI
-import JSONPreview
 
 class NetworkDetailViewController: UITableViewController, MFMailComposeViewControllerDelegate {
     
@@ -618,82 +617,15 @@ extension UIViewController {
             vc.jsonString = jsonString
             controller = vc
         } else {
-            let fallback = BasicExampleViewController()
-            fallback.json = jsonString
-            controller = fallback
+            let vc = JsonViewController.instanceFromStoryBoard()
+            var model = NetworkDetailModel(title: "Preview", content: jsonString, url: nil, httpModel: nil)
+            model.showPreview = false
+            vc.detailModel = model
+            controller = vc
         }
         navigationController?.pushViewController(controller, animated: true)
     }
 }
-
-import UIKit
-
-import SafariServices
-
-import JSONPreview
-
-class BaseJSONPreviewController: UIViewController {
-    lazy var previewView = JSONPreview()
-    
-    override func viewDidLoad() {
-        super.viewDidLoad()
-        
-        view.backgroundColor = .white
-        
-        previewView.delegate = self
-        
-        view.addSubview(previewView)
-    }
-}
-
-// MARK: - UITextViewDelegate
-
-extension BaseJSONPreviewController: JSONPreviewDelegate {
-    func jsonPreview(_ view: JSONPreview, didClickURL url: URL, on textView: UITextView) -> Bool {
-        print(url)
-        
-        let safari = SFSafariViewController(url: url)
-        safari.modalPresentationStyle = .overFullScreen
-        present(safari, animated: true, completion: nil)
-        
-        return false
-    }
-}
-class BasicExampleViewController: BaseJSONPreviewController {
-    var json:String? //= ""
-    override func viewDidLoad() {
-        super.viewDidLoad()
-        
-        title = "Json Preview"
-        
-        addPreviewViewLayout()
-        
-        preview()
-    }
-}
-
-// MARK: -
-
-private extension BasicExampleViewController {
-    func addPreviewViewLayout() {
-        previewView.translatesAutoresizingMaskIntoConstraints = false
-        
-        NSLayoutConstraint.activate([
-            previewView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
-            previewView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor),
-            previewView.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor),
-            previewView.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor)
-        ])
-    }
-    
-    func preview() {
-        let json = json ?? ""
-        
-        previewView.preview(json, initialState: .folded)
-        
-    }
-}
-
 
 import UIKit
 import WebKit

@@ -8,8 +8,6 @@
 
 #import "CocoaDebugTool.h"
 #import "_OCLogHelper.h"
-#import "GPBMessage+CocoaDebug.h"
-//#import "GPBMessage.h"
 
 @implementation CocoaDebugTool
 

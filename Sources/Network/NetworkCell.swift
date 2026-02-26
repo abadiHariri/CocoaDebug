@@ -322,15 +322,9 @@ class NetworkCell: UITableViewCell {
             statusDot.isHidden = true
         }
 
-        // URL (strip query parameters — they are shown in REQUEST PARAMETERS section)
+        // URL (full, including query parameters)
         let serverURL = CocoaDebugSettings.shared.serverURL ?? ""
-        let urlString: String
-        if let url = model.url, var components = URLComponents(url: url, resolvingAgainstBaseURL: false) {
-            components.query = nil
-            urlString = components.string ?? url.absoluteString
-        } else {
-            urlString = model.url?.absoluteString ?? ""
-        }
+        let urlString = model.url?.absoluteString ?? ""
         urlLabel.text = urlString
         if !serverURL.isEmpty && urlString.contains(serverURL) {
             urlLabel.font = .systemFont(ofSize: 12, weight: .heavy)
