@@ -7,7 +7,7 @@ Pod::Spec.new do |s|
   s.license             = "MIT"
   s.source_files        = "Sources", "Sources/**/*.{h,m,mm,swift,c}"
   s.public_header_files = "Sources/**/*.h"
-  s.resources           = "Sources/**/*.{png,xib,storyboard}"
+  s.resources           = "Sources/**/*.png"
   s.frameworks          = 'UIKit', 'Foundation', 'JavaScriptCore', 'QuickLook'
   s.platform            = :ios, "14.0"
   s.swift_version       = '5.0'

@@ -42,7 +42,7 @@ private class NetworkFilterSheetController: UIViewController, UITableViewDataSou
 
     // Data
     var page: Page = .hosts
-    var entries: [(display: String, filterKey: String, isPathFilter: Bool, isWeb: Bool)] = []
+    var entries: [(display: String, filterKeys: [(key: String, isPathFilter: Bool)], isWeb: Bool)] = []
     var tempPathFilters = Set<String>()
     var tempHostFilters = Set<String>()
     var tempEndpoints = Set<String>()
@@ -200,9 +200,9 @@ private class NetworkFilterSheetController: UIViewController, UITableViewDataSou
             cell.detailTextLabel?.text = nil   // clear any tag left from an endpoint cell reuse
             if indexPath.row < entries.count {
                 let entry = entries[indexPath.row]
-                let isSelected = entry.isPathFilter
-                    ? tempPathFilters.contains(entry.filterKey)
-                    : tempHostFilters.contains(entry.filterKey)
+                let isSelected = entry.filterKeys.contains { pair in
+                    pair.isPathFilter ? tempPathFilters.contains(pair.key) : tempHostFilters.contains(pair.key)
+                }
                 cell.textLabel?.text = entry.display
                 if entry.isWeb {
                     cell.detailTextLabel?.text = "web"
@@ -237,17 +237,14 @@ private class NetworkFilterSheetController: UIViewController, UITableViewDataSou
         case .hosts:
             if indexPath.row < entries.count {
                 let entry = entries[indexPath.row]
-                if entry.isPathFilter {
-                    if tempPathFilters.contains(entry.filterKey) {
-                        tempPathFilters.remove(entry.filterKey)
+                let isSelected = entry.filterKeys.contains { pair in
+                    pair.isPathFilter ? tempPathFilters.contains(pair.key) : tempHostFilters.contains(pair.key)
+                }
+                for pair in entry.filterKeys {
+                    if pair.isPathFilter {
+                        if isSelected { tempPathFilters.remove(pair.key) } else { tempPathFilters.insert(pair.key) }
                     } else {
-                        tempPathFilters.insert(entry.filterKey)
-                    }
-                } else {
-                    if tempHostFilters.contains(entry.filterKey) {
-                        tempHostFilters.remove(entry.filterKey)
-                    } else {
-                        tempHostFilters.insert(entry.filterKey)
+                        if isSelected { tempHostFilters.remove(pair.key) } else { tempHostFilters.insert(pair.key) }
                     }
                 }
                 tempEndpoints.removeAll()
@@ -291,10 +288,9 @@ class NetworkViewController: UIViewController {
 
     private var searchText: String = ""
 
-    @IBOutlet weak var tableView: UITableView!
-    @IBOutlet weak var searchBar: UISearchBar!
-    @IBOutlet weak var deleteItem: UIBarButtonItem!
-    @IBOutlet weak var naviItem: UINavigationItem!
+    private var tableView: UITableView!
+    private var searchBar: UISearchBar!
+    private var deleteItem: UIBarButtonItem!
 
     // Convenience accessors
     private var filterState: NetworkFilterState { NetworkFilterState.shared }
@@ -314,11 +310,11 @@ class NetworkViewController: UIViewController {
 
     //MARK: - Filter entry building
 
-    private func buildFilterEntries() -> [(display: String, filterKey: String, isPathFilter: Bool, isWeb: Bool)] {
+    private func buildFilterEntries() -> [(display: String, filterKeys: [(key: String, isPathFilter: Bool)], isWeb: Bool)] {
         guard let allModels = cacheModels, !allModels.isEmpty else { return [] }
 
         let onlyURLs = (_NetworkHelper.shared().onlyURLs as? [String]) ?? []
-        var entries: [(display: String, filterKey: String, isPathFilter: Bool, isWeb: Bool)] = []
+        var rawEntries: [(display: String, filterKey: String, isPathFilter: Bool, isWeb: Bool)] = []
         var coveredHosts = Set<String>()
 
         for urlString in onlyURLs {
@@ -340,7 +336,7 @@ class NetworkViewController: UIViewController {
 
             if hasMatch {
                 let display = tagLabel(forURLString: urlString) ?? stripped
-                entries.append((display: display, filterKey: stripped, isPathFilter: true, isWeb: pathIsWeb))
+                rawEntries.append((display: display, filterKey: stripped, isPathFilter: true, isWeb: pathIsWeb))
                 coveredHosts.insert(host.lowercased())
             }
         }
@@ -357,15 +353,33 @@ class NetworkViewController: UIViewController {
                 let isWeb = allModels.contains { m in
                     m.isWebViewRequest && m.url?.host?.lowercased() == lowerHost
                 }
-                entries.append((display: display, filterKey: host, isPathFilter: false, isWeb: isWeb))
+                rawEntries.append((display: display, filterKey: host, isPathFilter: false, isWeb: isWeb))
             }
         }
 
-        return entries.sorted {
+        // Sort by priority then alphabetically
+        let sorted = rawEntries.sorted {
             let priorityA = $0.isPathFilter ? 0 : ($0.isWeb ? 1 : 2)
             let priorityB = $1.isPathFilter ? 0 : ($1.isWeb ? 1 : 2)
             if priorityA != priorityB { return priorityA < priorityB }
             return $0.display.lowercased() < $1.display.lowercased()
+        }
+
+        // Deduplicate by display label — merge all filterKeys under the same tag into one row
+        var displayOrder: [String] = []
+        var mergedMap: [String: (filterKeys: [(key: String, isPathFilter: Bool)], isWeb: Bool)] = [:]
+        for entry in sorted {
+            let key = entry.display.lowercased()
+            if mergedMap[key] == nil {
+                displayOrder.append(entry.display)
+                mergedMap[key] = (filterKeys: [], isWeb: false)
+            }
+            mergedMap[key]!.filterKeys.append((key: entry.filterKey, isPathFilter: entry.isPathFilter))
+            if entry.isWeb { mergedMap[key]!.isWeb = true }
+        }
+        return displayOrder.map { display in
+            let info = mergedMap[display.lowercased()]!
+            return (display: display, filterKeys: info.filterKeys, isWeb: info.isWeb)
         }
     }
 
@@ -658,6 +672,8 @@ class NetworkViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
 
+        setupUI()
+
         let tap = UITapGestureRecognizer.init(target: self, action: #selector(didTapView))
         tap.cancelsTouchesInView = false
         view.addGestureRecognizer(tap)
@@ -666,16 +682,26 @@ class NetworkViewController: UIViewController {
         naviItemTitleLabel?.textAlignment = .center
         naviItemTitleLabel?.textColor = Color.mainGreen
         naviItemTitleLabel?.font = .boldSystemFont(ofSize: 20)
-        naviItem.titleView = naviItemTitleLabel
-
+        navigationItem.titleView = naviItemTitleLabel
         naviItemTitleLabel?.text = "\u{1f680}[0]"
+
+        // Nav bar buttons: trash, up, down
+        let bundle = Bundle(for: NetworkViewController.self)
+        let upImage   = UIImage(named: "_icon_file_type_up.png",   in: bundle, compatibleWith: nil)
+        let downImage = UIImage(named: "_icon_file_type_down.png", in: bundle, compatibleWith: nil)
+        let upButton   = UIBarButtonItem(image: upImage,   style: .plain, target: self, action: #selector(didTapUp(_:)))
+        let downButton = UIBarButtonItem(image: downImage, style: .plain, target: self, action: #selector(didTapDown(_:)))
+        upButton.tintColor   = Color.mainGreen
+        downButton.tintColor = Color.mainGreen
+        deleteItem = UIBarButtonItem(barButtonSystemItem: .trash, target: self, action: #selector(tapTrashButton(_:)))
         deleteItem.tintColor = Color.mainGreen
+        navigationItem.rightBarButtonItems = [deleteItem, downButton, upButton]
 
         // Search bar styling
         searchBar.barTintColor = .black
         searchBar.isTranslucent = false
         searchBar.tintColor = Color.mainGreen
-        searchBar.backgroundImage = UIImage() // remove default border/gradient
+        searchBar.backgroundImage = UIImage()
         searchBar.searchTextField.textColor = .white
         searchBar.searchTextField.backgroundColor = UIColor(white: 0.15, alpha: 1)
         searchBar.searchTextField.attributedPlaceholder = NSAttributedString(
@@ -685,7 +711,7 @@ class NetworkViewController: UIViewController {
         searchBar.searchTextField.leftView?.tintColor = .lightGray
         searchBar.delegate = self
 
-        // Filter button in nav bar
+        // Filter button — appended to existing right items
         filterButton = UIBarButtonItem(
             image: UIImage(systemName: "line.3.horizontal.decrease.circle"),
             style: .plain,
@@ -693,10 +719,9 @@ class NetworkViewController: UIViewController {
             action: #selector(didTapFilter)
         )
         filterButton.tintColor = Color.mainGreen
-
-        var rightItems = naviItem.rightBarButtonItems ?? []
+        var rightItems = navigationItem.rightBarButtonItems ?? []
         rightItems.append(filterButton)
-        naviItem.rightBarButtonItems = rightItems
+        navigationItem.rightBarButtonItems = rightItems
 
         updateFilterButtonTitle()
 
@@ -710,8 +735,6 @@ class NetworkViewController: UIViewController {
         tableView.delegate = self
         tableView.backgroundColor = .black
         tableView.separatorStyle = .none
-
-        // Register programmatic cell (overrides storyboard prototype)
         tableView.register(NetworkCell.self, forCellReuseIdentifier: "NetworkCell")
         tableView.rowHeight = UITableView.automaticDimension
         tableView.estimatedRowHeight = 80
@@ -727,12 +750,28 @@ class NetworkViewController: UIViewController {
         }
     }
 
-    override func viewWillAppear(_ animated: Bool) {
-        super.viewWillAppear(animated)
-    }
+    private func setupUI() {
+        view.backgroundColor = .black
 
-    override func viewWillDisappear(_ animated: Bool) {
-        super.viewWillDisappear(animated)
+        searchBar = UISearchBar()
+        searchBar.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(searchBar)
+
+        tableView = UITableView(frame: .zero, style: .plain)
+        tableView.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(tableView)
+
+        NSLayoutConstraint.activate([
+            searchBar.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
+            searchBar.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            searchBar.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            searchBar.heightAnchor.constraint(equalToConstant: 44),
+
+            tableView.topAnchor.constraint(equalTo: searchBar.bottomAnchor),
+            tableView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            tableView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            tableView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+        ])
     }
 
     deinit {
@@ -740,19 +779,19 @@ class NetworkViewController: UIViewController {
     }
 
     //MARK: - target action
-    @IBAction func didTapDown(_ sender: Any) {
+    @objc func didTapDown(_ sender: Any) {
         tableView.tableViewScrollToBottom(animated: true)
         reachEnd = true
         CocoaDebugSettings.shared.networkLastIndex = 0
     }
 
-    @IBAction func didTapUp(_ sender: Any) {
+    @objc func didTapUp(_ sender: Any) {
         tableView.tableViewScrollToHeader(animated: true)
         reachEnd = false
         CocoaDebugSettings.shared.networkLastIndex = 0
     }
 
-    @IBAction func tapTrashButton(_ sender: UIBarButtonItem) {
+    @objc func tapTrashButton(_ sender: UIBarButtonItem) {
         _HttpDatasource.shared().reset()
         models = []
         cacheModels = []
@@ -835,7 +874,7 @@ extension NetworkViewController: UITableViewDelegate {
         models[indexPath.row].isViewed = true
         tableView.reloadRows(at: [indexPath], with: .none)
 
-        let vc: NetworkDetailViewController = NetworkDetailViewController.instanceFromStoryBoard()
+        let vc = NetworkDetailViewController()
         vc.httpModels = models
         vc.httpModel = models[indexPath.row]
         self.navigationController?.pushViewController(vc, animated: true)

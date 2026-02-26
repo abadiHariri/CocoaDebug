@@ -14,34 +14,14 @@ class LogViewController: UIViewController {
     var firstIn: Bool = true
     var reloadDataFinish: Bool = true
 
-    @IBOutlet weak var segmentedControl: UISegmentedControl!
-    @IBOutlet weak var deleteItem: UIBarButtonItem!
-
-    // Use only the default table/search from storyboard — hide RN & Web
-    @IBOutlet weak var defaultTableView: UITableView!
-    @IBOutlet weak var defaultSearchBar: UISearchBar!
-
-    @IBOutlet weak var rnTableView: UITableView!
-    @IBOutlet weak var rnSearchBar: UISearchBar!
-    @IBOutlet weak var webTableView: UITableView!
-    @IBOutlet weak var webSearchBar: UISearchBar!
+    private var deleteItem: UIBarButtonItem!
+    private var defaultTableView: UITableView!
+    private var defaultSearchBar: UISearchBar!
 
     /// Combined log models from all sources (app + RN + web), sorted by date
     var allModels: [_OCLogModel] = []
     var cacheModels: [_OCLogModel]?
     var searchModels: [_OCLogModel]?
-
-    // Keep legacy properties so storyboard outlets don't crash
-    var defaultModels: [_OCLogModel] { allModels }
-    var defaultCacheModels: Array<_OCLogModel>? { cacheModels }
-    var defaultSearchModels: Array<_OCLogModel>? { searchModels }
-    var rnModels: [_OCLogModel] = []
-    var rnCacheModels: Array<_OCLogModel>?
-    var rnSearchModels: Array<_OCLogModel>?
-    var webModels: [_OCLogModel] = []
-    var webCacheModels: Array<_OCLogModel>?
-    var webSearchModels: Array<_OCLogModel>?
-    var selectedSegmentIndex: Int = 0
 
 
     // MARK: - Search
@@ -98,35 +78,32 @@ class LogViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
 
+        setupUI()
+
         let tap = UITapGestureRecognizer(target: self, action: #selector(didTapView))
         tap.cancelsTouchesInView = false
         view.addGestureRecognizer(tap)
 
-        deleteItem.tintColor = Color.mainGreen
-
-        // Hide segmented control
-        segmentedControl.isHidden = true
-        segmentedControl.removeFromSuperview()
-        navigationItem.titleView = nil
-
-        // Set a simple title instead
+        // Nav bar title
         let titleLabel = UILabel()
         titleLabel.text = "Logs"
         titleLabel.font = .boldSystemFont(ofSize: 20)
         titleLabel.textColor = Color.mainGreen
         navigationItem.titleView = titleLabel
 
-        // Hide RN & Web table/search (keep outlets connected so no crash)
-        rnTableView.isHidden = true
-        rnSearchBar.isHidden = true
-        webTableView.isHidden = true
-        webSearchBar.isHidden = true
+        // Nav bar buttons: trash, up, down
+        let bundle = Bundle(for: LogViewController.self)
+        let upImage   = UIImage(named: "_icon_file_type_up.png",   in: bundle, compatibleWith: nil)
+        let downImage = UIImage(named: "_icon_file_type_down.png", in: bundle, compatibleWith: nil)
+        let upButton   = UIBarButtonItem(image: upImage,   style: .plain, target: self, action: #selector(didTapUp(_:)))
+        let downButton = UIBarButtonItem(image: downImage, style: .plain, target: self, action: #selector(didTapDown(_:)))
+        upButton.tintColor   = Color.mainGreen
+        downButton.tintColor = Color.mainGreen
+        deleteItem = UIBarButtonItem(barButtonSystemItem: .trash, target: self, action: #selector(resetLogs(_:)))
+        deleteItem.tintColor = Color.mainGreen
+        navigationItem.rightBarButtonItems = [deleteItem, downButton, upButton]
 
         // Configure main table
-        defaultSearchBar.isHidden = false
-        defaultTableView.isHidden = false
-
-        // Register programmatic cell (overrides storyboard prototype)
         defaultTableView.register(LogCell.self, forCellReuseIdentifier: "LogCell")
         defaultTableView.tableFooterView = UIView()
         defaultTableView.delegate = self
@@ -141,8 +118,6 @@ class LogViewController: UIViewController {
         // Search bar
         defaultSearchBar.delegate = self
         defaultSearchBar.text = CocoaDebugSettings.shared.logSearchWordNormal
-
-        // Style search bar for dark theme
         defaultSearchBar.barTintColor = .black
         defaultSearchBar.isTranslucent = false
         defaultSearchBar.tintColor = Color.mainGreen
@@ -167,6 +142,30 @@ class LogViewController: UIViewController {
         reloadLogs(needScrollToEnd: true, needReloadData: true)
     }
 
+    private func setupUI() {
+        view.backgroundColor = .black
+
+        defaultSearchBar = UISearchBar()
+        defaultSearchBar.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(defaultSearchBar)
+
+        defaultTableView = UITableView(frame: .zero, style: .plain)
+        defaultTableView.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(defaultTableView)
+
+        NSLayoutConstraint.activate([
+            defaultSearchBar.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
+            defaultSearchBar.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            defaultSearchBar.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            defaultSearchBar.heightAnchor.constraint(equalToConstant: 44),
+
+            defaultTableView.topAnchor.constraint(equalTo: defaultSearchBar.bottomAnchor),
+            defaultTableView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            defaultTableView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            defaultTableView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+        ])
+    }
+
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
         defaultSearchBar.resignFirstResponder()
@@ -178,19 +177,19 @@ class LogViewController: UIViewController {
 
     // MARK: - Actions
 
-    @IBAction func didTapDown(_ sender: Any) {
+    @objc func didTapDown(_ sender: Any) {
         defaultTableView.tableViewScrollToBottom(animated: true)
         defaultSearchBar.resignFirstResponder()
         reachEnd = true
     }
 
-    @IBAction func didTapUp(_ sender: Any) {
+    @objc func didTapUp(_ sender: Any) {
         defaultTableView.tableViewScrollToHeader(animated: true)
         defaultSearchBar.resignFirstResponder()
         reachEnd = false
     }
 
-    @IBAction func resetLogs(_ sender: Any) {
+    @objc func resetLogs(_ sender: Any) {
         allModels = []
         cacheModels = []
         defaultSearchBar.resignFirstResponder()
@@ -200,10 +199,6 @@ class LogViewController: UIViewController {
         _OCLogStoreManager.shared()?.resetWebLogs()
 
         defaultTableView.reloadData()
-    }
-
-    @IBAction func segmentedControlAction(_ sender: UISegmentedControl) {
-        // No-op — segmented control is hidden
     }
 
     @objc func didTapView() {
@@ -275,7 +270,7 @@ extension LogViewController: UITableViewDelegate {
             return
         }
 
-        let vc = JsonViewController.instanceFromStoryBoard()
+        let vc = JsonViewController()
         vc.editType = .log
         vc.logTitleString = logTitleString
         vc.logModels = allModels

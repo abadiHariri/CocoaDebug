@@ -10,26 +10,6 @@ import UIKit
 
 class AppInfoViewController: UITableViewController {
 
-    // Keep storyboard outlets connected to avoid crashes (unused)
-    @IBOutlet weak var labelVersionNumber: UILabel!
-    @IBOutlet weak var labelBuildNumber: UILabel!
-    @IBOutlet weak var labelBundleName: UILabel!
-    @IBOutlet weak var labelScreenResolution: UILabel!
-    @IBOutlet weak var labelDeviceModel: UILabel!
-    @IBOutlet weak var labelCrashCount: UILabel!
-    @IBOutlet weak var labelBundleID: UILabel!
-    @IBOutlet weak var labelserverURL: UILabel!
-    @IBOutlet weak var labelIOSVersion: UILabel!
-    @IBOutlet weak var labelHtml: UILabel!
-    @IBOutlet weak var crashSwitch: UISwitch!
-    @IBOutlet weak var logSwitch: UISwitch!
-    @IBOutlet weak var networkSwitch: UISwitch!
-    @IBOutlet weak var webViewSwitch: UISwitch!
-    @IBOutlet weak var slowAnimationsSwitch: UISwitch!
-    @IBOutlet weak var naviItem: UINavigationItem!
-    @IBOutlet weak var rnSwitch: UISwitch!
-    @IBOutlet weak var uiBlockingSwitch: UISwitch!
-
     // MARK: - Data
 
     /// Section 0: App info key-value pairs
@@ -56,9 +36,9 @@ class AppInfoViewController: UITableViewController {
         titleLabel.textColor = Color.mainGreen
         titleLabel.font = .boldSystemFont(ofSize: 20)
         titleLabel.text = "App"
-        naviItem.titleView = titleLabel
+        navigationItem.titleView = titleLabel
 
-        // Replace the storyboard's static table view with a fresh dynamic one
+        // Replace the inherited table view with a fresh dynamic one
         let dynamicTable = UITableView(frame: .zero, style: .grouped)
         dynamicTable.dataSource = self
         dynamicTable.delegate = self
@@ -118,41 +98,24 @@ class AppInfoViewController: UITableViewController {
     }
 
     private func reloadURLs() {
-        var seen = Set<String>()
-        var items: [URLItem] = []
+        let onlyURLs = (_NetworkHelper.shared()?.onlyURLs as? [String]) ?? []
         let serverURL = CocoaDebugSettings.shared.serverURL ?? ""
 
-        if let models = _HttpDatasource.shared()?.httpModels as? [_HttpModel] {
-            for model in models {
-                if let url = model.url, var components = URLComponents(url: url, resolvingAgainstBaseURL: false) {
-                    components.query = nil
-                    components.fragment = nil
-                    guard let clean = components.string, !seen.contains(clean) else { continue }
-                    seen.insert(clean)
-
-                    let host = url.host?.lowercased() ?? ""
-                    let path = url.path.lowercased()
-
-                    // Host tag
-                    let hostTag = Self.detectHostTag(host: host, path: path, serverURL: serverURL, isWebView: model.isWebViewRequest)
-
-                    // Version tag — detect /v1/, /v2/, etc. in path
-                    let versionTag = Self.detectVersion(path: path)
-
-                    // Beta tag
-                    let isBeta = host.contains(".beta.") || host.hasPrefix("beta.")
-
-                    items.append(URLItem(url: clean, hostTag: hostTag, versionTag: versionTag, isBeta: isBeta))
-                }
-            }
+        capturedURLs = onlyURLs.map { urlString in
+            let url = URL(string: urlString)
+            let host = url?.host?.lowercased() ?? ""
+            let path = url?.path.lowercased() ?? ""
+            let hostTag = Self.detectHostTag(urlString: urlString, host: host, path: path, serverURL: serverURL, isWebView: false)
+            let versionTag = Self.detectVersion(path: path)
+            let isBeta = host.contains(".beta.") || host.hasPrefix("beta.")
+            return URLItem(url: urlString, hostTag: hostTag, versionTag: versionTag, isBeta: isBeta)
         }
-        capturedURLs = items.sorted { $0.url < $1.url }
         tableView.reloadData()
     }
 
     // MARK: - Tag Detection
 
-    private static func detectHostTag(host: String, path: String, serverURL: String, isWebView: Bool) -> (label: String, color: UIColor)? {
+    private static func detectHostTag(urlString: String, host: String, path: String, serverURL: String, isWebView: Bool) -> (label: String, color: UIColor)? {
         // Skip app's own server
         if !serverURL.isEmpty {
             let cleanServer = serverURL.lowercased()
@@ -164,10 +127,12 @@ class AppInfoViewController: UITableViewController {
             }
         }
 
-        // Custom tags
+        // Custom tags — check full URL first, then host
         if let customMap = CocoaDebug.networkTagMap {
+            let lowerURL = urlString.lowercased()
             for (keyword, label) in customMap {
-                if host.contains(keyword.lowercased()) {
+                let lowerKeyword = keyword.lowercased()
+                if lowerURL.contains(lowerKeyword) || host.contains(lowerKeyword) {
                     return (label, colorForTag(keyword))
                 }
             }
@@ -282,7 +247,7 @@ class AppInfoViewController: UITableViewController {
         if section == 0 {
             label.text = "APP INFO"
         } else {
-            label.text = "CAPTURED URLS (\(capturedURLs.count))"
+            label.text = "MONITORED URLS (\(capturedURLs.count))"
         }
 
         return header

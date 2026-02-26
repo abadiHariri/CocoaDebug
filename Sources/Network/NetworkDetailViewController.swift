@@ -12,9 +12,8 @@ import MessageUI
 
 class NetworkDetailViewController: UITableViewController, MFMailComposeViewControllerDelegate {
     
-    @IBOutlet weak var closeItem: UIBarButtonItem!
-    @IBOutlet weak var naviItem: UINavigationItem!
-    
+    private var closeItem: UIBarButtonItem!
+
     var naviItemTitleLabel: UILabel?
     
     var httpModel: _HttpModel?
@@ -27,19 +26,11 @@ class NetworkDetailViewController: UITableViewController, MFMailComposeViewContr
     /// JSON body data inside the cURL command.
     private var rawCurlString: String = ""
 
-    var requestDictionary: [String: Any]? = Dictionary()
-    
     var headerCell: NetworkCell?
     
     var messageBody: String = ""
     
     var justCancelCallback:(() -> Void)?
-    
-    static func instanceFromStoryBoard() -> NetworkDetailViewController {
-        let storyboard = UIStoryboard(name: "Network", bundle: Bundle(for: CocoaDebug.self))
-        return storyboard.instantiateViewController(withIdentifier: "NetworkDetailViewController") as! NetworkDetailViewController
-    }
-    
     
     //MARK: - tool
     func setupModels() {
@@ -362,8 +353,10 @@ class NetworkDetailViewController: UITableViewController, MFMailComposeViewContr
         naviItemTitleLabel?.textColor = Color.mainGreen
         naviItemTitleLabel?.font = .boldSystemFont(ofSize: 20)
         naviItemTitleLabel?.text = "Details"
-        naviItem.titleView = naviItemTitleLabel
-        
+        navigationItem.titleView = naviItemTitleLabel
+
+        let closeImage = UIImage(named: "_icon_file_type_close.png", in: Bundle(for: NetworkDetailViewController.self), compatibleWith: nil)
+        closeItem = UIBarButtonItem(image: closeImage, style: .plain, target: self, action: #selector(close(_:)))
         closeItem.tintColor = Color.mainGreen
         
         //detect the request format (JSON/Form)
@@ -390,7 +383,7 @@ class NetworkDetailViewController: UITableViewController, MFMailComposeViewContr
         tableView.showsVerticalScrollIndicator = false
 
         // Nav bar: close only
-        naviItem.rightBarButtonItems = [closeItem]
+        navigationItem.rightBarButtonItems = [closeItem]
 
         //header
         headerCell = NetworkCell(style: .default, reuseIdentifier: "NetworkCell")
@@ -450,11 +443,11 @@ class NetworkDetailViewController: UITableViewController, MFMailComposeViewContr
     
     //MARK: - target action
 
-    @IBAction func close(_ sender: UIBarButtonItem) {
+    @objc func close(_ sender: UIBarButtonItem) {
         (self.navigationController as! CocoaDebugNavigationController).exit()
     }
     
-    @IBAction func didTapMail(_ sender: UIBarButtonItem) {
+    @objc func didTapMail(_ sender: UIBarButtonItem) {
         
         // create an actionSheet
         let alert: UIAlertController = UIAlertController(title: nil, message: nil, preferredStyle: .actionSheet)
@@ -617,7 +610,7 @@ extension UIViewController {
             vc.jsonString = jsonString
             controller = vc
         } else {
-            let vc = JsonViewController.instanceFromStoryBoard()
+            let vc = JsonViewController()
             var model = NetworkDetailModel(title: "Preview", content: jsonString, url: nil, httpModel: nil)
             model.showPreview = false
             vc.detailModel = model

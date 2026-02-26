@@ -18,32 +18,20 @@ import Foundation
 import UIKit
 
 class JsonViewController: UIViewController {
-    
-    @IBOutlet weak var textView: CustomTextView!
-    @IBOutlet weak var imageView: UIImageView!
-    @IBOutlet weak var naviItem: UINavigationItem!
-    
+
+    private var textView: CustomTextView!
+    private var imageView: UIImageView!
+
     var naviItemTitleLabel: UILabel?
-    
+
     var editType: EditType  = .unknown
-    var httpModel: _HttpModel?
     var detailModel: NetworkDetailModel?
-    
-    //Edited url
-    var editedURLString: String?
-    //Edited content
-    var editedContent: String?
-    
+
     //log
     var logTitleString: String?
     var logModels: [_OCLogModel]?
     var logModel: _OCLogModel?
     var justCancelCallback:(() -> Void)?
-    
-    static func instanceFromStoryBoard() -> JsonViewController {
-        let storyboard = UIStoryboard(name: "Network", bundle: Bundle(for: CocoaDebug.self))
-        return storyboard.instantiateViewController(withIdentifier: "JsonViewController") as! JsonViewController
-    }
     
     //MARK: - tool
     
@@ -95,13 +83,43 @@ class JsonViewController: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        
+
+        // Programmatic views
+        view.backgroundColor = .black
+
+        textView = CustomTextView(frame: .zero)
+        textView.translatesAutoresizingMaskIntoConstraints = false
+        textView.backgroundColor = .clear
+        textView.textColor = .white
+        textView.font = .boldSystemFont(ofSize: 12)
+        textView.isEditable = false
+        textView.isScrollEnabled = true
+        view.addSubview(textView)
+
+        imageView = UIImageView()
+        imageView.translatesAutoresizingMaskIntoConstraints = false
+        imageView.contentMode = .scaleAspectFit
+        imageView.isHidden = true
+        view.addSubview(imageView)
+
+        NSLayoutConstraint.activate([
+            textView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
+            textView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            textView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            textView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+
+            imageView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
+            imageView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            imageView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            imageView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+        ])
+
         naviItemTitleLabel = UILabel.init(frame: CGRect(x: 0, y: 0, width: 80, height: 40))
         naviItemTitleLabel?.textAlignment = .center
         naviItemTitleLabel?.textColor = Color.mainGreen
         naviItemTitleLabel?.font = .boldSystemFont(ofSize: 20)
         naviItemTitleLabel?.text = detailModel?.title
-        naviItem.titleView = naviItemTitleLabel
+        navigationItem.titleView = naviItemTitleLabel
         
         textView.textContainer.lineFragmentPadding = 15
         //        textView.textContainerInset = .zero

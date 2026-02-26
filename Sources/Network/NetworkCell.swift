@@ -175,8 +175,8 @@ class NetworkCell: UITableViewCell {
 
         urlLabel.font = .systemFont(ofSize: 12, weight: .regular)
         urlLabel.textColor = UIColor(white: 0.85, alpha: 1)
-        urlLabel.numberOfLines = 0
-        urlLabel.lineBreakMode = .byCharWrapping
+        urlLabel.numberOfLines = 5
+        urlLabel.lineBreakMode = .byTruncatingTail
 
         // --- Row 3: tags left, timestamp right ---
 

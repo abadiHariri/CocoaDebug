@@ -13,17 +13,18 @@ class CocoaDebugNavigationController: UINavigationController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        navigationBar.isTranslucent = false //liman
-        
+        overrideUserInterfaceStyle = .dark
+        navigationBar.isTranslucent = false
+
         navigationBar.tintColor = Color.mainGreen
         navigationBar.titleTextAttributes = [.font: UIFont.boldSystemFont(ofSize: 20),
                                              .foregroundColor: Color.mainGreen]
         
         let selector = #selector(CocoaDebugNavigationController.exit)
-        
+
         let image = UIImage(named: "_icon_file_type_close", in: Bundle(for: CocoaDebugNavigationController.self), compatibleWith: nil)
-        let leftItem = UIBarButtonItem(image: image,
-                                       style: .done, target: self, action: selector)
+                  ?? UIImage(systemName: "xmark")
+        let leftItem = UIBarButtonItem(image: image, style: .plain, target: self, action: selector)
         leftItem.tintColor = Color.mainGreen
         topViewController?.navigationItem.leftBarButtonItem = leftItem
         
@@ -31,11 +32,10 @@ class CocoaDebugNavigationController: UINavigationController {
         if #available(iOS 13, *) {
             let appearance = UINavigationBarAppearance()
             appearance.configureWithOpaqueBackground()
-            // self.navigationController?.navigationBar.isTranslucent = true  // pass "true" for fixing iOS 15.0 black bg issue
-            // self.navigationController?.navigationBar.tintColor = UIColor.white // We need to set tintcolor for iOS 15.0
+            appearance.backgroundColor = .black
             appearance.shadowColor = .clear    //removing navigationbar 1 px bottom border.
-//            UINavigationBar.appearance().standardAppearance = appearance
-//            UINavigationBar.appearance().scrollEdgeAppearance = appearance
+            appearance.titleTextAttributes = [.font: UIFont.boldSystemFont(ofSize: 20),
+                                              .foregroundColor: Color.mainGreen]
             self.navigationBar.standardAppearance = appearance
             self.navigationBar.scrollEdgeAppearance = appearance
         }

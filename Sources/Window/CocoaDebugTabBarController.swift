@@ -15,7 +15,10 @@ class CocoaDebugTabBarController: UITabBarController {
         super.viewDidLoad()
         
         UIApplication.shared.keyWindow?.endEditing(true)
-        
+
+        overrideUserInterfaceStyle = .dark
+        self.delegate = self
+
         setChildControllers()
         
         let savedIndex = CocoaDebugSettings.shared.tabBarSelectItem
@@ -54,52 +57,26 @@ class CocoaDebugTabBarController: UITabBarController {
     
     //MARK: - private
     func setChildControllers() {
+        let bundle = Bundle(for: CocoaDebug.self)
+        let network = makeNav(root: NetworkViewController(),  tabTitle: "Network", tabImage: "_icon_file_type_network", bundle: bundle)
+        let logs    = makeNav(root: LogViewController(),      tabTitle: "Logs",    tabImage: "_icon_file_type_logs",    bundle: bundle)
+        let app     = makeNav(root: AppInfoViewController(),  tabTitle: "App",     tabImage: "_icon_file_type_app",     bundle: bundle)
 
-        //1.
-        let logs = UIStoryboard(name: "Logs", bundle: Bundle(for: CocoaDebug.self)).instantiateViewController(withIdentifier: "Logs")
-        let network = UIStoryboard(name: "Network", bundle: Bundle(for: CocoaDebug.self)).instantiateViewController(withIdentifier: "Network")
-        let app = UIStoryboard(name: "App", bundle: Bundle(for: CocoaDebug.self)).instantiateViewController(withIdentifier: "App")
-
-        //2. Sandbox removed — skip initialization
-
-        //3.
         guard let additionalViewController = CocoaDebugSettings.shared.additionalViewController else {
             self.viewControllers = [network, logs, app]
             return
         }
 
-        //4.Add additional controller
-        var temp = [network, logs, app]
-        
-        let nav = UINavigationController.init(rootViewController: additionalViewController)
-        nav.navigationBar.barTintColor = "#1f2124".hexColor
-        nav.tabBarItem = UITabBarItem.init(tabBarSystemItem: .more, tag: 4)
-
-        //****** copy codes from LogNavigationViewController.swift ******
-        nav.navigationBar.isTranslucent = false
-        
-        nav.navigationBar.tintColor = Color.mainGreen
-        nav.navigationBar.titleTextAttributes = [.font: UIFont.boldSystemFont(ofSize: 20),
-                                                 .foregroundColor: Color.mainGreen]
-        
-        let selector = #selector(CocoaDebugNavigationController.exit)
-        
-        
-        let image = UIImage(named: "_icon_file_type_close", in: Bundle(for: CocoaDebugNavigationController.self), compatibleWith: nil)
-        let leftItem = UIBarButtonItem(image: image,
-                                       style: .done, target: self, action: selector)
-        leftItem.tintColor = Color.mainGreen
-        nav.topViewController?.navigationItem.leftBarButtonItem = leftItem
-        //****** copy codes from LogNavigationViewController.swift ******
-        
-        temp.append(nav)
-        
-        self.viewControllers = temp
+        let nav = CocoaDebugNavigationController(rootViewController: additionalViewController)
+        nav.tabBarItem = UITabBarItem(tabBarSystemItem: .more, tag: 4)
+        self.viewControllers = [network, logs, app, nav]
     }
-    
-    //MARK: - target action
-    @objc func exit() {
-        dismiss(animated: true, completion: nil)
+
+    private func makeNav(root: UIViewController, tabTitle: String, tabImage: String, bundle: Bundle) -> CocoaDebugNavigationController {
+        let nav = CocoaDebugNavigationController(rootViewController: root)
+        let image = UIImage(named: tabImage, in: bundle, compatibleWith: nil)
+        nav.tabBarItem = UITabBarItem(title: tabTitle, image: image, selectedImage: image)
+        return nav
     }
     
     //MARK: - show more than 5 tabs by CocoaDebug
@@ -112,14 +89,26 @@ class CocoaDebugTabBarController: UITabBarController {
 
 //MARK: - UITabBarDelegate
 extension CocoaDebugTabBarController {
-    
+
     override func tabBar(_ tabBar: UITabBar, didSelect item: UITabBarItem) {
-        guard let items = self.tabBar.items else {return}
-        
+        guard let items = self.tabBar.items else { return }
         for index in 0...items.count-1 {
             if item == items[index] {
                 CocoaDebugSettings.shared.tabBarSelectItem = index
             }
         }
+    }
+}
+
+//MARK: - UITabBarControllerDelegate
+extension CocoaDebugTabBarController: UITabBarControllerDelegate {
+
+    func tabBarController(_ tabBarController: UITabBarController, shouldSelect viewController: UIViewController) -> Bool {
+        guard viewController !== selectedViewController else { return true }
+        let transition = CATransition()
+        transition.duration = 0.2
+        transition.type = .fade
+        view.layer.add(transition, forKey: nil)
+        return true
     }
 }
