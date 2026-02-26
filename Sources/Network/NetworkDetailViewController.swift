@@ -284,6 +284,64 @@ class NetworkDetailViewController: UITableViewController, MFMailComposeViewContr
             modelErrorDetails.isInfoOnly = true
         }
 
+        // MARK: Cache Headers
+        var cacheLines: [String] = []
+        let respFields = httpModel?.responseHeaderFields
+
+        func responseHeader(_ key: String) -> String? {
+            guard let fields = respFields else { return nil }
+            let lower = key.lowercased()
+            for (k, v) in fields {
+                if (k as? String)?.lowercased() == lower, let str = v as? String { return str }
+            }
+            return nil
+        }
+
+        if let cc = responseHeader("Cache-Control") {
+            cacheLines.append("Cache-Control   \(cc)")
+            let directives = cc.lowercased().components(separatedBy: ",")
+                              .map { $0.trimmingCharacters(in: .whitespaces) }
+            for d in directives {
+                if d == "no-store"          { cacheLines.append("  → Not cached at all") }
+                else if d == "no-cache"     { cacheLines.append("  → Must revalidate before each use") }
+                else if d == "must-revalidate" { cacheLines.append("  → Must revalidate when stale") }
+                else if d == "immutable"    { cacheLines.append("  → Content never changes") }
+                else if d == "public"       { cacheLines.append("  → Cacheable by any cache") }
+                else if d == "private"      { cacheLines.append("  → Browser-only cache") }
+                else if d.hasPrefix("max-age="), let s = Int(d.dropFirst(8)), s >= 0 {
+                    cacheLines.append("  → Fresh for \(humanDuration(s))")
+                } else if d.hasPrefix("s-maxage="), let s = Int(d.dropFirst(9)), s >= 0 {
+                    cacheLines.append("  → Shared cache: fresh for \(humanDuration(s))")
+                } else if d.hasPrefix("stale-while-revalidate="), let s = Int(d.dropFirst(23)) {
+                    cacheLines.append("  → Serve stale for \(humanDuration(s)) while revalidating")
+                } else if d.hasPrefix("stale-if-error="), let s = Int(d.dropFirst(15)) {
+                    cacheLines.append("  → Serve stale for \(humanDuration(s)) on error")
+                }
+            }
+        }
+        if let age = responseHeader("Age"), let ageSecs = Int(age) {
+            cacheLines.append("Age             \(age)s  (cached \(humanDuration(ageSecs)) ago)")
+        }
+        if let etag = responseHeader("ETag") {
+            cacheLines.append("ETag            \(etag)")
+        }
+        if let lastMod = responseHeader("Last-Modified") {
+            cacheLines.append("Last-Modified   \(lastMod)")
+        }
+        if let expires = responseHeader("Expires") {
+            cacheLines.append("Expires         \(expires)")
+        }
+        if let vary = responseHeader("Vary") {
+            cacheLines.append("Vary            \(vary)")
+        }
+        if let pragma = responseHeader("Pragma") {
+            cacheLines.append("Pragma          \(pragma)")
+        }
+        let modelCache = NetworkDetailModel(
+            title: "CACHE HEADERS",
+            content: cacheLines.isEmpty ? nil : cacheLines.joined(separator: "\n"),
+            url: urlStr, httpModel: httpModel)
+
         // Build final list — only include sections that have content.
         // URL is always included (hidden placeholder row).
         // REQUEST CURL is always included (useful even with just URL + method).
@@ -292,7 +350,7 @@ class NetworkDetailViewController: UITableViewController, MFMailComposeViewContr
 
         let allSections = [model_1, modelParams, model_2, model_3, model_4, model_5,
                            model_6, model_7, modelCurl,
-                           modelTiming, modelJWT, modelErrorDetails]
+                           modelTiming, modelJWT, modelErrorDetails, modelCache]
         for section in allSections {
             let title = section.title ?? ""
             if alwaysInclude.contains(title) {
@@ -303,9 +361,62 @@ class NetworkDetailViewController: UITableViewController, MFMailComposeViewContr
                 detailModels.append(section)
             }
         }
+
+        // MARK: Similar Requests — same host + normalized path (numbers/UUIDs stripped)
+        let currentHost     = httpModel?.url?.host ?? ""
+        let currentNormPath = Self.normalizedPath(httpModel?.url)
+
+        let capped: [_HttpModel]
+        if let current = httpModel, !currentNormPath.isEmpty {
+            capped = Array((httpModels ?? []).filter { model in
+                guard model !== current else { return false }
+                return model.url?.host == currentHost
+                    && Self.normalizedPath(model.url) == currentNormPath
+            }.prefix(10))
+        } else {
+            capped = []
+        }
+        if !capped.isEmpty {
+            var modelSimilar = NetworkDetailModel(title: "SIMILAR REQUESTS", content: nil, url: urlStr, httpModel: httpModel)
+            modelSimilar.similarRequests = capped
+            detailModels.append(modelSimilar)
+        }
     }
     
     // MARK: - Helpers
+
+    /// Normalizes a URL path for endpoint matching:
+    /// - replaces purely-numeric segments  (/orders/123  → /orders/*)
+    /// - replaces UUID-like segments        (/users/550e8400-…  → /users/*)
+    /// - ignores query parameters entirely
+    private static func normalizedPath(_ url: URL?) -> String {
+        guard let path = url?.path, !path.isEmpty else { return "" }
+        return path
+            .components(separatedBy: "/")
+            .map { seg -> String in
+                guard !seg.isEmpty else { return seg }
+                // Purely numeric
+                if seg.allSatisfy({ $0.isNumber }) { return "*" }
+                // UUID (8-4-4-4-12 hex + hyphens)
+                if seg.count == 36,
+                   seg.filter({ $0 == "-" }).count == 4,
+                   seg.replacingOccurrences(of: "-", with: "").allSatisfy({ $0.isHexDigit }) {
+                    return "*"
+                }
+                return seg
+            }
+            .joined(separator: "/")
+    }
+
+    private func humanDuration(_ seconds: Int) -> String {
+        if seconds < 60   { return "\(seconds)s" }
+        if seconds < 3600 {
+            let m = seconds / 60; let s = seconds % 60
+            return s > 0 ? "\(m)m \(s)s" : "\(m)m"
+        }
+        let h = seconds / 3600; let m = (seconds % 3600) / 60
+        return m > 0 ? "\(h)h \(m)m" : "\(h)h"
+    }
 
     private func formatBytes(_ bytes: Int) -> String {
         guard bytes > 0 else { return "" }
@@ -491,6 +602,7 @@ class NetworkDetailViewController: UITableViewController, MFMailComposeViewContr
         //Register programmatic cells (overrides storyboard prototypes)
         tableView.register(NetworkCell.self, forCellReuseIdentifier: "NetworkCell")
         tableView.register(NetworkDetailCell.self, forCellReuseIdentifier: "NetworkDetailCell")
+        tableView.register(NetworkSimilarRequestsCell.self, forCellReuseIdentifier: "NetworkSimilarRequestsCell")
 
         // Table styling
         tableView.backgroundColor = .black
@@ -629,11 +741,30 @@ extension NetworkDetailViewController {
     }
     
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        guard indexPath.row < detailModels.count else {
+            return tableView.dequeueReusableCell(withIdentifier: "NetworkDetailCell", for: indexPath)
+        }
+        let model = detailModels[indexPath.row]
+
+        // Similar Requests row — horizontal card scroll
+        if let similar = model.similarRequests, !similar.isEmpty {
+            let cell = tableView.dequeueReusableCell(withIdentifier: "NetworkSimilarRequestsCell", for: indexPath)
+                as! NetworkSimilarRequestsCell
+            cell.configure(with: similar)
+            cell.onTap = { [weak self] tappedModel in
+                guard let self = self else { return }
+                let vc = NetworkDetailViewController(style: .plain)
+                vc.httpModel  = tappedModel
+                vc.httpModels = self.httpModels
+                self.navigationController?.pushViewController(vc, animated: true)
+            }
+            return cell
+        }
+
         let cell = tableView.dequeueReusableCell(withIdentifier: "NetworkDetailCell", for: indexPath)
             as! NetworkDetailCell
-        guard indexPath.row < detailModels.count else { return cell }
-        cell.detailModel = detailModels[indexPath.row]
-        
+        cell.detailModel = model
+
         //2.click edit view
         cell.tapEditViewCallback = { [weak self] detailModel in
             guard let self = self else { return }
@@ -649,7 +780,7 @@ extension NetworkDetailViewController {
 
             self.pushJSONViewerOrFallback(with: content)
         }
-        
+
         return cell
     }
 }
