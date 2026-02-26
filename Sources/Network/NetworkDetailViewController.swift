@@ -148,6 +148,8 @@ class NetworkDetailViewController: UITableViewController, MFMailComposeViewContr
         // Request body
         var model_3 = NetworkDetailModel(title: "REQUEST", content: requestContent, url: urlStr, httpModel: httpModel)
         model_3.showPreview = true
+        let reqBytes = Int(httpModel?.requestDataSize ?? 0)
+        if reqBytes > 0 { model_3.sizeTag = "↑ \(formatBytes(reqBytes))" }
 
         // Response header
         var model_4 = NetworkDetailModel(title: "RESPONSE HEADER", content: nil, url: urlStr, httpModel: httpModel)
@@ -173,6 +175,16 @@ class NetworkDetailViewController: UITableViewController, MFMailComposeViewContr
             model_5 = NetworkDetailModel(title: "RESPONSE", content: cachedResponseData?.dataToPrettyPrintString(), url: urlStr, httpModel: httpModel)
         }
         model_5.showPreview = true
+        if httpModel?.isImage != true {
+            let respBytes = Int(httpModel?.responseDataSize ?? 0)
+            if respBytes > 0 {
+                let encoding = (httpModel?.responseHeaderFields?["Content-Encoding"] as? String ?? "").lowercased()
+                var tag = "↓ \(formatBytes(respBytes))"
+                if encoding.contains("gzip") { tag += "  gzip" }
+                else if encoding.contains("br") { tag += "  br" }
+                model_5.sizeTag = tag
+            }
+        }
 
         // Errors (info-only sections — different styling, no preview)
         var model_6 = NetworkDetailModel(title: "ERROR", content: httpModel?.errorLocalizedDescription, url: urlStr, httpModel: httpModel)
@@ -185,13 +197,102 @@ class NetworkDetailViewController: UITableViewController, MFMailComposeViewContr
         var modelCurl = NetworkDetailModel(title: "REQUEST CURL", content: rawCurlString, url: urlStr, httpModel: httpModel)
         modelCurl.showPreview = true
 
+        // MARK: Timing
+        var timingLines: [String] = []
+        if let durStr = httpModel?.totalDuration {
+            let cleaned = durStr.replacingOccurrences(of: " (s)", with: "").trimmingCharacters(in: .whitespaces)
+            if let secs = Double(cleaned) {
+                let ms = secs * 1000
+                timingLines.append(ms < 1000
+                    ? String(format: "Duration   %.0f ms", ms)
+                    : String(format: "Duration   %.2f s", secs))
+            }
+        }
+        if let startStr = httpModel?.startTime, let endStr = httpModel?.endTime {
+            let startTs = (startStr as NSString).doubleValue
+            let endTs   = (endStr   as NSString).doubleValue
+            if startTs > 0 {
+                let fmt = DateFormatter()
+                fmt.dateFormat = "HH:mm:ss.SSS"
+                timingLines.append("Started    " + fmt.string(from: Date(timeIntervalSince1970: startTs)))
+                timingLines.append("Finished   " + fmt.string(from: Date(timeIntervalSince1970: endTs)))
+            }
+        }
+        let modelTiming = NetworkDetailModel(
+            title: "TIMING",
+            content: timingLines.isEmpty ? nil : timingLines.joined(separator: "\n"),
+            url: urlStr, httpModel: httpModel)
+
+        // MARK: JWT
+        var modelJWT = NetworkDetailModel(title: "JWT TOKEN", content: nil, url: urlStr, httpModel: httpModel)
+        if let auth = httpModel?.requestHeaderFields?["Authorization"] as? String,
+           auth.lowercased().hasPrefix("bearer ") {
+            let token = String(auth.dropFirst(7)).trimmingCharacters(in: .whitespaces)
+            let parts = token.components(separatedBy: ".")
+            if parts.count >= 2 {
+                var blocks: [String] = []
+                if let data = Data(base64Encoded: padBase64(parts[0])),
+                   let obj  = try? JSONSerialization.jsonObject(with: data),
+                   let pretty = try? JSONSerialization.data(withJSONObject: obj, options: .prettyPrinted),
+                   let str = String(data: pretty, encoding: .utf8) {
+                    blocks.append("// HEADER\n\(str)")
+                }
+                if let data = Data(base64Encoded: padBase64(parts[1])),
+                   let obj  = try? JSONSerialization.jsonObject(with: data),
+                   let pretty = try? JSONSerialization.data(withJSONObject: obj, options: .prettyPrinted),
+                   let str = String(data: pretty, encoding: .utf8) {
+                    blocks.append("// PAYLOAD\n\(str)")
+                    if let dict = obj as? [String: Any],
+                       let expNum = dict["exp"] as? NSNumber {
+                        let expDate = Date(timeIntervalSince1970: expNum.doubleValue)
+                        let dateFmt = DateFormatter()
+                        dateFmt.dateFormat = "yyyy-MM-dd HH:mm:ss"
+                        if expDate > Date() {
+                            let diff = expDate.timeIntervalSinceNow
+                            let h = Int(diff) / 3600
+                            let m = (Int(diff) % 3600) / 60
+                            blocks.append("// EXPIRY\nExpires: \(dateFmt.string(from: expDate))\nExpires in: \(h)h \(m)m")
+                        } else {
+                            blocks.append("// EXPIRY\n⚠️ EXPIRED\nWas valid until: \(dateFmt.string(from: expDate))")
+                        }
+                    }
+                }
+                if !blocks.isEmpty {
+                    modelJWT.content = blocks.joined(separator: "\n\n")
+                    modelJWT.showPreview = true
+                }
+            }
+        }
+
+        // MARK: Error Details
+        var modelErrorDetails = NetworkDetailModel(title: "ERROR DETAILS", content: nil, url: urlStr, httpModel: httpModel)
+        let statusInt = Int(httpModel?.statusCode ?? "0") ?? 0
+        var errorLines: [String] = []
+        if statusInt >= 400 {
+            let msg = HTTPURLResponse.localizedString(forStatusCode: statusInt).capitalized
+            errorLines.append("HTTP \(statusInt)  \(msg)")
+        }
+        if let desc = httpModel?.errorLocalizedDescription, !desc.isEmpty {
+            errorLines.append(desc)
+        }
+        if let extra = httpModel?.errorDescription, !extra.isEmpty,
+           extra != httpModel?.errorLocalizedDescription {
+            errorLines.append(extra)
+        }
+        if !errorLines.isEmpty {
+            modelErrorDetails.content = errorLines.joined(separator: "\n")
+            modelErrorDetails.isInfoOnly = true
+        }
+
         // Build final list — only include sections that have content.
         // URL is always included (hidden placeholder row).
         // REQUEST CURL is always included (useful even with just URL + method).
         // Everything else is filtered out when empty.
         let alwaysInclude: Set<String> = ["URL", "REQUEST CURL"]
 
-        let allSections = [model_1, modelParams, model_2, model_3, model_4, model_5, model_6, model_7, modelCurl]
+        let allSections = [model_1, modelParams, model_2, model_3, model_4, model_5,
+                           model_6, model_7, modelCurl,
+                           modelTiming, modelJWT, modelErrorDetails]
         for section in allSections {
             let title = section.title ?? ""
             if alwaysInclude.contains(title) {
@@ -204,6 +305,23 @@ class NetworkDetailViewController: UITableViewController, MFMailComposeViewContr
         }
     }
     
+    // MARK: - Helpers
+
+    private func formatBytes(_ bytes: Int) -> String {
+        guard bytes > 0 else { return "" }
+        if bytes < 1024 { return "\(bytes) B" }
+        if bytes < 1024 * 1024 { return String(format: "%.1f KB", Double(bytes) / 1024) }
+        return String(format: "%.1f MB", Double(bytes) / (1024 * 1024))
+    }
+
+    private func padBase64(_ s: String) -> String {
+        var padded = s
+            .replacingOccurrences(of: "-", with: "+")
+            .replacingOccurrences(of: "_", with: "/")
+        while padded.count % 4 != 0 { padded += "=" }
+        return padded
+    }
+
     //detetc request format (JSON/Form)
     func detectRequestSerializer() {
         guard let requestData = httpModel?.requestData else {
@@ -444,7 +562,7 @@ class NetworkDetailViewController: UITableViewController, MFMailComposeViewContr
     //MARK: - target action
 
     @objc func close(_ sender: UIBarButtonItem) {
-        (self.navigationController as! CocoaDebugNavigationController).exit()
+        self.navigationController?.dismiss(animated: true)
     }
     
     @objc func didTapMail(_ sender: UIBarButtonItem) {

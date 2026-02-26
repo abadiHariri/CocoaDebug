@@ -27,6 +27,10 @@ struct NetworkDetailModel {
     var showPreview: Bool = false
     /// Info-only section (e.g. ERROR) — uses dimmer styling, no preview
     var isInfoOnly: Bool = false
+    /// Optional size annotation shown after the section title (e.g. "↑ 12.4 KB")
+    var sizeTag: String? = nil
+    /// Other requests shown horizontally in the "SIMILAR REQUESTS" section
+    var similarRequests: [_HttpModel]? = nil
 
     
     init(title: String? = nil, content: String? = "", url: String? = "", image: UIImage? = nil, httpModel: _HttpModel? = nil) {

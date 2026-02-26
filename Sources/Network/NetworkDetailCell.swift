@@ -211,6 +211,8 @@ class NetworkDetailCell: UITableViewCell {
 
     override func prepareForReuse() {
         super.prepareForReuse()
+        titleLabel.attributedText = nil
+        titleLabel.text = nil
         contentTextView.attributedText = nil
         contentTextView.text = nil
         contentTextView.isHidden = true
@@ -240,9 +242,23 @@ class NetworkDetailCell: UITableViewCell {
         let showPreview = model.showPreview && hasContent
         let mustInPreview = model.mustInPreview
 
-        // Title
-        titleLabel.text = model.title
-        titleLabel.textColor = isInfo ? Self.infoTitle : Self.tealTitle
+        // Title (with optional size annotation pill)
+        let titleColor = isInfo ? Self.infoTitle : Self.tealTitle
+        if let size = model.sizeTag, !size.isEmpty {
+            let attr = NSMutableAttributedString(string: model.title ?? "", attributes: [
+                .font: UIFont.systemFont(ofSize: 12, weight: .bold),
+                .foregroundColor: titleColor,
+            ])
+            attr.append(NSAttributedString(string: "  \(size)", attributes: [
+                .font: UIFont.systemFont(ofSize: 10),
+                .foregroundColor: UIColor(white: 0.42, alpha: 1),
+            ]))
+            titleLabel.attributedText = attr
+        } else {
+            titleLabel.attributedText = nil
+            titleLabel.text = model.title
+            titleLabel.textColor = titleColor
+        }
 
         // Card color
         cardView.backgroundColor = isInfo ? Self.infoCardColor : Self.cardColor

@@ -62,14 +62,28 @@ class CocoaDebugTabBarController: UITabBarController {
         let logs    = makeNav(root: LogViewController(),      tabTitle: "Logs",    tabImage: "_icon_file_type_logs",    bundle: bundle)
         let app     = makeNav(root: AppInfoViewController(),  tabTitle: "App",     tabImage: "_icon_file_type_app",     bundle: bundle)
 
-        guard let additionalViewController = CocoaDebugSettings.shared.additionalViewController else {
-            self.viewControllers = [network, logs, app]
-            return
+        var navs: [UINavigationController] = [network, logs, app]
+
+        if let additionalViewController = CocoaDebugSettings.shared.additionalViewController {
+            let nav = CocoaDebugNavigationController(rootViewController: additionalViewController)
+            nav.tabBarItem = UITabBarItem(tabBarSystemItem: .more, tag: 4)
+            navs.append(nav)
         }
 
-        let nav = CocoaDebugNavigationController(rootViewController: additionalViewController)
-        nav.tabBarItem = UITabBarItem(tabBarSystemItem: .more, tag: 4)
-        self.viewControllers = [network, logs, app, nav]
+        self.viewControllers = navs
+
+        // Add close button to each tab's root VC
+        let closeImage = UIImage(named: "_icon_file_type_close", in: bundle, compatibleWith: nil)
+                       ?? UIImage(systemName: "xmark")
+        for nav in navs {
+            let btn = UIBarButtonItem(image: closeImage, style: .plain, target: self, action: #selector(dismissDebugger))
+            btn.tintColor = Color.mainGreen
+            nav.topViewController?.navigationItem.leftBarButtonItem = btn
+        }
+    }
+
+    @objc private func dismissDebugger() {
+        dismiss(animated: true)
     }
 
     private func makeNav(root: UIViewController, tabTitle: String, tabImage: String, bundle: Bundle) -> CocoaDebugNavigationController {
