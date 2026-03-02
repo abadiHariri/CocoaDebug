@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import UIKit
 
 public class _SwiftLogHelper: NSObject {
     
@@ -39,9 +40,8 @@ public class _SwiftLogHelper: NSObject {
         let fileInfo = parseFileInfo(file: file, function: function, line: line)
         
         //2.
-        if let newLog = _OCLogModel.init(content: message, color: color, fileInfo: fileInfo, isTag: false, type: .none) {
-            _OCLogStoreManager.shared().addLog(newLog)
-        }
+        let newLog = _OCLogModel(content: message, color: color, fileInfo: fileInfo, isTag: false, type: .none)
+        _OCLogStoreManager.shared.addLog(newLog)
         
         //3.
         NotificationCenter.default.post(name: NSNotification.Name("refreshLogs_CocoaDebug"), object: nil, userInfo: nil)

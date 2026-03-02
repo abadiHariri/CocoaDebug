@@ -32,18 +32,16 @@ public class WindowHelper: NSObject {
         window.delegate = self
         window.isHidden = false
 
-        if #available(iOS 13.0, *) {
-            var success: Bool = false
+        var success: Bool = false
 
-            for i in 0...10 {
-                DispatchQueue.main.asyncAfter(deadline: DispatchTime.now() + (0.1 * Double(i))) {[weak self] in
-                    if success == true {return}
+        for i in 0...10 {
+            DispatchQueue.main.asyncAfter(deadline: DispatchTime.now() + (0.1 * Double(i))) {[weak self] in
+                if success == true {return}
 
-                    for scene in UIApplication.shared.connectedScenes {
-                        if let windowScene = scene as? UIWindowScene {
-                            self?.window.windowScene = windowScene
-                            success = true
-                        }
+                for scene in UIApplication.shared.connectedScenes {
+                    if let windowScene = scene as? UIWindowScene {
+                        self?.window.windowScene = windowScene
+                        success = true
                     }
                 }
             }

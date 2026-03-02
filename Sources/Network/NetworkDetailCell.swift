@@ -91,12 +91,10 @@ class NetworkDetailCell: UITableViewCell {
         copyButton.translatesAutoresizingMaskIntoConstraints = false
         copyButton.isHidden = true
         copyButton.addTarget(self, action: #selector(tapCopy), for: .touchUpInside)
-        if #available(iOS 13.0, *) {
-            let config = UIImage.SymbolConfiguration(pointSize: 12, weight: .medium)
-            let icon = UIImage(systemName: "doc.on.doc", withConfiguration: config)?
-                .withTintColor(Self.tealTitle, renderingMode: .alwaysOriginal)
-            copyButton.setImage(icon, for: .normal)
-        }
+        let copyConfig = UIImage.SymbolConfiguration(pointSize: 12, weight: .medium)
+        let copyIcon = UIImage(systemName: "doc.on.doc", withConfiguration: copyConfig)?
+            .withTintColor(Self.tealTitle, renderingMode: .alwaysOriginal)
+        copyButton.setImage(copyIcon, for: .normal)
         cardView.addSubview(copyButton)
 
         // Preview button (compact teal pill)
@@ -109,13 +107,11 @@ class NetworkDetailCell: UITableViewCell {
         previewButton.contentEdgeInsets = UIEdgeInsets(top: 4, left: 8, bottom: 4, right: 8)
         previewButton.addTarget(self, action: #selector(tapPreview), for: .touchUpInside)
 
-        if #available(iOS 13.0, *) {
-            let config = UIImage.SymbolConfiguration(pointSize: 10, weight: .semibold)
-            let icon = UIImage(systemName: "doc.text.magnifyingglass", withConfiguration: config)?
-                .withTintColor(.white, renderingMode: .alwaysOriginal)
-            previewButton.setImage(icon, for: .normal)
-            previewButton.imageEdgeInsets = UIEdgeInsets(top: 0, left: -3, bottom: 0, right: 3)
-        }
+        let previewConfig = UIImage.SymbolConfiguration(pointSize: 10, weight: .semibold)
+        let previewIcon = UIImage(systemName: "doc.text.magnifyingglass", withConfiguration: previewConfig)?
+            .withTintColor(.white, renderingMode: .alwaysOriginal)
+        previewButton.setImage(previewIcon, for: .normal)
+        previewButton.imageEdgeInsets = UIEdgeInsets(top: 0, left: -3, bottom: 0, right: 3)
         previewButton.setTitle("Preview", for: .normal)
         previewButton.isHidden = true
         cardView.addSubview(previewButton)
@@ -142,13 +138,11 @@ class NetworkDetailCell: UITableViewCell {
         showFullButton.contentEdgeInsets = UIEdgeInsets(top: 6, left: 16, bottom: 6, right: 16)
         showFullButton.addTarget(self, action: #selector(tapPreview), for: .touchUpInside)
 
-        if #available(iOS 13.0, *) {
-            let cfg = UIImage.SymbolConfiguration(pointSize: 10, weight: .semibold)
-            let ico = UIImage(systemName: "arrow.down.left.and.arrow.up.right", withConfiguration: cfg)?
-                .withTintColor(Self.tealTitle, renderingMode: .alwaysOriginal)
-            showFullButton.setImage(ico, for: .normal)
-            showFullButton.imageEdgeInsets = UIEdgeInsets(top: 0, left: -4, bottom: 0, right: 4)
-        }
+        let showFullCfg = UIImage.SymbolConfiguration(pointSize: 10, weight: .semibold)
+        let showFullIco = UIImage(systemName: "arrow.down.left.and.arrow.up.right", withConfiguration: showFullCfg)?
+            .withTintColor(Self.tealTitle, renderingMode: .alwaysOriginal)
+        showFullButton.setImage(showFullIco, for: .normal)
+        showFullButton.imageEdgeInsets = UIEdgeInsets(top: 0, left: -4, bottom: 0, right: 4)
         showFullButton.setTitle("Show Full Response", for: .normal)
         showFullButton.isHidden = true
         cardView.addSubview(showFullButton)
@@ -340,16 +334,14 @@ class NetworkDetailCell: UITableViewCell {
         UIPasteboard.general.string = content
 
         // Brief visual feedback — flash the icon color
-        if #available(iOS 13.0, *) {
-            let config = UIImage.SymbolConfiguration(pointSize: 12, weight: .medium)
-            let checkIcon = UIImage(systemName: "checkmark", withConfiguration: config)?
-                .withTintColor(.systemGreen, renderingMode: .alwaysOriginal)
-            copyButton.setImage(checkIcon, for: .normal)
-            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
-                let originalIcon = UIImage(systemName: "doc.on.doc", withConfiguration: config)?
-                    .withTintColor(Self.tealTitle, renderingMode: .alwaysOriginal)
-                self?.copyButton.setImage(originalIcon, for: .normal)
-            }
+        let config = UIImage.SymbolConfiguration(pointSize: 12, weight: .medium)
+        let checkIcon = UIImage(systemName: "checkmark", withConfiguration: config)?
+            .withTintColor(.systemGreen, renderingMode: .alwaysOriginal)
+        copyButton.setImage(checkIcon, for: .normal)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
+            let originalIcon = UIImage(systemName: "doc.on.doc", withConfiguration: config)?
+                .withTintColor(Self.tealTitle, renderingMode: .alwaysOriginal)
+            self?.copyButton.setImage(originalIcon, for: .normal)
         }
     }
 
@@ -417,7 +409,7 @@ class NetworkDetailCell: UITableViewCell {
 
         // "curl" command keyword
         if let regex = try? NSRegularExpression(pattern: "^curl\\b", options: []) {
-            let boldFont = UIFont(name: "Menlo-Bold", size: 11) ?? .monospacedSystemFont(ofSize: 11, weight: .bold)
+            let boldFont = UIFont(name: "Menlo-Bold", size: 11) ?? UIFont.boldSystemFont(ofSize: 11)
             for match in regex.matches(in: text, range: fullRange) {
                 attr.addAttribute(.foregroundColor, value: cmdColor, range: match.range)
                 attr.addAttribute(.font, value: boldFont, range: match.range)

@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import UIKit
 
 struct NetworkDetailModel {
     var title: String?
@@ -15,7 +16,7 @@ struct NetworkDetailModel {
     var image: UIImage?
     var blankContent: String?
     var isLast: Bool = false
-    var requestSerializer: RequestSerializer = RequestSerializer.JSON//default JSON format
+    var requestSerializer: RequestSerializer = RequestSerializer.json//default JSON format
     var requestHeaderFields: [String: Any]?
     var responseHeaderFields: [String: Any]?
     var requestData: Data?
@@ -41,7 +42,7 @@ struct NetworkDetailModel {
         self.httpModel = httpModel
         
         mustInPreview = (content?.count ?? 0 > 10000)
-        self.heigth = mustInPreview ? 100 : Double(self.content?.height(with: UIFont.systemFont(ofSize: 13), constraintToWidth: (UIScreen.main.bounds.size.width - 30)) ?? 0.0)
+        self.heigth = mustInPreview ? 100 : Double((self.content as NSString?)?.heightWithFont(UIFont.systemFont(ofSize: 13), constraintToWidth: (UIScreen.main.bounds.size.width - 30)) ?? 0.0)
         // print("Estimated size of label: \(heigth)")
       
 

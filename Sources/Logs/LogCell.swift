@@ -342,7 +342,7 @@ class LogCell: UITableViewCell {
     private static func tagInfo(for logType: CocoaDebugLogType) -> (label: String, color: UIColor) {
         switch logType {
         case .normal: return ("app", appTagColor)
-        case .RN:     return ("react", rnTagColor)
+        case .rn:     return ("react", rnTagColor)
         case .web:    return ("web", webTagColor)
         @unknown default: return ("log", appTagColor)
         }

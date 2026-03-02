@@ -44,7 +44,7 @@ class NetworkDetailViewController: UITableViewController, MFMailComposeViewContr
         // responseData loaded later, only when needed
 
         // detect the request parameter format (JSON/Form)
-        if requestSerializer == RequestSerializer.JSON {
+        if requestSerializer == RequestSerializer.json {
             requestContent = cachedRequestData?.dataToPrettyPrintString()
         }else if requestSerializer == RequestSerializer.form {
             if let data = cachedRequestData {
@@ -113,14 +113,14 @@ class NetworkDetailViewController: UITableViewController, MFMailComposeViewContr
         // Load response data from disk ONCE - single disk read
         let cachedResponseData: Data? = httpModel?.responseData
 
-        let urlStr = httpModel?.url.absoluteString
+        let urlStr = httpModel?.url?.absoluteString
 
         // URL (hidden row placeholder)
         let model_1 = NetworkDetailModel(title: "URL", content: "https://github.com/CocoaDebug/CocoaDebug", url: urlStr, httpModel: httpModel)
 
         // Request parameters (extracted from URL query string)
         var modelParams = NetworkDetailModel(title: "REQUEST PARAMETERS", content: nil, url: urlStr, httpModel: httpModel)
-        if let url = httpModel?.url, let components = URLComponents(url: url, resolvingAgainstBaseURL: false),
+        if let url = httpModel?.url as URL?, let components = URLComponents(url: url, resolvingAgainstBaseURL: false),
            let queryItems = components.queryItems, !queryItems.isEmpty {
             var dict: [String: Any] = [:]
             for item in queryItems {
@@ -135,9 +135,9 @@ class NetworkDetailViewController: UITableViewController, MFMailComposeViewContr
 
         // Request header
         var model_2 = NetworkDetailModel(title: "REQUEST HEADER", content: nil, url: urlStr, httpModel: httpModel)
-        if let requestHeaderFields = httpModel?.requestHeaderFields, !requestHeaderFields.isEmpty {
+        if let requestHeaderFields = httpModel?.requestHeaderFields, requestHeaderFields.count > 0 {
             model_2 = NetworkDetailModel(title: "REQUEST HEADER", content: requestHeaderFields.description, url: urlStr, httpModel: httpModel)
-            model_2.requestHeaderFields = requestHeaderFields
+            model_2.requestHeaderFields = requestHeaderFields as? [String: Any]
             if let data = try? JSONSerialization.data(withJSONObject: requestHeaderFields, options: [.prettyPrinted]),
                let jsonString = String(data: data, encoding: .utf8) {
                 model_2.content = jsonString
@@ -153,9 +153,9 @@ class NetworkDetailViewController: UITableViewController, MFMailComposeViewContr
 
         // Response header
         var model_4 = NetworkDetailModel(title: "RESPONSE HEADER", content: nil, url: urlStr, httpModel: httpModel)
-        if let responseHeaderFields = httpModel?.responseHeaderFields, !responseHeaderFields.isEmpty {
+        if let responseHeaderFields = httpModel?.responseHeaderFields, responseHeaderFields.count > 0 {
             model_4 = NetworkDetailModel(title: "RESPONSE HEADER", content: responseHeaderFields.description, url: urlStr, httpModel: httpModel)
-            model_4.responseHeaderFields = responseHeaderFields
+            model_4.responseHeaderFields = responseHeaderFields as? [String: Any]
             if let data = try? JSONSerialization.data(withJSONObject: responseHeaderFields, options: [.prettyPrinted]),
                let jsonString = String(data: data, encoding: .utf8) {
                 model_4.content = jsonString
@@ -167,7 +167,7 @@ class NetworkDetailViewController: UITableViewController, MFMailComposeViewContr
         var model_5: NetworkDetailModel
         if httpModel?.isImage == true {
             if let responseData = cachedResponseData {
-                model_5 = NetworkDetailModel(title: "RESPONSE", content: nil, url: urlStr, image: UIImage(gifData: responseData), httpModel: httpModel)
+                model_5 = NetworkDetailModel(title: "RESPONSE", content: nil, url: urlStr, image: UIImage.imageWithGIFData(responseData), httpModel: httpModel)
             } else {
                 model_5 = NetworkDetailModel(title: "RESPONSE", content: nil, url: urlStr, httpModel: httpModel)
             }
@@ -364,14 +364,14 @@ class NetworkDetailViewController: UITableViewController, MFMailComposeViewContr
 
         // MARK: Similar Requests — same host + normalized path (numbers/UUIDs stripped)
         let currentHost     = httpModel?.url?.host ?? ""
-        let currentNormPath = Self.normalizedPath(httpModel?.url)
+        let currentNormPath = Self.normalizedPath(httpModel?.url as URL?)
 
         let capped: [_HttpModel]
         if let current = httpModel, !currentNormPath.isEmpty {
             capped = Array((httpModels ?? []).filter { model in
                 guard model !== current else { return false }
                 return model.url?.host == currentHost
-                    && Self.normalizedPath(model.url) == currentNormPath
+                    && Self.normalizedPath(model.url as URL?) == currentNormPath
             }.prefix(10))
         } else {
             capped = []
@@ -436,13 +436,13 @@ class NetworkDetailViewController: UITableViewController, MFMailComposeViewContr
     //detetc request format (JSON/Form)
     func detectRequestSerializer() {
         guard let requestData = httpModel?.requestData else {
-            httpModel?.requestSerializer = RequestSerializer.JSON//default JSON format
+            httpModel?.requestSerializer = RequestSerializer.json//default JSON format
             return
         }
         
         if let _ = requestData.dataToDictionary() {
             //JSON format
-            httpModel?.requestSerializer = RequestSerializer.JSON
+            httpModel?.requestSerializer = RequestSerializer.json
         } else {
             //Form format
             httpModel?.requestSerializer = RequestSerializer.form
@@ -484,13 +484,13 @@ class NetworkDetailViewController: UITableViewController, MFMailComposeViewContr
         //2.1.url
         var url: String = ""
         if let httpModel = httpModel {
-            url = httpModel.url.absoluteString
+            url = httpModel.url?.absoluteString ?? ""
         }
         
         //2.2.method
         var method: String = ""
         if let httpModel = httpModel {
-            method = "[" + httpModel.method + "]"
+            method = "[" + (httpModel.method ?? "") + "]"
         }
         
         //2.3.time
@@ -508,7 +508,7 @@ class NetworkDetailViewController: UITableViewController, MFMailComposeViewContr
         //2.4.statusCode
         var statusCode: String = ""
         if let httpModel = httpModel {
-            statusCode = httpModel.statusCode
+            statusCode = httpModel.statusCode ?? ""
             if statusCode == "0" { //"0" means network unavailable
                 statusCode = "❌"
             }

@@ -32,7 +32,7 @@ class LogViewController: UIViewController {
             allModels = cache
         } else {
             allModels = cache.filter {
-                $0.content.lowercased().contains(searchText.lowercased())
+                ($0.content ?? "").lowercased().contains(searchText.lowercased())
             }
         }
     }
@@ -44,13 +44,13 @@ class LogViewController: UIViewController {
 
         // Merge all 3 log stores into one list sorted by date
         var combined: [_OCLogModel] = []
-        if let normal = _OCLogStoreManager.shared()?.normalLogArray as? [_OCLogModel] {
+        if let normal = _OCLogStoreManager.shared.normalLogArray as? [_OCLogModel] {
             combined.append(contentsOf: normal)
         }
-        if let rn = _OCLogStoreManager.shared()?.rnLogArray as? [_OCLogModel] {
+        if let rn = _OCLogStoreManager.shared.rnLogArray as? [_OCLogModel] {
             combined.append(contentsOf: rn)
         }
-        if let web = _OCLogStoreManager.shared()?.webLogArray as? [_OCLogModel] {
+        if let web = _OCLogStoreManager.shared.webLogArray as? [_OCLogModel] {
             combined.append(contentsOf: web)
         }
         combined.sort { ($0.date ?? .distantPast) < ($1.date ?? .distantPast) }
@@ -194,9 +194,9 @@ class LogViewController: UIViewController {
         cacheModels = []
         defaultSearchBar.resignFirstResponder()
 
-        _OCLogStoreManager.shared()?.resetNormalLogs()
-        _OCLogStoreManager.shared()?.resetRNLogs()
-        _OCLogStoreManager.shared()?.resetWebLogs()
+        _OCLogStoreManager.shared.resetNormalLogs()
+        _OCLogStoreManager.shared.resetRNLogs()
+        _OCLogStoreManager.shared.resetWebLogs()
 
         defaultTableView.reloadData()
     }
@@ -254,7 +254,7 @@ extension LogViewController: UITableViewDelegate {
         let logTitleString: String
         switch logModel.logType {
         case .normal: logTitleString = "App Log"
-        case .RN:     logTitleString = "React Log"
+        case .rn:     logTitleString = "React Log"
         case .web:    logTitleString = "Web Log"
         @unknown default: logTitleString = "Log"
         }

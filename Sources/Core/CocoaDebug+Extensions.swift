@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import UIKit
 
 extension Dictionary {
     ///JSON/Form format conversion
@@ -346,7 +347,7 @@ extension CocoaDebug {
         CocoaDebugSettings.shared.protobufTransferMap = protobufTransferMap
         CocoaDebugSettings.shared.additionalViewController = additionalViewController
         
-        var _ = _OCLogStoreManager.shared()
+        var _ = _OCLogStoreManager.shared
         CocoaDebugSettings.shared.responseShake = true
         
         //share via email
@@ -360,27 +361,29 @@ extension CocoaDebug {
         let enableLogMonitoring = UserDefaults.standard.bool(forKey: "enableLogMonitoring_CocoaDebug")
         if enableLogMonitoring == false {
             _SwiftLogHelper.shared.enable = false
-//            _OCLogHelper.shared()?.enable = false
         } else {
             _SwiftLogHelper.shared.enable = true
-//            _OCLogHelper.shared()?.enable = true
         }
-        
+
+        //hooks (replaces +load methods from ObjC)
+        _NSLogHook.enableIfNeeded()
+        _WKWebViewSwizzling.enableIfNeeded()
+        _CustomHTTPProtocol.swizzleSessionConfiguration()
+
         //network
         let disableNetworkMonitoring = UserDefaults.standard.bool(forKey: "disableNetworkMonitoring_CocoaDebug")
         if disableNetworkMonitoring == true {
-            _NetworkHelper.shared().disable()
+            _NetworkHelper.shared.disable()
         } else {
-            _NetworkHelper.shared().enable()
+            _NetworkHelper.shared.enable()
         }
     }
-    
+
     ///deinit
     static func deinitializationMethod() {
         WindowHelper.shared.disable()
-        _NetworkHelper.shared().disable()
+        _NetworkHelper.shared.disable()
         _SwiftLogHelper.shared.enable = false
-//        _OCLogHelper.shared()?.enable = false
         CocoaDebugSettings.shared.responseShake = false
     }
 }

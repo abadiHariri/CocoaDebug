@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import UIKit
 
 @objc public class CocoaDebugSettings: NSObject {
 
@@ -164,7 +165,7 @@ import Foundation
         didSet {
             UserDefaults.standard.set(mainColor, forKey: "mainColor_CocoaDebug")
             UserDefaults.standard.synchronize()
-            _NetworkHelper.shared().mainColor = mainColor.hexColor
+            _NetworkHelper.shared.mainColor = mainColor.hexColor
         }
     }
 
@@ -177,46 +178,46 @@ import Foundation
     //objc
     @objc public var ignoredURLs: [String]? = nil {
         didSet {
-            _NetworkHelper.shared().ignoredURLs = ignoredURLs
+            _NetworkHelper.shared.ignoredURLs = ignoredURLs
         }
     }
 
     @objc public var onlyURLs: [String]? = nil {
         didSet {
-            _NetworkHelper.shared().onlyURLs = onlyURLs
+            _NetworkHelper.shared.onlyURLs = onlyURLs
         }
     }
 
     @objc public var ignoredPrefixLogs: [String]? = nil {
         didSet {
-            _NetworkHelper.shared().ignoredPrefixLogs = ignoredPrefixLogs
+            _NetworkHelper.shared.ignoredPrefixLogs = ignoredPrefixLogs
         }
     }
 
     @objc public var onlyPrefixLogs: [String]? = nil {
         didSet {
-            _NetworkHelper.shared().onlyPrefixLogs = onlyPrefixLogs
+            _NetworkHelper.shared.onlyPrefixLogs = onlyPrefixLogs
         }
     }
 
     //protobuf
     @objc public var protobufTransferMap: [String: [String]]? = nil {
         didSet {
-            _NetworkHelper.shared().protobufTransferMap = protobufTransferMap
+            _NetworkHelper.shared.protobufTransferMap = protobufTransferMap
         }
     }
 
     //Max response body size (bytes) to capture. Default 10 MB.
     @objc public var maxResponseSize: UInt = 10 * 1024 * 1024 {
         didSet {
-            _NetworkHelper.shared().maxResponseSize = maxResponseSize
+            _NetworkHelper.shared.maxResponseSize = maxResponseSize
         }
     }
 
     //Max request body size (bytes) to capture from streams. Default 512 KB.
     @objc public var maxRequestBodySize: UInt = 512 * 1024 {
         didSet {
-            _NetworkHelper.shared().maxRequestBodySize = maxRequestBodySize
+            _NetworkHelper.shared.maxRequestBodySize = maxRequestBodySize
         }
     }
 
@@ -242,17 +243,17 @@ import Foundation
         mainColor = UserDefaults.standard.string(forKey: "mainColor_CocoaDebug") ?? "#42d459"
 
         //objc
-        ignoredURLs = _NetworkHelper.shared().ignoredURLs
-        onlyURLs = _NetworkHelper.shared().onlyURLs
+        ignoredURLs = _NetworkHelper.shared.ignoredURLs
+        onlyURLs = _NetworkHelper.shared.onlyURLs
 
-        ignoredPrefixLogs = _NetworkHelper.shared().ignoredPrefixLogs
-        onlyPrefixLogs = _NetworkHelper.shared().onlyPrefixLogs
+        ignoredPrefixLogs = _NetworkHelper.shared.ignoredPrefixLogs
+        onlyPrefixLogs = _NetworkHelper.shared.onlyPrefixLogs
 
         //protobuf
-        protobufTransferMap = _NetworkHelper.shared().protobufTransferMap
+        protobufTransferMap = _NetworkHelper.shared.protobufTransferMap
 
         //Size limits
-        maxResponseSize = _NetworkHelper.shared().maxResponseSize
-        maxRequestBodySize = _NetworkHelper.shared().maxRequestBodySize
+        maxResponseSize = _NetworkHelper.shared.maxResponseSize
+        maxRequestBodySize = _NetworkHelper.shared.maxRequestBodySize
     }
 }

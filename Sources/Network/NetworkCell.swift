@@ -215,11 +215,9 @@ class NetworkCell: UITableViewCell {
         viewedIcon.translatesAutoresizingMaskIntoConstraints = false
         viewedIcon.setContentHuggingPriority(.required, for: .horizontal)
         viewedIcon.setContentCompressionResistancePriority(.required, for: .horizontal)
-        if #available(iOS 13.0, *) {
-            let config = UIImage.SymbolConfiguration(pointSize: 9, weight: .medium)
-            viewedIcon.image = UIImage(systemName: "eye.fill", withConfiguration: config)?
-                .withTintColor(UIColor(white: 0.35, alpha: 1), renderingMode: .alwaysOriginal)
-        }
+        let viewedConfig = UIImage.SymbolConfiguration(pointSize: 9, weight: .medium)
+        viewedIcon.image = UIImage(systemName: "eye.fill", withConfiguration: viewedConfig)?
+            .withTintColor(UIColor(white: 0.35, alpha: 1), renderingMode: .alwaysOriginal)
         viewedIcon.widthAnchor.constraint(equalToConstant: 14).isActive = true
         viewedIcon.heightAnchor.constraint(equalToConstant: 10).isActive = true
 
@@ -246,13 +244,11 @@ class NetworkCell: UITableViewCell {
         curlButton.contentEdgeInsets = UIEdgeInsets(top: 6, left: 12, bottom: 6, right: 12)
         curlButton.addTarget(self, action: #selector(curlButtonTapped), for: .touchUpInside)
 
-        if #available(iOS 13.0, *) {
-            let config = UIImage.SymbolConfiguration(pointSize: 11, weight: .semibold)
-            let icon = UIImage(systemName: "terminal", withConfiguration: config)?
-                .withTintColor(Color.mainGreen, renderingMode: .alwaysOriginal)
-            curlButton.setImage(icon, for: .normal)
-            curlButton.imageEdgeInsets = UIEdgeInsets(top: 0, left: -4, bottom: 0, right: 4)
-        }
+        let curlConfig = UIImage.SymbolConfiguration(pointSize: 11, weight: .semibold)
+        let curlIcon = UIImage(systemName: "terminal", withConfiguration: curlConfig)?
+            .withTintColor(Color.mainGreen, renderingMode: .alwaysOriginal)
+        curlButton.setImage(curlIcon, for: .normal)
+        curlButton.imageEdgeInsets = UIEdgeInsets(top: 0, left: -4, bottom: 0, right: 4)
         curlButton.setTitle("Copy cURL", for: .normal)
         curlButton.setTitleColor(Color.mainGreen, for: .normal)
 
@@ -432,7 +428,7 @@ class NetworkCell: UITableViewCell {
             return
         }
 
-        let fullURL = model.url?.absoluteString.lowercased() ?? ""
+        let fullURL = (model.url?.absoluteString ?? "").lowercased()
 
         // 1. Custom tags ALWAYS run first — even for the main server URL.
         //    Same matching as onlyURLs: keyword is a substring of the full URL

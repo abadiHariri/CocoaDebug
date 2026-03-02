@@ -27,17 +27,11 @@ class CocoaDebugTabBarController: UITabBarController {
         self.tabBar.tintColor = Color.mainGreen
         
         //bugfix #issues-158
-        if #available(iOS 13, *) {
-            let appearance = UITabBarAppearance()
-            appearance.configureWithOpaqueBackground()
-            appearance.shadowColor = .clear    //removing navigationbar 1 px bottom border.
-//            self.tabBar.appearance().standardAppearance = appearance
-//            self.tabBar.appearance().scrollEdgeAppearance = appearance
-            self.tabBar.standardAppearance = appearance
-            if #available(iOS 15.0, *) {
-                self.tabBar.scrollEdgeAppearance = appearance
-            }
-        }
+        let appearance = UITabBarAppearance()
+        appearance.configureWithOpaqueBackground()
+        appearance.shadowColor = .clear    //removing navigationbar 1 px bottom border.
+        self.tabBar.standardAppearance = appearance
+        self.tabBar.scrollEdgeAppearance = appearance
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -73,8 +67,10 @@ class CocoaDebugTabBarController: UITabBarController {
         self.viewControllers = navs
 
         // Add close button to each tab's root VC
-        let closeImage = UIImage(named: "_icon_file_type_close", in: bundle, compatibleWith: nil)
-                       ?? UIImage(systemName: "xmark")
+        var closeImage = UIImage(named: "_icon_file_type_close", in: bundle, compatibleWith: nil)
+        if closeImage == nil {
+            closeImage = UIImage(systemName: "xmark")
+        }
         for nav in navs {
             let btn = UIBarButtonItem(image: closeImage, style: .plain, target: self, action: #selector(dismissDebugger))
             btn.tintColor = Color.mainGreen

@@ -111,10 +111,7 @@ extension _HttpModel {
 
         json["requests"] = expanded
 
-        var options: JSONSerialization.WritingOptions = [.sortedKeys]
-        if #available(iOS 13.0, *) {
-            options.insert(.withoutEscapingSlashes)
-        }
+        var options: JSONSerialization.WritingOptions = [.sortedKeys, .withoutEscapingSlashes]
         guard let newData = try? JSONSerialization.data(withJSONObject: json, options: options),
               let result = String(data: newData, encoding: .utf8) else {
             return nil

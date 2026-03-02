@@ -38,20 +38,20 @@ class JsonViewController: UIViewController {
     //detect format (JSON/Form)
     func detectSerializer() {
         guard let content = detailModel?.content else {
-            detailModel?.requestSerializer = RequestSerializer.JSON//default JSON format
+            detailModel?.requestSerializer = RequestSerializer.json//default JSON format
             return
         }
         
         if let _ = content.stringToDictionary() {
             //JSON format
-            detailModel?.requestSerializer = RequestSerializer.JSON
+            detailModel?.requestSerializer = RequestSerializer.json
         } else {
             //Form format
             detailModel?.requestSerializer = RequestSerializer.form
             
             if let jsonString = detailModel?.content?.formStringToJsonString() {
                 textView.text = jsonString
-                detailModel?.requestSerializer = RequestSerializer.JSON
+                detailModel?.requestSerializer = RequestSerializer.json
                 detailModel?.content = textView.text
             }
         }

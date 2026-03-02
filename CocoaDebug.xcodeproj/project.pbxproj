@@ -8,16 +8,6 @@
 
 /* Begin PBXBuildFile section */
 		3826DB4924EE5BF5003DE040 /* AppInfoViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3826D9D524EE5BF4003DE040 /* AppInfoViewController.swift */; };
-		3826DB4B24EE5BF5003DE040 /* CrashStoreManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3826D9D724EE5BF4003DE040 /* CrashStoreManager.swift */; };
-		3826DB4D24EE5BF5003DE040 /* CrashDetailViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3826D9D924EE5BF4003DE040 /* CrashDetailViewController.swift */; };
-		3826DB4E24EE5BF5003DE040 /* IgnoredURLsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3826D9DA24EE5BF4003DE040 /* IgnoredURLsViewController.swift */; };
-		3826DB4F24EE5BF5003DE040 /* CrashListViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3826D9DB24EE5BF4003DE040 /* CrashListViewController.swift */; };
-		3826DB5024EE5BF5003DE040 /* _CrashModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3826D9DC24EE5BF4003DE040 /* _CrashModel.swift */; };
-		3826DB5124EE5BF5003DE040 /* CrashLogger.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3826D9DD24EE5BF4003DE040 /* CrashLogger.swift */; };
-		3826DB5324EE5BF5003DE040 /* AboutViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3826D9DF24EE5BF4003DE040 /* AboutViewController.swift */; };
-		3826DB5424EE5BF5003DE040 /* CrashCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3826D9E024EE5BF4003DE040 /* CrashCell.swift */; };
-		3826DB7924EE5BF5003DE040 /* NetworkCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 3826DA0924EE5BF4003DE040 /* NetworkCell.xib */; };
-		3826DB7A24EE5BF5003DE040 /* Logs.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 3826DA0A24EE5BF4003DE040 /* Logs.storyboard */; };
 		3826DB7B24EE5BF5003DE040 /* _icon_file_type_app@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 3826DA0C24EE5BF4003DE040 /* _icon_file_type_app@2x.png */; };
 		3826DB7C24EE5BF5003DE040 /* _icon_file_type_close@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 3826DA0D24EE5BF4003DE040 /* _icon_file_type_close@2x.png */; };
 		3826DB7D24EE5BF5003DE040 /* _icon_file_type_network@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 3826DA0E24EE5BF4003DE040 /* _icon_file_type_network@2x.png */; };
@@ -27,7 +17,6 @@
 		3826DB8124EE5BF5003DE040 /* _icon_file_type_mail@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 3826DA1224EE5BF4003DE040 /* _icon_file_type_mail@2x.png */; };
 		3826DB8224EE5BF5003DE040 /* _icon_file_type_up@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 3826DA1324EE5BF4003DE040 /* _icon_file_type_up@2x.png */; };
 		3826DB8324EE5BF5003DE040 /* _icon_file_type_down@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 3826DA1424EE5BF4003DE040 /* _icon_file_type_down@2x.png */; };
-		3826DB8424EE5BF5003DE040 /* Network.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 3826DA1524EE5BF4003DE040 /* Network.storyboard */; };
 		3826DB8524EE5BF5003DE040 /* icon_file_type_wav@3x.png in Resources */ = {isa = PBXBuildFile; fileRef = 3826DA1724EE5BF4003DE040 /* icon_file_type_wav@3x.png */; };
 		3826DB8624EE5BF5003DE040 /* icon_file_type_bin@3x.png in Resources */ = {isa = PBXBuildFile; fileRef = 3826DA1824EE5BF4003DE040 /* icon_file_type_bin@3x.png */; };
 		3826DB8724EE5BF5003DE040 /* icon_file_type_folder_not_empty@3x.png in Resources */ = {isa = PBXBuildFile; fileRef = 3826DA1924EE5BF4003DE040 /* icon_file_type_folder_not_empty@3x.png */; };
@@ -190,46 +179,14 @@
 		3826DC2424EE5BF5003DE040 /* icon_file_type_md@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 3826DAB624EE5BF5003DE040 /* icon_file_type_md@2x.png */; };
 		3826DC2524EE5BF5003DE040 /* icon_file_type_pdf@3x.png in Resources */ = {isa = PBXBuildFile; fileRef = 3826DAB724EE5BF5003DE040 /* icon_file_type_pdf@3x.png */; };
 		3826DC2624EE5BF5003DE040 /* icon_file_type_js@3x.png in Resources */ = {isa = PBXBuildFile; fileRef = 3826DAB824EE5BF5003DE040 /* icon_file_type_js@3x.png */; };
-		3826DC2724EE5BF5003DE040 /* Manager.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 3826DAB924EE5BF5003DE040 /* Manager.storyboard */; };
-		3826DC2824EE5BF5003DE040 /* App.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 3826DABA24EE5BF5003DE040 /* App.storyboard */; };
 		3826DC2924EE5BF5003DE040 /* JsonViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3826DABC24EE5BF5003DE040 /* JsonViewController.swift */; };
-		3826DC2A24EE5BF5003DE040 /* _HttpModel.m in Sources */ = {isa = PBXBuildFile; fileRef = 3826DABD24EE5BF5003DE040 /* _HttpModel.m */; };
-		3826DC2B24EE5BF5003DE040 /* _NetworkHelper.h in Headers */ = {isa = PBXBuildFile; fileRef = 3826DABE24EE5BF5003DE040 /* _NetworkHelper.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		3826DC2C24EE5BF5003DE040 /* NetworkCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3826DABF24EE5BF5003DE040 /* NetworkCell.swift */; };
-		3826DC2D24EE5BF5003DE040 /* _HttpDatasource.h in Headers */ = {isa = PBXBuildFile; fileRef = 3826DAC024EE5BF5003DE040 /* _HttpDatasource.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		3826DC2E24EE5BF5003DE040 /* NetworkViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3826DAC124EE5BF5003DE040 /* NetworkViewController.swift */; };
 		3826DC2F24EE5BF5003DE040 /* NetworkDetailViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3826DAC224EE5BF5003DE040 /* NetworkDetailViewController.swift */; };
-		3826DC3024EE5BF5003DE040 /* _HttpModel.h in Headers */ = {isa = PBXBuildFile; fileRef = 3826DAC324EE5BF5003DE040 /* _HttpModel.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		3826DC3124EE5BF5003DE040 /* NetworkDetailCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3826DAC424EE5BF5003DE040 /* NetworkDetailCell.swift */; };
-		3826DC3224EE5BF5003DE040 /* _NetworkHelper.m in Sources */ = {isa = PBXBuildFile; fileRef = 3826DAC524EE5BF5003DE040 /* _NetworkHelper.m */; };
 		3826DC3324EE5BF5003DE040 /* NetworkDetailModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3826DAC624EE5BF5003DE040 /* NetworkDetailModel.swift */; };
-		3826DC3424EE5BF5003DE040 /* _HttpDatasource.m in Sources */ = {isa = PBXBuildFile; fileRef = 3826DAC724EE5BF5003DE040 /* _HttpDatasource.m */; };
-		3826DC3524EE5BF5003DE040 /* _CacheStoragePolicy.h in Headers */ = {isa = PBXBuildFile; fileRef = 3826DAC924EE5BF5003DE040 /* _CacheStoragePolicy.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		3826DC3624EE5BF5003DE040 /* _CanonicalRequest.h in Headers */ = {isa = PBXBuildFile; fileRef = 3826DACA24EE5BF5003DE040 /* _CanonicalRequest.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		3826DC3724EE5BF5003DE040 /* _QNSURLSessionDemux.m in Sources */ = {isa = PBXBuildFile; fileRef = 3826DACB24EE5BF5003DE040 /* _QNSURLSessionDemux.m */; };
-		3826DC3824EE5BF5003DE040 /* _CustomHTTPProtocol.m in Sources */ = {isa = PBXBuildFile; fileRef = 3826DACC24EE5BF5003DE040 /* _CustomHTTPProtocol.m */; };
-		3826DC3924EE5BF5003DE040 /* _CacheStoragePolicy.m in Sources */ = {isa = PBXBuildFile; fileRef = 3826DACD24EE5BF5003DE040 /* _CacheStoragePolicy.m */; };
-		3826DC3A24EE5BF5003DE040 /* _QNSURLSessionDemux.h in Headers */ = {isa = PBXBuildFile; fileRef = 3826DACE24EE5BF5003DE040 /* _QNSURLSessionDemux.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		3826DC3B24EE5BF5003DE040 /* _CanonicalRequest.m in Sources */ = {isa = PBXBuildFile; fileRef = 3826DACF24EE5BF5003DE040 /* _CanonicalRequest.m */; };
-		3826DC3C24EE5BF5003DE040 /* _CustomHTTPProtocol.h in Headers */ = {isa = PBXBuildFile; fileRef = 3826DAD024EE5BF5003DE040 /* _CustomHTTPProtocol.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		3826DC3E24EE5BF5003DE040 /* _OCLogModel.h in Headers */ = {isa = PBXBuildFile; fileRef = 3826DAD324EE5BF5003DE040 /* _OCLogModel.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		3826DC3F24EE5BF5003DE040 /* _NSLogHook.m in Sources */ = {isa = PBXBuildFile; fileRef = 3826DAD424EE5BF5003DE040 /* _NSLogHook.m */; };
-		3826DC4024EE5BF5003DE040 /* _OCLogHelper.h in Headers */ = {isa = PBXBuildFile; fileRef = 3826DAD524EE5BF5003DE040 /* _OCLogHelper.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		3826DC4124EE5BF5003DE040 /* _OCLoggerFormat.m in Sources */ = {isa = PBXBuildFile; fileRef = 3826DAD624EE5BF5003DE040 /* _OCLoggerFormat.m */; };
-		3826DC4224EE5BF5003DE040 /* CocoaDebugTool.m in Sources */ = {isa = PBXBuildFile; fileRef = 3826DAD724EE5BF5003DE040 /* CocoaDebugTool.m */; };
-		3826DC4324EE5BF5003DE040 /* _ObjcLog.h in Headers */ = {isa = PBXBuildFile; fileRef = 3826DAD824EE5BF5003DE040 /* _ObjcLog.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		3826DC4424EE5BF5003DE040 /* _OCLogStoreManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 3826DAD924EE5BF5003DE040 /* _OCLogStoreManager.m */; };
-		3826DC4524EE5BF5003DE040 /* _OCLogHelper.m in Sources */ = {isa = PBXBuildFile; fileRef = 3826DADA24EE5BF5003DE040 /* _OCLogHelper.m */; };
-		3826DC4624EE5BF5003DE040 /* _OCLogModel.m in Sources */ = {isa = PBXBuildFile; fileRef = 3826DADB24EE5BF5003DE040 /* _OCLogModel.m */; };
 		3826DC4724EE5BF5003DE040 /* LogCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3826DADC24EE5BF5003DE040 /* LogCell.swift */; };
 		3826DC4824EE5BF5003DE040 /* LogViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3826DADD24EE5BF5003DE040 /* LogViewController.swift */; };
-		3826DC4924EE5BF5003DE040 /* _OCLoggerFormat.h in Headers */ = {isa = PBXBuildFile; fileRef = 3826DADE24EE5BF5003DE040 /* _OCLoggerFormat.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		3826DC4A24EE5BF5003DE040 /* CocoaDebugTool.h in Headers */ = {isa = PBXBuildFile; fileRef = 3826DADF24EE5BF5003DE040 /* CocoaDebugTool.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		3826DC4B24EE5BF5003DE040 /* _OCLogStoreManager.h in Headers */ = {isa = PBXBuildFile; fileRef = 3826DAE024EE5BF5003DE040 /* _OCLogStoreManager.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		3826DC4C24EE5BF5003DE040 /* _ObjcLog.m in Sources */ = {isa = PBXBuildFile; fileRef = 3826DAE124EE5BF5003DE040 /* _ObjcLog.m */; };
-		3826DC5E24EE5BF5003DE040 /* _Swizzling.m in Sources */ = {isa = PBXBuildFile; fileRef = 3826DAF524EE5BF5003DE040 /* _Swizzling.m */; };
-		3826DC5F24EE5BF5003DE040 /* _WKWebView+Swizzling.m in Sources */ = {isa = PBXBuildFile; fileRef = 3826DAF624EE5BF5003DE040 /* _WKWebView+Swizzling.m */; };
-		3826DC6024EE5BF5003DE040 /* _Swizzling.h in Headers */ = {isa = PBXBuildFile; fileRef = 3826DAF724EE5BF5003DE040 /* _Swizzling.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		3826DC6124EE5BF5003DE040 /* Bubble.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3826DAF924EE5BF5003DE040 /* Bubble.swift */; };
 		3826DC6224EE5BF5003DE040 /* WindowHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3826DAFA24EE5BF5003DE040 /* WindowHelper.swift */; };
 		3826DC6324EE5BF5003DE040 /* CocoaDebugNavigationController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3826DAFB24EE5BF5003DE040 /* CocoaDebugNavigationController.swift */; };
@@ -237,53 +194,36 @@
 		3826DC6524EE5BF5003DE040 /* CocoaDebugTabBarController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3826DAFD24EE5BF5003DE040 /* CocoaDebugTabBarController.swift */; };
 		3826DC6624EE5BF5003DE040 /* CocoaDebugWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3826DAFE24EE5BF5003DE040 /* CocoaDebugWindow.swift */; };
 		3826DC6724EE5BF5003DE040 /* Color.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3826DAFF24EE5BF5003DE040 /* Color.swift */; };
-		3826DC6824EE5BF5003DE040 /* NSObject+CocoaDebug.h in Headers */ = {isa = PBXBuildFile; fileRef = 3826DB0124EE5BF5003DE040 /* NSObject+CocoaDebug.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		3826DC6A24EE5BF5003DE040 /* NSObject+CocoaDebug.m in Sources */ = {isa = PBXBuildFile; fileRef = 3826DB0324EE5BF5003DE040 /* NSObject+CocoaDebug.m */; };
-		3826DD2424EE5FD5003DE040 /* _SandboxerHelper.m in Sources */ = {isa = PBXBuildFile; fileRef = 3826DD1324EE5FD4003DE040 /* _SandboxerHelper.m */; };
-		3826DD2524EE5FD5003DE040 /* _ImageController.m in Sources */ = {isa = PBXBuildFile; fileRef = 3826DD1424EE5FD4003DE040 /* _ImageController.m */; };
-		3826DD2624EE5FD5003DE040 /* _FileInfo.m in Sources */ = {isa = PBXBuildFile; fileRef = 3826DD1524EE5FD4003DE040 /* _FileInfo.m */; };
-		3826DD2724EE5FD5003DE040 /* _FileTableViewCell.h in Headers */ = {isa = PBXBuildFile; fileRef = 3826DD1624EE5FD5003DE040 /* _FileTableViewCell.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		3826DD2824EE5FD5003DE040 /* _FileInfo.h in Headers */ = {isa = PBXBuildFile; fileRef = 3826DD1724EE5FD5003DE040 /* _FileInfo.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		3826DD2924EE5FD5003DE040 /* _FilePreviewController.h in Headers */ = {isa = PBXBuildFile; fileRef = 3826DD1824EE5FD5003DE040 /* _FilePreviewController.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		3826DD2A24EE5FD5003DE040 /* _DirectoryContentsTableViewController.h in Headers */ = {isa = PBXBuildFile; fileRef = 3826DD1924EE5FD5003DE040 /* _DirectoryContentsTableViewController.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		3826DD2B24EE5FD5003DE040 /* _Sandboxer.h in Headers */ = {isa = PBXBuildFile; fileRef = 3826DD1A24EE5FD5003DE040 /* _Sandboxer.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		3826DD2C24EE5FD5003DE040 /* _SandboxerHelper.h in Headers */ = {isa = PBXBuildFile; fileRef = 3826DD1B24EE5FD5003DE040 /* _SandboxerHelper.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		3826DD2D24EE5FD5003DE040 /* _FilePreviewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 3826DD1C24EE5FD5003DE040 /* _FilePreviewController.m */; };
-		3826DD2E24EE5FD5003DE040 /* _Sandboxer.m in Sources */ = {isa = PBXBuildFile; fileRef = 3826DD1D24EE5FD5003DE040 /* _Sandboxer.m */; };
-		3826DD2F24EE5FD5003DE040 /* _ImageResources.h in Headers */ = {isa = PBXBuildFile; fileRef = 3826DD1E24EE5FD5003DE040 /* _ImageResources.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		3826DD3024EE5FD5003DE040 /* _ImageResources.m in Sources */ = {isa = PBXBuildFile; fileRef = 3826DD1F24EE5FD5003DE040 /* _ImageResources.m */; };
-		3826DD3124EE5FD5003DE040 /* _FileTableViewCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 3826DD2024EE5FD5003DE040 /* _FileTableViewCell.m */; };
-		3826DD3224EE5FD5003DE040 /* _Sandboxer-Header.h in Headers */ = {isa = PBXBuildFile; fileRef = 3826DD2124EE5FD5003DE040 /* _Sandboxer-Header.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		3826DD3324EE5FD5003DE040 /* _DirectoryContentsTableViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 3826DD2224EE5FD5003DE040 /* _DirectoryContentsTableViewController.m */; };
-		3826DD3424EE5FD5003DE040 /* _ImageController.h in Headers */ = {isa = PBXBuildFile; fileRef = 3826DD2324EE5FD5003DE040 /* _ImageController.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		3826DE7924EE7CDE003DE040 /* CocoaDebugTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 3826DE7824EE7CDE003DE040 /* CocoaDebugTests.m */; };
 		3826DE7B24EE7CDE003DE040 /* CocoaDebug.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 380965722414E04F00382668 /* CocoaDebug.framework */; platformFilter = ios; };
 		3826DEA824EE854E003DE040 /* copy_and_codesign.sh in Resources */ = {isa = PBXBuildFile; fileRef = 3826DEA724EE854E003DE040 /* copy_and_codesign.sh */; };
-		3828BA29259E223B00ABF650 /* FPSCounter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3828BA26259E223B00ABF650 /* FPSCounter.swift */; };
-		3828BA2A259E223B00ABF650 /* _DebugConsoleLabel.h in Headers */ = {isa = PBXBuildFile; fileRef = 3828BA27259E223B00ABF650 /* _DebugConsoleLabel.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		3828BA2B259E223B00ABF650 /* _DebugConsoleLabel.m in Sources */ = {isa = PBXBuildFile; fileRef = 3828BA28259E223B00ABF650 /* _DebugConsoleLabel.m */; };
-		3828BA33259E234C00ABF650 /* UIBlockingBubble.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3828BA32259E234C00ABF650 /* UIBlockingBubble.swift */; };
 		385945EE256D07D400ADA065 /* _SwiftLogHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 385945ED256D07D400ADA065 /* _SwiftLogHelper.swift */; };
-		3871CFFA27042E1F005967AE /* _BacktraceLogger.h in Headers */ = {isa = PBXBuildFile; fileRef = 3871CFF627042E1F005967AE /* _BacktraceLogger.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		3871CFFB27042E1F005967AE /* _BacktraceLogger.m in Sources */ = {isa = PBXBuildFile; fileRef = 3871CFF727042E1F005967AE /* _BacktraceLogger.m */; };
-		3871CFFC27042E1F005967AE /* _RunloopMonitor.h in Headers */ = {isa = PBXBuildFile; fileRef = 3871CFF827042E1F005967AE /* _RunloopMonitor.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		3871CFFD27042E1F005967AE /* _RunloopMonitor.m in Sources */ = {isa = PBXBuildFile; fileRef = 3871CFF927042E1F005967AE /* _RunloopMonitor.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
 		3882D68225676EA200379E0C /* _fishhook.c in Sources */ = {isa = PBXBuildFile; fileRef = 3882D68025676EA200379E0C /* _fishhook.c */; };
 		3882D68325676EA200379E0C /* _fishhook.h in Headers */ = {isa = PBXBuildFile; fileRef = 3882D68125676EA200379E0C /* _fishhook.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		38CD79A629B22ADA00B973BD /* CocoaDebug+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 38CD799B29B22ADA00B973BD /* CocoaDebug+Extensions.swift */; };
-		38CD79A729B22ADA00B973BD /* CocoaDebugDeviceInfo.h in Headers */ = {isa = PBXBuildFile; fileRef = 38CD799C29B22ADA00B973BD /* CocoaDebugDeviceInfo.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		38CD79A829B22ADA00B973BD /* _AutoLaunch.m in Sources */ = {isa = PBXBuildFile; fileRef = 38CD799D29B22ADA00B973BD /* _AutoLaunch.m */; };
 		38CD79A929B22ADA00B973BD /* CocoaDebugSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 38CD799E29B22ADA00B973BD /* CocoaDebugSettings.swift */; };
-		38CD79AA29B22ADA00B973BD /* _DeviceUtil+Constant.h in Headers */ = {isa = PBXBuildFile; fileRef = 38CD799F29B22ADA00B973BD /* _DeviceUtil+Constant.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		38CD79AB29B22ADA00B973BD /* _DeviceUtil.m in Sources */ = {isa = PBXBuildFile; fileRef = 38CD79A029B22ADA00B973BD /* _DeviceUtil.m */; };
-		38CD79AC29B22ADA00B973BD /* CocoaDebug.h in Headers */ = {isa = PBXBuildFile; fileRef = 38CD79A129B22ADA00B973BD /* CocoaDebug.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		38CD79AD29B22ADA00B973BD /* _DeviceUtil.h in Headers */ = {isa = PBXBuildFile; fileRef = 38CD79A229B22ADA00B973BD /* _DeviceUtil.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		38CD79AE29B22ADA00B973BD /* _DeviceUtil+Constant.m in Sources */ = {isa = PBXBuildFile; fileRef = 38CD79A329B22ADA00B973BD /* _DeviceUtil+Constant.m */; };
 		38CD79AF29B22ADA00B973BD /* CocoaDebug.swift in Sources */ = {isa = PBXBuildFile; fileRef = 38CD79A429B22ADA00B973BD /* CocoaDebug.swift */; };
-		38CD79B029B22ADA00B973BD /* CocoaDebugDeviceInfo.m in Sources */ = {isa = PBXBuildFile; fileRef = 38CD79A529B22ADA00B973BD /* CocoaDebugDeviceInfo.m */; };
-		38F69F8A26A6FAFB0010953F /* GPBMessage+CocoaDebug.h in Headers */ = {isa = PBXBuildFile; fileRef = 38F69F8826A6FAFB0010953F /* GPBMessage+CocoaDebug.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		38F69F8B26A6FAFB0010953F /* GPBMessage+CocoaDebug.m in Sources */ = {isa = PBXBuildFile; fileRef = 38F69F8926A6FAFB0010953F /* GPBMessage+CocoaDebug.m */; };
 		F93A16022A35F4F400F76A99 /* _HTTPModel+cURL.swift in Sources */ = {isa = PBXBuildFile; fileRef = F93A16012A35F4F400F76A99 /* _HTTPModel+cURL.swift */; };
+		CDA7D9A3FADEED3B213A2CC4 /* Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD57302187CDFA441908F22D /* Extensions.swift */; };
+		CD7571CB9EB4F52217867DFA /* CocoaDebugDeviceInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD61308ADFEB4BF350562C7D /* CocoaDebugDeviceInfo.swift */; };
+		CD6744E9B0850933F65F5048 /* DeviceUtil.swift in Sources */ = {isa = PBXBuildFile; fileRef = CDC64BB3D79AAD4492649CF8 /* DeviceUtil.swift */; };
+		CDD2C975AF6E0174BC480974 /* CacheStoragePolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD7CC80EA33790C53303692D /* CacheStoragePolicy.swift */; };
+		CD0D53E8EA4A6B17ACA78156 /* CanonicalRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD8B05E6F437A0B667C22935 /* CanonicalRequest.swift */; };
+		CDD8FA1D9CE8C1FF434CC072 /* CustomHTTPProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD4CC3D7C58AFB14E862D6AF /* CustomHTTPProtocol.swift */; };
+		CD53E8C5761C7691D13C0A64 /* QNSURLSessionDemux.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD6A2CBAE569DE4B66CA7AE6 /* QNSURLSessionDemux.swift */; };
+		CDE61CC12338D77FF95E911B /* CocoaDebugTool.swift in Sources */ = {isa = PBXBuildFile; fileRef = CDF832837122783083F632FD /* CocoaDebugTool.swift */; };
+		CD6C1C9298EFA1ED8D30981A /* NSLogHook.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD66DE955EDB1C1DAEE63E9D /* NSLogHook.swift */; };
+		CD09881ED64A20891F631088 /* OCLogHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD4F83D72555FF037A7EB9F5 /* OCLogHelper.swift */; };
+		CD587B817562918AC0C5E1AC /* OCLogModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = CDC93B37B1B600D6C1E41347 /* OCLogModel.swift */; };
+		CDB7085E28C72E944241559E /* OCLogStoreManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD3946015BAC61A9DE5228C3 /* OCLogStoreManager.swift */; };
+		CDEFCB08C29D46F4BECC5B50 /* OCLoggerFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD1168160A6E5C6771EED672 /* OCLoggerFormat.swift */; };
+		CDEDA326EBF719C44810FC9F /* ObjcLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = CDA5EE64AA13EE302A64A44E /* ObjcLog.swift */; };
+		CD4E71E2048AC9C8D50B0A2C /* HttpDatasource.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD8412404784587FA5CBA8E1 /* HttpDatasource.swift */; };
+		CD1B7DB3BCA1C37CB00FDF04 /* HttpModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD46E7359EE681B9C5D6A728 /* HttpModel.swift */; };
+		CD391E8BA5E413B6C226426E /* NetworkHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD4CC20750E26F2D66075FCE /* NetworkHelper.swift */; };
+		CD6CB22485700C1D7FF742CC /* NetworkSimilarRequestsCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD3AA1A0462BF168C4FAA607 /* NetworkSimilarRequestsCell.swift */; };
+		CDBD2F154A87D1FDA6FC90DC /* Swizzling.swift in Sources */ = {isa = PBXBuildFile; fileRef = CDF45568CC89AA96C42CAA56 /* Swizzling.swift */; };
+		CD54108ED379B7E9B0B9ADF1 /* WKWebViewSwizzling.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD28669389521751EF893912 /* WKWebViewSwizzling.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -299,16 +239,6 @@
 /* Begin PBXFileReference section */
 		380965722414E04F00382668 /* CocoaDebug.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = CocoaDebug.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		3826D9D524EE5BF4003DE040 /* AppInfoViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AppInfoViewController.swift; sourceTree = "<group>"; };
-		3826D9D724EE5BF4003DE040 /* CrashStoreManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CrashStoreManager.swift; sourceTree = "<group>"; };
-		3826D9D924EE5BF4003DE040 /* CrashDetailViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CrashDetailViewController.swift; sourceTree = "<group>"; };
-		3826D9DA24EE5BF4003DE040 /* IgnoredURLsViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = IgnoredURLsViewController.swift; sourceTree = "<group>"; };
-		3826D9DB24EE5BF4003DE040 /* CrashListViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CrashListViewController.swift; sourceTree = "<group>"; };
-		3826D9DC24EE5BF4003DE040 /* _CrashModel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = _CrashModel.swift; sourceTree = "<group>"; };
-		3826D9DD24EE5BF4003DE040 /* CrashLogger.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CrashLogger.swift; sourceTree = "<group>"; };
-		3826D9DF24EE5BF4003DE040 /* AboutViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AboutViewController.swift; sourceTree = "<group>"; };
-		3826D9E024EE5BF4003DE040 /* CrashCell.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CrashCell.swift; sourceTree = "<group>"; };
-		3826DA0924EE5BF4003DE040 /* NetworkCell.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = NetworkCell.xib; sourceTree = "<group>"; };
-		3826DA0A24EE5BF4003DE040 /* Logs.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; path = Logs.storyboard; sourceTree = "<group>"; };
 		3826DA0C24EE5BF4003DE040 /* _icon_file_type_app@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "_icon_file_type_app@2x.png"; sourceTree = "<group>"; };
 		3826DA0D24EE5BF4003DE040 /* _icon_file_type_close@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "_icon_file_type_close@2x.png"; sourceTree = "<group>"; };
 		3826DA0E24EE5BF4003DE040 /* _icon_file_type_network@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "_icon_file_type_network@2x.png"; sourceTree = "<group>"; };
@@ -318,7 +248,6 @@
 		3826DA1224EE5BF4003DE040 /* _icon_file_type_mail@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "_icon_file_type_mail@2x.png"; sourceTree = "<group>"; };
 		3826DA1324EE5BF4003DE040 /* _icon_file_type_up@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "_icon_file_type_up@2x.png"; sourceTree = "<group>"; };
 		3826DA1424EE5BF4003DE040 /* _icon_file_type_down@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "_icon_file_type_down@2x.png"; sourceTree = "<group>"; };
-		3826DA1524EE5BF4003DE040 /* Network.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; path = Network.storyboard; sourceTree = "<group>"; };
 		3826DA1724EE5BF4003DE040 /* icon_file_type_wav@3x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "icon_file_type_wav@3x.png"; sourceTree = "<group>"; };
 		3826DA1824EE5BF4003DE040 /* icon_file_type_bin@3x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "icon_file_type_bin@3x.png"; sourceTree = "<group>"; };
 		3826DA1924EE5BF4003DE040 /* icon_file_type_folder_not_empty@3x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "icon_file_type_folder_not_empty@3x.png"; sourceTree = "<group>"; };
@@ -481,46 +410,14 @@
 		3826DAB624EE5BF5003DE040 /* icon_file_type_md@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "icon_file_type_md@2x.png"; sourceTree = "<group>"; };
 		3826DAB724EE5BF5003DE040 /* icon_file_type_pdf@3x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "icon_file_type_pdf@3x.png"; sourceTree = "<group>"; };
 		3826DAB824EE5BF5003DE040 /* icon_file_type_js@3x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "icon_file_type_js@3x.png"; sourceTree = "<group>"; };
-		3826DAB924EE5BF5003DE040 /* Manager.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; path = Manager.storyboard; sourceTree = "<group>"; };
-		3826DABA24EE5BF5003DE040 /* App.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; path = App.storyboard; sourceTree = "<group>"; };
 		3826DABC24EE5BF5003DE040 /* JsonViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = JsonViewController.swift; sourceTree = "<group>"; };
-		3826DABD24EE5BF5003DE040 /* _HttpModel.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = _HttpModel.m; sourceTree = "<group>"; };
-		3826DABE24EE5BF5003DE040 /* _NetworkHelper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = _NetworkHelper.h; sourceTree = "<group>"; };
 		3826DABF24EE5BF5003DE040 /* NetworkCell.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = NetworkCell.swift; sourceTree = "<group>"; };
-		3826DAC024EE5BF5003DE040 /* _HttpDatasource.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = _HttpDatasource.h; sourceTree = "<group>"; };
 		3826DAC124EE5BF5003DE040 /* NetworkViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = NetworkViewController.swift; sourceTree = "<group>"; };
 		3826DAC224EE5BF5003DE040 /* NetworkDetailViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = NetworkDetailViewController.swift; sourceTree = "<group>"; };
-		3826DAC324EE5BF5003DE040 /* _HttpModel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = _HttpModel.h; sourceTree = "<group>"; };
 		3826DAC424EE5BF5003DE040 /* NetworkDetailCell.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = NetworkDetailCell.swift; sourceTree = "<group>"; };
-		3826DAC524EE5BF5003DE040 /* _NetworkHelper.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = _NetworkHelper.m; sourceTree = "<group>"; };
 		3826DAC624EE5BF5003DE040 /* NetworkDetailModel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = NetworkDetailModel.swift; sourceTree = "<group>"; };
-		3826DAC724EE5BF5003DE040 /* _HttpDatasource.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = _HttpDatasource.m; sourceTree = "<group>"; };
-		3826DAC924EE5BF5003DE040 /* _CacheStoragePolicy.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = _CacheStoragePolicy.h; sourceTree = "<group>"; };
-		3826DACA24EE5BF5003DE040 /* _CanonicalRequest.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = _CanonicalRequest.h; sourceTree = "<group>"; };
-		3826DACB24EE5BF5003DE040 /* _QNSURLSessionDemux.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = _QNSURLSessionDemux.m; sourceTree = "<group>"; };
-		3826DACC24EE5BF5003DE040 /* _CustomHTTPProtocol.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = _CustomHTTPProtocol.m; sourceTree = "<group>"; };
-		3826DACD24EE5BF5003DE040 /* _CacheStoragePolicy.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = _CacheStoragePolicy.m; sourceTree = "<group>"; };
-		3826DACE24EE5BF5003DE040 /* _QNSURLSessionDemux.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = _QNSURLSessionDemux.h; sourceTree = "<group>"; };
-		3826DACF24EE5BF5003DE040 /* _CanonicalRequest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = _CanonicalRequest.m; sourceTree = "<group>"; };
-		3826DAD024EE5BF5003DE040 /* _CustomHTTPProtocol.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = _CustomHTTPProtocol.h; sourceTree = "<group>"; };
-		3826DAD324EE5BF5003DE040 /* _OCLogModel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = _OCLogModel.h; sourceTree = "<group>"; };
-		3826DAD424EE5BF5003DE040 /* _NSLogHook.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = _NSLogHook.m; sourceTree = "<group>"; };
-		3826DAD524EE5BF5003DE040 /* _OCLogHelper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = _OCLogHelper.h; sourceTree = "<group>"; };
-		3826DAD624EE5BF5003DE040 /* _OCLoggerFormat.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = _OCLoggerFormat.m; sourceTree = "<group>"; };
-		3826DAD724EE5BF5003DE040 /* CocoaDebugTool.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CocoaDebugTool.m; sourceTree = "<group>"; };
-		3826DAD824EE5BF5003DE040 /* _ObjcLog.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = _ObjcLog.h; sourceTree = "<group>"; };
-		3826DAD924EE5BF5003DE040 /* _OCLogStoreManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = _OCLogStoreManager.m; sourceTree = "<group>"; };
-		3826DADA24EE5BF5003DE040 /* _OCLogHelper.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = _OCLogHelper.m; sourceTree = "<group>"; };
-		3826DADB24EE5BF5003DE040 /* _OCLogModel.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = _OCLogModel.m; sourceTree = "<group>"; };
 		3826DADC24EE5BF5003DE040 /* LogCell.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LogCell.swift; sourceTree = "<group>"; };
 		3826DADD24EE5BF5003DE040 /* LogViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LogViewController.swift; sourceTree = "<group>"; };
-		3826DADE24EE5BF5003DE040 /* _OCLoggerFormat.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = _OCLoggerFormat.h; sourceTree = "<group>"; };
-		3826DADF24EE5BF5003DE040 /* CocoaDebugTool.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CocoaDebugTool.h; sourceTree = "<group>"; };
-		3826DAE024EE5BF5003DE040 /* _OCLogStoreManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = _OCLogStoreManager.h; sourceTree = "<group>"; };
-		3826DAE124EE5BF5003DE040 /* _ObjcLog.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = _ObjcLog.m; sourceTree = "<group>"; };
-		3826DAF524EE5BF5003DE040 /* _Swizzling.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = _Swizzling.m; sourceTree = "<group>"; };
-		3826DAF624EE5BF5003DE040 /* _WKWebView+Swizzling.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "_WKWebView+Swizzling.m"; sourceTree = "<group>"; };
-		3826DAF724EE5BF5003DE040 /* _Swizzling.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = _Swizzling.h; sourceTree = "<group>"; };
 		3826DAF924EE5BF5003DE040 /* Bubble.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Bubble.swift; sourceTree = "<group>"; };
 		3826DAFA24EE5BF5003DE040 /* WindowHelper.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = WindowHelper.swift; sourceTree = "<group>"; };
 		3826DAFB24EE5BF5003DE040 /* CocoaDebugNavigationController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CocoaDebugNavigationController.swift; sourceTree = "<group>"; };
@@ -528,55 +425,38 @@
 		3826DAFD24EE5BF5003DE040 /* CocoaDebugTabBarController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CocoaDebugTabBarController.swift; sourceTree = "<group>"; };
 		3826DAFE24EE5BF5003DE040 /* CocoaDebugWindow.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CocoaDebugWindow.swift; sourceTree = "<group>"; };
 		3826DAFF24EE5BF5003DE040 /* Color.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Color.swift; sourceTree = "<group>"; };
-		3826DB0124EE5BF5003DE040 /* NSObject+CocoaDebug.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSObject+CocoaDebug.h"; sourceTree = "<group>"; };
-		3826DB0324EE5BF5003DE040 /* NSObject+CocoaDebug.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSObject+CocoaDebug.m"; sourceTree = "<group>"; };
-		3826DD1324EE5FD4003DE040 /* _SandboxerHelper.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = _SandboxerHelper.m; sourceTree = "<group>"; };
-		3826DD1424EE5FD4003DE040 /* _ImageController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = _ImageController.m; sourceTree = "<group>"; };
-		3826DD1524EE5FD4003DE040 /* _FileInfo.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = _FileInfo.m; sourceTree = "<group>"; };
-		3826DD1624EE5FD5003DE040 /* _FileTableViewCell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = _FileTableViewCell.h; sourceTree = "<group>"; };
-		3826DD1724EE5FD5003DE040 /* _FileInfo.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = _FileInfo.h; sourceTree = "<group>"; };
-		3826DD1824EE5FD5003DE040 /* _FilePreviewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = _FilePreviewController.h; sourceTree = "<group>"; };
-		3826DD1924EE5FD5003DE040 /* _DirectoryContentsTableViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = _DirectoryContentsTableViewController.h; sourceTree = "<group>"; };
-		3826DD1A24EE5FD5003DE040 /* _Sandboxer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = _Sandboxer.h; sourceTree = "<group>"; };
-		3826DD1B24EE5FD5003DE040 /* _SandboxerHelper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = _SandboxerHelper.h; sourceTree = "<group>"; };
-		3826DD1C24EE5FD5003DE040 /* _FilePreviewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = _FilePreviewController.m; sourceTree = "<group>"; };
-		3826DD1D24EE5FD5003DE040 /* _Sandboxer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = _Sandboxer.m; sourceTree = "<group>"; };
-		3826DD1E24EE5FD5003DE040 /* _ImageResources.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = _ImageResources.h; sourceTree = "<group>"; };
-		3826DD1F24EE5FD5003DE040 /* _ImageResources.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = _ImageResources.m; sourceTree = "<group>"; };
-		3826DD2024EE5FD5003DE040 /* _FileTableViewCell.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = _FileTableViewCell.m; sourceTree = "<group>"; };
-		3826DD2124EE5FD5003DE040 /* _Sandboxer-Header.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "_Sandboxer-Header.h"; sourceTree = "<group>"; };
-		3826DD2224EE5FD5003DE040 /* _DirectoryContentsTableViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = _DirectoryContentsTableViewController.m; sourceTree = "<group>"; };
-		3826DD2324EE5FD5003DE040 /* _ImageController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = _ImageController.h; sourceTree = "<group>"; };
 		3826DE7624EE7CDE003DE040 /* CocoaDebugTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CocoaDebugTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		3826DE7824EE7CDE003DE040 /* CocoaDebugTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CocoaDebugTests.m; sourceTree = "<group>"; };
 		3826DE7A24EE7CDE003DE040 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		3826DEA724EE854E003DE040 /* copy_and_codesign.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = copy_and_codesign.sh; sourceTree = "<group>"; };
-		3828BA26259E223B00ABF650 /* FPSCounter.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FPSCounter.swift; sourceTree = "<group>"; };
-		3828BA27259E223B00ABF650 /* _DebugConsoleLabel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = _DebugConsoleLabel.h; sourceTree = "<group>"; };
-		3828BA28259E223B00ABF650 /* _DebugConsoleLabel.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = _DebugConsoleLabel.m; sourceTree = "<group>"; };
-		3828BA32259E234C00ABF650 /* UIBlockingBubble.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UIBlockingBubble.swift; sourceTree = "<group>"; };
 		385945ED256D07D400ADA065 /* _SwiftLogHelper.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = _SwiftLogHelper.swift; sourceTree = "<group>"; };
-		3871CFF627042E1F005967AE /* _BacktraceLogger.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = _BacktraceLogger.h; sourceTree = "<group>"; };
-		3871CFF727042E1F005967AE /* _BacktraceLogger.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = _BacktraceLogger.m; sourceTree = "<group>"; };
-		3871CFF827042E1F005967AE /* _RunloopMonitor.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = _RunloopMonitor.h; sourceTree = "<group>"; };
-		3871CFF927042E1F005967AE /* _RunloopMonitor.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = _RunloopMonitor.m; sourceTree = "<group>"; };
 		3882D68025676EA200379E0C /* _fishhook.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = _fishhook.c; sourceTree = "<group>"; };
 		3882D68125676EA200379E0C /* _fishhook.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = _fishhook.h; sourceTree = "<group>"; };
 		38CD799B29B22ADA00B973BD /* CocoaDebug+Extensions.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "CocoaDebug+Extensions.swift"; sourceTree = "<group>"; };
-		38CD799C29B22ADA00B973BD /* CocoaDebugDeviceInfo.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CocoaDebugDeviceInfo.h; sourceTree = "<group>"; };
-		38CD799D29B22ADA00B973BD /* _AutoLaunch.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = _AutoLaunch.m; sourceTree = "<group>"; };
 		38CD799E29B22ADA00B973BD /* CocoaDebugSettings.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CocoaDebugSettings.swift; sourceTree = "<group>"; };
-		38CD799F29B22ADA00B973BD /* _DeviceUtil+Constant.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "_DeviceUtil+Constant.h"; sourceTree = "<group>"; };
-		38CD79A029B22ADA00B973BD /* _DeviceUtil.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = _DeviceUtil.m; sourceTree = "<group>"; };
-		38CD79A129B22ADA00B973BD /* CocoaDebug.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CocoaDebug.h; sourceTree = "<group>"; };
-		38CD79A229B22ADA00B973BD /* _DeviceUtil.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = _DeviceUtil.h; sourceTree = "<group>"; };
-		38CD79A329B22ADA00B973BD /* _DeviceUtil+Constant.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "_DeviceUtil+Constant.m"; sourceTree = "<group>"; };
 		38CD79A429B22ADA00B973BD /* CocoaDebug.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CocoaDebug.swift; sourceTree = "<group>"; };
-		38CD79A529B22ADA00B973BD /* CocoaDebugDeviceInfo.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CocoaDebugDeviceInfo.m; sourceTree = "<group>"; };
-		38F69F8826A6FAFB0010953F /* GPBMessage+CocoaDebug.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "GPBMessage+CocoaDebug.h"; sourceTree = "<group>"; };
-		38F69F8926A6FAFB0010953F /* GPBMessage+CocoaDebug.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "GPBMessage+CocoaDebug.m"; sourceTree = "<group>"; };
 		F93A16012A35F4F400F76A99 /* _HTTPModel+cURL.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "_HTTPModel+cURL.swift"; sourceTree = "<group>"; };
 		FABC630A2BCC051600258711 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		CD57302187CDFA441908F22D /* Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Extensions.swift; sourceTree = "<group>"; };
+		CD61308ADFEB4BF350562C7D /* CocoaDebugDeviceInfo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CocoaDebugDeviceInfo.swift; sourceTree = "<group>"; };
+		CDC64BB3D79AAD4492649CF8 /* DeviceUtil.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceUtil.swift; sourceTree = "<group>"; };
+		CD7CC80EA33790C53303692D /* CacheStoragePolicy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CacheStoragePolicy.swift; sourceTree = "<group>"; };
+		CD8B05E6F437A0B667C22935 /* CanonicalRequest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CanonicalRequest.swift; sourceTree = "<group>"; };
+		CD4CC3D7C58AFB14E862D6AF /* CustomHTTPProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomHTTPProtocol.swift; sourceTree = "<group>"; };
+		CD6A2CBAE569DE4B66CA7AE6 /* QNSURLSessionDemux.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QNSURLSessionDemux.swift; sourceTree = "<group>"; };
+		CDF832837122783083F632FD /* CocoaDebugTool.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CocoaDebugTool.swift; sourceTree = "<group>"; };
+		CD66DE955EDB1C1DAEE63E9D /* NSLogHook.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NSLogHook.swift; sourceTree = "<group>"; };
+		CD4F83D72555FF037A7EB9F5 /* OCLogHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OCLogHelper.swift; sourceTree = "<group>"; };
+		CDC93B37B1B600D6C1E41347 /* OCLogModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OCLogModel.swift; sourceTree = "<group>"; };
+		CD3946015BAC61A9DE5228C3 /* OCLogStoreManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OCLogStoreManager.swift; sourceTree = "<group>"; };
+		CD1168160A6E5C6771EED672 /* OCLoggerFormat.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OCLoggerFormat.swift; sourceTree = "<group>"; };
+		CDA5EE64AA13EE302A64A44E /* ObjcLog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ObjcLog.swift; sourceTree = "<group>"; };
+		CD8412404784587FA5CBA8E1 /* HttpDatasource.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HttpDatasource.swift; sourceTree = "<group>"; };
+		CD46E7359EE681B9C5D6A728 /* HttpModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HttpModel.swift; sourceTree = "<group>"; };
+		CD4CC20750E26F2D66075FCE /* NetworkHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetworkHelper.swift; sourceTree = "<group>"; };
+		CD3AA1A0462BF168C4FAA607 /* NetworkSimilarRequestsCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetworkSimilarRequestsCell.swift; sourceTree = "<group>"; };
+		CDF45568CC89AA96C42CAA56 /* Swizzling.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Swizzling.swift; sourceTree = "<group>"; };
+		CD28669389521751EF893912 /* WKWebViewSwizzling.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WKWebViewSwizzling.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -629,7 +509,6 @@
 			isa = PBXGroup;
 			children = (
 				FABC630A2BCC051600258711 /* PrivacyInfo.xcprivacy */,
-				3828BA25259E223B00ABF650 /* Monitor */,
 				3882D67F25676EA200379E0C /* fishhook */,
 				3826D9CE24EE5BF4003DE040 /* Core */,
 				3826D9D424EE5BF4003DE040 /* App */,
@@ -637,7 +516,6 @@
 				3826DABB24EE5BF5003DE040 /* Network */,
 				3826DAC824EE5BF5003DE040 /* CustomHTTPProtocol */,
 				3826DAD124EE5BF5003DE040 /* Logs */,
-				3826DAE224EE5BF5003DE040 /* Sandbox */,
 				3826DAF424EE5BF5003DE040 /* Swizzling */,
 				3826DAF824EE5BF5003DE040 /* Window */,
 				3826DB0024EE5BF5003DE040 /* Categories */,
@@ -648,17 +526,11 @@
 		3826D9CE24EE5BF4003DE040 /* Core */ = {
 			isa = PBXGroup;
 			children = (
-				38CD799D29B22ADA00B973BD /* _AutoLaunch.m */,
-				38CD79A229B22ADA00B973BD /* _DeviceUtil.h */,
-				38CD79A029B22ADA00B973BD /* _DeviceUtil.m */,
-				38CD799F29B22ADA00B973BD /* _DeviceUtil+Constant.h */,
-				38CD79A329B22ADA00B973BD /* _DeviceUtil+Constant.m */,
-				38CD79A129B22ADA00B973BD /* CocoaDebug.h */,
 				38CD79A429B22ADA00B973BD /* CocoaDebug.swift */,
 				38CD799B29B22ADA00B973BD /* CocoaDebug+Extensions.swift */,
-				38CD799C29B22ADA00B973BD /* CocoaDebugDeviceInfo.h */,
-				38CD79A529B22ADA00B973BD /* CocoaDebugDeviceInfo.m */,
 				38CD799E29B22ADA00B973BD /* CocoaDebugSettings.swift */,
+				CD61308ADFEB4BF350562C7D /* CocoaDebugDeviceInfo.swift */,
+				CDC64BB3D79AAD4492649CF8 /* DeviceUtil.swift */,
 			);
 			path = Core;
 			sourceTree = "<group>";
@@ -667,14 +539,6 @@
 			isa = PBXGroup;
 			children = (
 				3826D9D524EE5BF4003DE040 /* AppInfoViewController.swift */,
-				3826D9D724EE5BF4003DE040 /* CrashStoreManager.swift */,
-				3826D9D924EE5BF4003DE040 /* CrashDetailViewController.swift */,
-				3826D9DA24EE5BF4003DE040 /* IgnoredURLsViewController.swift */,
-				3826D9DB24EE5BF4003DE040 /* CrashListViewController.swift */,
-				3826D9DC24EE5BF4003DE040 /* _CrashModel.swift */,
-				3826D9DD24EE5BF4003DE040 /* CrashLogger.swift */,
-				3826D9DF24EE5BF4003DE040 /* AboutViewController.swift */,
-				3826D9E024EE5BF4003DE040 /* CrashCell.swift */,
 			);
 			path = App;
 			sourceTree = "<group>";
@@ -682,13 +546,8 @@
 		3826DA0824EE5BF4003DE040 /* Resources */ = {
 			isa = PBXGroup;
 			children = (
-				3826DA0924EE5BF4003DE040 /* NetworkCell.xib */,
-				3826DA0A24EE5BF4003DE040 /* Logs.storyboard */,
 				3826DA0B24EE5BF4003DE040 /* images */,
-				3826DA1524EE5BF4003DE040 /* Network.storyboard */,
 				3826DA1624EE5BF4003DE040 /* FileType */,
-				3826DAB924EE5BF5003DE040 /* Manager.storyboard */,
-				3826DABA24EE5BF5003DE040 /* App.storyboard */,
 			);
 			path = Resources;
 			sourceTree = "<group>";
@@ -882,18 +741,16 @@
 			isa = PBXGroup;
 			children = (
 				3826DABC24EE5BF5003DE040 /* JsonViewController.swift */,
-				3826DABD24EE5BF5003DE040 /* _HttpModel.m */,
-				3826DABE24EE5BF5003DE040 /* _NetworkHelper.h */,
 				3826DABF24EE5BF5003DE040 /* NetworkCell.swift */,
-				3826DAC024EE5BF5003DE040 /* _HttpDatasource.h */,
 				3826DAC124EE5BF5003DE040 /* NetworkViewController.swift */,
 				3826DAC224EE5BF5003DE040 /* NetworkDetailViewController.swift */,
 				F93A16012A35F4F400F76A99 /* _HTTPModel+cURL.swift */,
-				3826DAC324EE5BF5003DE040 /* _HttpModel.h */,
 				3826DAC424EE5BF5003DE040 /* NetworkDetailCell.swift */,
-				3826DAC524EE5BF5003DE040 /* _NetworkHelper.m */,
 				3826DAC624EE5BF5003DE040 /* NetworkDetailModel.swift */,
-				3826DAC724EE5BF5003DE040 /* _HttpDatasource.m */,
+				CD8412404784587FA5CBA8E1 /* HttpDatasource.swift */,
+				CD46E7359EE681B9C5D6A728 /* HttpModel.swift */,
+				CD4CC20750E26F2D66075FCE /* NetworkHelper.swift */,
+				CD3AA1A0462BF168C4FAA607 /* NetworkSimilarRequestsCell.swift */,
 			);
 			path = Network;
 			sourceTree = "<group>";
@@ -901,14 +758,10 @@
 		3826DAC824EE5BF5003DE040 /* CustomHTTPProtocol */ = {
 			isa = PBXGroup;
 			children = (
-				3826DAC924EE5BF5003DE040 /* _CacheStoragePolicy.h */,
-				3826DACA24EE5BF5003DE040 /* _CanonicalRequest.h */,
-				3826DACB24EE5BF5003DE040 /* _QNSURLSessionDemux.m */,
-				3826DACC24EE5BF5003DE040 /* _CustomHTTPProtocol.m */,
-				3826DACD24EE5BF5003DE040 /* _CacheStoragePolicy.m */,
-				3826DACE24EE5BF5003DE040 /* _QNSURLSessionDemux.h */,
-				3826DACF24EE5BF5003DE040 /* _CanonicalRequest.m */,
-				3826DAD024EE5BF5003DE040 /* _CustomHTTPProtocol.h */,
+				CD7CC80EA33790C53303692D /* CacheStoragePolicy.swift */,
+				CD8B05E6F437A0B667C22935 /* CanonicalRequest.swift */,
+				CD4CC3D7C58AFB14E862D6AF /* CustomHTTPProtocol.swift */,
+				CD6A2CBAE569DE4B66CA7AE6 /* QNSURLSessionDemux.swift */,
 			);
 			path = CustomHTTPProtocol;
 			sourceTree = "<group>";
@@ -916,56 +769,25 @@
 		3826DAD124EE5BF5003DE040 /* Logs */ = {
 			isa = PBXGroup;
 			children = (
-				3826DAD324EE5BF5003DE040 /* _OCLogModel.h */,
-				3826DADB24EE5BF5003DE040 /* _OCLogModel.m */,
 				385945ED256D07D400ADA065 /* _SwiftLogHelper.swift */,
-				3826DAD424EE5BF5003DE040 /* _NSLogHook.m */,
-				3826DAD524EE5BF5003DE040 /* _OCLogHelper.h */,
-				3826DAD624EE5BF5003DE040 /* _OCLoggerFormat.m */,
-				3826DAD724EE5BF5003DE040 /* CocoaDebugTool.m */,
-				3826DAD824EE5BF5003DE040 /* _ObjcLog.h */,
-				3826DAD924EE5BF5003DE040 /* _OCLogStoreManager.m */,
-				3826DADA24EE5BF5003DE040 /* _OCLogHelper.m */,
 				3826DADC24EE5BF5003DE040 /* LogCell.swift */,
 				3826DADD24EE5BF5003DE040 /* LogViewController.swift */,
-				3826DADE24EE5BF5003DE040 /* _OCLoggerFormat.h */,
-				3826DADF24EE5BF5003DE040 /* CocoaDebugTool.h */,
-				3826DAE024EE5BF5003DE040 /* _OCLogStoreManager.h */,
-				3826DAE124EE5BF5003DE040 /* _ObjcLog.m */,
+				CDF832837122783083F632FD /* CocoaDebugTool.swift */,
+				CD66DE955EDB1C1DAEE63E9D /* NSLogHook.swift */,
+				CD4F83D72555FF037A7EB9F5 /* OCLogHelper.swift */,
+				CDC93B37B1B600D6C1E41347 /* OCLogModel.swift */,
+				CD3946015BAC61A9DE5228C3 /* OCLogStoreManager.swift */,
+				CD1168160A6E5C6771EED672 /* OCLoggerFormat.swift */,
+				CDA5EE64AA13EE302A64A44E /* ObjcLog.swift */,
 			);
 			path = Logs;
-			sourceTree = "<group>";
-		};
-		3826DAE224EE5BF5003DE040 /* Sandbox */ = {
-			isa = PBXGroup;
-			children = (
-				3826DD1924EE5FD5003DE040 /* _DirectoryContentsTableViewController.h */,
-				3826DD2224EE5FD5003DE040 /* _DirectoryContentsTableViewController.m */,
-				3826DD1724EE5FD5003DE040 /* _FileInfo.h */,
-				3826DD1524EE5FD4003DE040 /* _FileInfo.m */,
-				3826DD1824EE5FD5003DE040 /* _FilePreviewController.h */,
-				3826DD1C24EE5FD5003DE040 /* _FilePreviewController.m */,
-				3826DD1624EE5FD5003DE040 /* _FileTableViewCell.h */,
-				3826DD2024EE5FD5003DE040 /* _FileTableViewCell.m */,
-				3826DD2324EE5FD5003DE040 /* _ImageController.h */,
-				3826DD1424EE5FD4003DE040 /* _ImageController.m */,
-				3826DD1E24EE5FD5003DE040 /* _ImageResources.h */,
-				3826DD1F24EE5FD5003DE040 /* _ImageResources.m */,
-				3826DD2124EE5FD5003DE040 /* _Sandboxer-Header.h */,
-				3826DD1A24EE5FD5003DE040 /* _Sandboxer.h */,
-				3826DD1D24EE5FD5003DE040 /* _Sandboxer.m */,
-				3826DD1B24EE5FD5003DE040 /* _SandboxerHelper.h */,
-				3826DD1324EE5FD4003DE040 /* _SandboxerHelper.m */,
-			);
-			path = Sandbox;
 			sourceTree = "<group>";
 		};
 		3826DAF424EE5BF5003DE040 /* Swizzling */ = {
 			isa = PBXGroup;
 			children = (
-				3826DAF524EE5BF5003DE040 /* _Swizzling.m */,
-				3826DAF624EE5BF5003DE040 /* _WKWebView+Swizzling.m */,
-				3826DAF724EE5BF5003DE040 /* _Swizzling.h */,
+				CDF45568CC89AA96C42CAA56 /* Swizzling.swift */,
+				CD28669389521751EF893912 /* WKWebViewSwizzling.swift */,
 			);
 			path = Swizzling;
 			sourceTree = "<group>";
@@ -974,7 +796,6 @@
 			isa = PBXGroup;
 			children = (
 				3826DAF924EE5BF5003DE040 /* Bubble.swift */,
-				3828BA32259E234C00ABF650 /* UIBlockingBubble.swift */,
 				3826DAFA24EE5BF5003DE040 /* WindowHelper.swift */,
 				3826DAFB24EE5BF5003DE040 /* CocoaDebugNavigationController.swift */,
 				3826DAFC24EE5BF5003DE040 /* CocoaDebugViewController.swift */,
@@ -988,10 +809,7 @@
 		3826DB0024EE5BF5003DE040 /* Categories */ = {
 			isa = PBXGroup;
 			children = (
-				38F69F8826A6FAFB0010953F /* GPBMessage+CocoaDebug.h */,
-				38F69F8926A6FAFB0010953F /* GPBMessage+CocoaDebug.m */,
-				3826DB0124EE5BF5003DE040 /* NSObject+CocoaDebug.h */,
-				3826DB0324EE5BF5003DE040 /* NSObject+CocoaDebug.m */,
+				CD57302187CDFA441908F22D /* Extensions.swift */,
 			);
 			path = Categories;
 			sourceTree = "<group>";
@@ -1003,20 +821,6 @@
 				3826DE7A24EE7CDE003DE040 /* Info.plist */,
 			);
 			path = CocoaDebugTests;
-			sourceTree = "<group>";
-		};
-		3828BA25259E223B00ABF650 /* Monitor */ = {
-			isa = PBXGroup;
-			children = (
-				3871CFF827042E1F005967AE /* _RunloopMonitor.h */,
-				3871CFF927042E1F005967AE /* _RunloopMonitor.m */,
-				3871CFF627042E1F005967AE /* _BacktraceLogger.h */,
-				3871CFF727042E1F005967AE /* _BacktraceLogger.m */,
-				3828BA26259E223B00ABF650 /* FPSCounter.swift */,
-				3828BA27259E223B00ABF650 /* _DebugConsoleLabel.h */,
-				3828BA28259E223B00ABF650 /* _DebugConsoleLabel.m */,
-			);
-			path = Monitor;
 			sourceTree = "<group>";
 		};
 		3882D67F25676EA200379E0C /* fishhook */ = {
@@ -1035,39 +839,7 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				3826DC3624EE5BF5003DE040 /* _CanonicalRequest.h in Headers */,
-				3826DC3A24EE5BF5003DE040 /* _QNSURLSessionDemux.h in Headers */,
-				3826DC4B24EE5BF5003DE040 /* _OCLogStoreManager.h in Headers */,
-				3826DC3524EE5BF5003DE040 /* _CacheStoragePolicy.h in Headers */,
-				3826DC4024EE5BF5003DE040 /* _OCLogHelper.h in Headers */,
-				3826DC4324EE5BF5003DE040 /* _ObjcLog.h in Headers */,
-				3826DC4924EE5BF5003DE040 /* _OCLoggerFormat.h in Headers */,
-				3826DC3E24EE5BF5003DE040 /* _OCLogModel.h in Headers */,
-				3826DC6024EE5BF5003DE040 /* _Swizzling.h in Headers */,
-				3826DC4A24EE5BF5003DE040 /* CocoaDebugTool.h in Headers */,
-				3826DC6824EE5BF5003DE040 /* NSObject+CocoaDebug.h in Headers */,
-				3826DC2B24EE5BF5003DE040 /* _NetworkHelper.h in Headers */,
-				3826DC3C24EE5BF5003DE040 /* _CustomHTTPProtocol.h in Headers */,
-				3826DC3024EE5BF5003DE040 /* _HttpModel.h in Headers */,
-				3826DD3224EE5FD5003DE040 /* _Sandboxer-Header.h in Headers */,
-				3826DD2C24EE5FD5003DE040 /* _SandboxerHelper.h in Headers */,
-				3826DD3424EE5FD5003DE040 /* _ImageController.h in Headers */,
-				3826DD2B24EE5FD5003DE040 /* _Sandboxer.h in Headers */,
-				3826DD2F24EE5FD5003DE040 /* _ImageResources.h in Headers */,
-				3826DD2724EE5FD5003DE040 /* _FileTableViewCell.h in Headers */,
-				3826DD2824EE5FD5003DE040 /* _FileInfo.h in Headers */,
-				3826DD2A24EE5FD5003DE040 /* _DirectoryContentsTableViewController.h in Headers */,
-				3826DD2924EE5FD5003DE040 /* _FilePreviewController.h in Headers */,
-				38CD79AD29B22ADA00B973BD /* _DeviceUtil.h in Headers */,
-				38CD79AA29B22ADA00B973BD /* _DeviceUtil+Constant.h in Headers */,
-				38CD79AC29B22ADA00B973BD /* CocoaDebug.h in Headers */,
-				38CD79A729B22ADA00B973BD /* CocoaDebugDeviceInfo.h in Headers */,
-				3871CFFA27042E1F005967AE /* _BacktraceLogger.h in Headers */,
-				3871CFFC27042E1F005967AE /* _RunloopMonitor.h in Headers */,
 				3882D68325676EA200379E0C /* _fishhook.h in Headers */,
-				3826DC2D24EE5BF5003DE040 /* _HttpDatasource.h in Headers */,
-				3828BA2A259E223B00ABF650 /* _DebugConsoleLabel.h in Headers */,
-				38F69F8A26A6FAFB0010953F /* GPBMessage+CocoaDebug.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1167,7 +939,6 @@
 				3826DBCF24EE5BF5003DE040 /* icon_file_type_dmg@2x.png in Resources */,
 				3826DB8824EE5BF5003DE040 /* icon_file_type_png.png in Resources */,
 				3826DBF124EE5BF5003DE040 /* icon_file_type_html@3x.png in Resources */,
-				3826DB7A24EE5BF5003DE040 /* Logs.storyboard in Resources */,
 				3826DBE024EE5BF5003DE040 /* icon_file_type_gif@2x.png in Resources */,
 				3826DBE124EE5BF5003DE040 /* icon_file_type_jpg@2x.png in Resources */,
 				3826DBF324EE5BF5003DE040 /* icon_file_type_bmp@2x.png in Resources */,
@@ -1216,7 +987,6 @@
 				3826DB9924EE5BF5003DE040 /* icon_file_type_avi.png in Resources */,
 				3826DBF424EE5BF5003DE040 /* icon_file_type_mp3@2x.png in Resources */,
 				3826DBD524EE5BF5003DE040 /* icon_file_type_bmp.png in Resources */,
-				3826DB7924EE5BF5003DE040 /* NetworkCell.xib in Resources */,
 				3826DBAB24EE5BF5003DE040 /* icon_file_type_folder_not_empty.png in Resources */,
 				3826DC2624EE5BF5003DE040 /* icon_file_type_js@3x.png in Resources */,
 				3826DEA824EE854E003DE040 /* copy_and_codesign.sh in Resources */,
@@ -1247,12 +1017,10 @@
 				3826DBD024EE5BF5003DE040 /* icon_file_type_mov@3x.png in Resources */,
 				3826DC0A24EE5BF5003DE040 /* icon_file_type_json.png in Resources */,
 				3826DBD324EE5BF5003DE040 /* icon_file_type_doc@2x.png in Resources */,
-				3826DC2824EE5BF5003DE040 /* App.storyboard in Resources */,
 				3826DBC124EE5BF5003DE040 /* icon_file_type_ipa@3x.png in Resources */,
 				3826DBE824EE5BF5003DE040 /* icon_file_type_dll@2x.png in Resources */,
 				3826DB8724EE5BF5003DE040 /* icon_file_type_folder_not_empty@3x.png in Resources */,
 				3826DB9624EE5BF5003DE040 /* icon_file_type_sql@3x.png in Resources */,
-				3826DC2724EE5BF5003DE040 /* Manager.storyboard in Resources */,
 				3826DBBB24EE5BF5003DE040 /* icon_file_type_dmg.png in Resources */,
 				3826DC0224EE5BF5003DE040 /* icon_file_type_md.png in Resources */,
 				3826DBEC24EE5BF5003DE040 /* icon_file_type_ppt@3x.png in Resources */,
@@ -1288,7 +1056,6 @@
 				3826DBF724EE5BF5003DE040 /* icon_file_type_psd@3x.png in Resources */,
 				3826DBE524EE5BF5003DE040 /* icon_file_type_db@3x.png in Resources */,
 				3826DC1624EE5BF5003DE040 /* icon_file_type_swift.png in Resources */,
-				3826DB8424EE5BF5003DE040 /* Network.storyboard in Resources */,
 				3826DBE224EE5BF5003DE040 /* icon_file_type_fla@3x.png in Resources */,
 				3826DBFC24EE5BF5003DE040 /* icon_file_type_torrent@3x.png in Resources */,
 				3826DBB824EE5BF5003DE040 /* icon_file_type_dat@2x.png in Resources */,
@@ -1345,71 +1112,48 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				3826DC3924EE5BF5003DE040 /* _CacheStoragePolicy.m in Sources */,
-				3871CFFD27042E1F005967AE /* _RunloopMonitor.m in Sources */,
-				3826DD2424EE5FD5003DE040 /* _SandboxerHelper.m in Sources */,
 				3882D68225676EA200379E0C /* _fishhook.c in Sources */,
-				38F69F8B26A6FAFB0010953F /* GPBMessage+CocoaDebug.m in Sources */,
 				3826DC3324EE5BF5003DE040 /* NetworkDetailModel.swift in Sources */,
 				3826DC2C24EE5BF5003DE040 /* NetworkCell.swift in Sources */,
 				385945EE256D07D400ADA065 /* _SwiftLogHelper.swift in Sources */,
 				38CD79A929B22ADA00B973BD /* CocoaDebugSettings.swift in Sources */,
-				3826DC4124EE5BF5003DE040 /* _OCLoggerFormat.m in Sources */,
-				3826DC6A24EE5BF5003DE040 /* NSObject+CocoaDebug.m in Sources */,
-				38CD79AB29B22ADA00B973BD /* _DeviceUtil.m in Sources */,
-				3826DB4B24EE5BF5003DE040 /* CrashStoreManager.swift in Sources */,
-				3826DC3F24EE5BF5003DE040 /* _NSLogHook.m in Sources */,
-				38CD79A829B22ADA00B973BD /* _AutoLaunch.m in Sources */,
-				3826DC3824EE5BF5003DE040 /* _CustomHTTPProtocol.m in Sources */,
-				3826DC5F24EE5BF5003DE040 /* _WKWebView+Swizzling.m in Sources */,
-				3826DD3324EE5FD5003DE040 /* _DirectoryContentsTableViewController.m in Sources */,
 				F93A16022A35F4F400F76A99 /* _HTTPModel+cURL.swift in Sources */,
-				3826DC4524EE5BF5003DE040 /* _OCLogHelper.m in Sources */,
 				3826DC3124EE5BF5003DE040 /* NetworkDetailCell.swift in Sources */,
-				3826DC4624EE5BF5003DE040 /* _OCLogModel.m in Sources */,
-				3826DD3124EE5FD5003DE040 /* _FileTableViewCell.m in Sources */,
-				3828BA2B259E223B00ABF650 /* _DebugConsoleLabel.m in Sources */,
-				3826DB5124EE5BF5003DE040 /* CrashLogger.swift in Sources */,
 				3826DC4824EE5BF5003DE040 /* LogViewController.swift in Sources */,
-				38CD79B029B22ADA00B973BD /* CocoaDebugDeviceInfo.m in Sources */,
-				3826DB5024EE5BF5003DE040 /* _CrashModel.swift in Sources */,
-				3826DD2E24EE5FD5003DE040 /* _Sandboxer.m in Sources */,
-				3828BA33259E234C00ABF650 /* UIBlockingBubble.swift in Sources */,
-				3826DB5324EE5BF5003DE040 /* AboutViewController.swift in Sources */,
 				3826DB4924EE5BF5003DE040 /* AppInfoViewController.swift in Sources */,
-				3828BA29259E223B00ABF650 /* FPSCounter.swift in Sources */,
-				3826DC3B24EE5BF5003DE040 /* _CanonicalRequest.m in Sources */,
 				3826DC6624EE5BF5003DE040 /* CocoaDebugWindow.swift in Sources */,
-				3826DC4224EE5BF5003DE040 /* CocoaDebugTool.m in Sources */,
 				3826DC6424EE5BF5003DE040 /* CocoaDebugViewController.swift in Sources */,
-				3826DC4424EE5BF5003DE040 /* _OCLogStoreManager.m in Sources */,
-				3826DC5E24EE5BF5003DE040 /* _Swizzling.m in Sources */,
 				3826DC2F24EE5BF5003DE040 /* NetworkDetailViewController.swift in Sources */,
-				3826DB4F24EE5BF5003DE040 /* CrashListViewController.swift in Sources */,
 				3826DC6724EE5BF5003DE040 /* Color.swift in Sources */,
-				3826DB4D24EE5BF5003DE040 /* CrashDetailViewController.swift in Sources */,
-				3826DC3424EE5BF5003DE040 /* _HttpDatasource.m in Sources */,
-				3826DC3724EE5BF5003DE040 /* _QNSURLSessionDemux.m in Sources */,
-				3871CFFB27042E1F005967AE /* _BacktraceLogger.m in Sources */,
-				3826DB5424EE5BF5003DE040 /* CrashCell.swift in Sources */,
-				3826DC2A24EE5BF5003DE040 /* _HttpModel.m in Sources */,
-				3826DD2524EE5FD5003DE040 /* _ImageController.m in Sources */,
-				3826DD2D24EE5FD5003DE040 /* _FilePreviewController.m in Sources */,
 				3826DC4724EE5BF5003DE040 /* LogCell.swift in Sources */,
 				3826DC6224EE5BF5003DE040 /* WindowHelper.swift in Sources */,
-				3826DD3024EE5FD5003DE040 /* _ImageResources.m in Sources */,
 				3826DC2924EE5BF5003DE040 /* JsonViewController.swift in Sources */,
-				3826DB4E24EE5BF5003DE040 /* IgnoredURLsViewController.swift in Sources */,
 				3826DC6124EE5BF5003DE040 /* Bubble.swift in Sources */,
-				3826DC3224EE5BF5003DE040 /* _NetworkHelper.m in Sources */,
 				3826DC6324EE5BF5003DE040 /* CocoaDebugNavigationController.swift in Sources */,
-				3826DC4C24EE5BF5003DE040 /* _ObjcLog.m in Sources */,
 				3826DC2E24EE5BF5003DE040 /* NetworkViewController.swift in Sources */,
 				38CD79AF29B22ADA00B973BD /* CocoaDebug.swift in Sources */,
 				3826DC6524EE5BF5003DE040 /* CocoaDebugTabBarController.swift in Sources */,
-				3826DD2624EE5FD5003DE040 /* _FileInfo.m in Sources */,
 				38CD79A629B22ADA00B973BD /* CocoaDebug+Extensions.swift in Sources */,
-				38CD79AE29B22ADA00B973BD /* _DeviceUtil+Constant.m in Sources */,
+				CDA7D9A3FADEED3B213A2CC4 /* Extensions.swift in Sources */,
+				CD7571CB9EB4F52217867DFA /* CocoaDebugDeviceInfo.swift in Sources */,
+				CD6744E9B0850933F65F5048 /* DeviceUtil.swift in Sources */,
+				CDD2C975AF6E0174BC480974 /* CacheStoragePolicy.swift in Sources */,
+				CD0D53E8EA4A6B17ACA78156 /* CanonicalRequest.swift in Sources */,
+				CDD8FA1D9CE8C1FF434CC072 /* CustomHTTPProtocol.swift in Sources */,
+				CD53E8C5761C7691D13C0A64 /* QNSURLSessionDemux.swift in Sources */,
+				CDE61CC12338D77FF95E911B /* CocoaDebugTool.swift in Sources */,
+				CD6C1C9298EFA1ED8D30981A /* NSLogHook.swift in Sources */,
+				CD09881ED64A20891F631088 /* OCLogHelper.swift in Sources */,
+				CD587B817562918AC0C5E1AC /* OCLogModel.swift in Sources */,
+				CDB7085E28C72E944241559E /* OCLogStoreManager.swift in Sources */,
+				CDEFCB08C29D46F4BECC5B50 /* OCLoggerFormat.swift in Sources */,
+				CDEDA326EBF719C44810FC9F /* ObjcLog.swift in Sources */,
+				CD4E71E2048AC9C8D50B0A2C /* HttpDatasource.swift in Sources */,
+				CD1B7DB3BCA1C37CB00FDF04 /* HttpModel.swift in Sources */,
+				CD391E8BA5E413B6C226426E /* NetworkHelper.swift in Sources */,
+				CD6CB22485700C1D7FF742CC /* NetworkSimilarRequestsCell.swift in Sources */,
+				CDBD2F154A87D1FDA6FC90DC /* Swizzling.swift in Sources */,
+				CD54108ED379B7E9B0B9ADF1 /* WKWebViewSwizzling.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1485,7 +1229,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
@@ -1541,7 +1285,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				SDKROOT = iphoneos;
@@ -1564,7 +1308,7 @@
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
 				INFOPLIST_FILE = CocoaDebug/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
-				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -1592,7 +1336,7 @@
 				"EXCLUDED_ARCHS[sdk=iphonesimulator*]" = arm64;
 				INFOPLIST_FILE = CocoaDebug/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
-				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -1614,7 +1358,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = XA8SWALX42;
 				INFOPLIST_FILE = CocoaDebugTests/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -1633,7 +1377,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = XA8SWALX42;
 				INFOPLIST_FILE = CocoaDebugTests/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",

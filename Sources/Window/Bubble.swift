@@ -40,10 +40,8 @@ class Bubble: UIView {
         }
         
         var h = 0
-        if #available(iOS 11.0, *) {
-            if UIApplication.shared.keyWindow?.safeAreaInsets.top ?? 0 > 24.0 {
-                h = 16;
-            }
+        if UIApplication.shared.keyWindow?.safeAreaInsets.top ?? 0 > 24.0 {
+            h = 16;
         }
         return CGPoint(x: 1.875 + _width/2, y: UIScreen.main.bounds.size.height/2 - _height - CGFloat(h))
     }
@@ -254,7 +252,7 @@ class Bubble: UIView {
     }
     
     @objc func longTap() {
-        _HttpDatasource.shared().reset()
+        _HttpDatasource.shared.reset()
         CocoaDebugSettings.shared.networkLastIndex = 0
         NotificationCenter.default.post(name: NSNotification.Name("deleteAllLogs_CocoaDebug"), object: nil, userInfo: nil)
     }
@@ -275,13 +273,7 @@ class Bubble: UIView {
         
         if panner.state == .ended || panner.state == .cancelled {
             
-            var frameInset: UIEdgeInsets
-            
-            if #available(iOS 11.0, *) {
-                frameInset = UIApplication.shared.keyWindow?.safeAreaInsets ?? UIEdgeInsets(top: UIApplication.shared.statusBarFrame.height, left: 0, bottom: 0, right: 0)
-            } else {
-                frameInset = UIDevice.current.orientation.isPortrait ? UIEdgeInsets(top: 20, left: 0, bottom: 0, right: 0) : .zero
-            }
+            let frameInset = UIApplication.shared.keyWindow?.safeAreaInsets ?? UIEdgeInsets(top: UIApplication.shared.statusBarFrame.height, left: 0, bottom: 0, right: 0)
             
             let location = panner.location(in: self.superview)
             let velocity = panner.velocity(in: self.superview)

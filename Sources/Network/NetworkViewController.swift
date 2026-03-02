@@ -313,7 +313,7 @@ class NetworkViewController: UIViewController {
     private func buildFilterEntries() -> [(display: String, filterKeys: [(key: String, isPathFilter: Bool)], isWeb: Bool)] {
         guard let allModels = cacheModels, !allModels.isEmpty else { return [] }
 
-        let onlyURLs = (_NetworkHelper.shared().onlyURLs as? [String]) ?? []
+        let onlyURLs = (_NetworkHelper.shared.onlyURLs as? [String]) ?? []
         var rawEntries: [(display: String, filterKey: String, isPathFilter: Bool, isWeb: Bool)] = []
         var coveredHosts = Set<String>()
 
@@ -410,7 +410,7 @@ class NetworkViewController: UIViewController {
         guard let models = cacheModels else { return [] }
         if pathFilters.isEmpty && hostFilters.isEmpty { return [] }
 
-        let onlyURLs = (_NetworkHelper.shared().onlyURLs as? [String]) ?? []
+        let onlyURLs = (_NetworkHelper.shared.onlyURLs as? [String]) ?? []
 
         // Build set of onlyURLs paths (for exclusion — already top-level filter entries).
         // Also map: lowercased stripped key → original full URL (for tag lookup).
@@ -585,7 +585,7 @@ class NetworkViewController: UIViewController {
         if !searchText.isEmpty {
             let query = searchText.lowercased()
             filtered = filtered.filter { model in
-                model.url?.absoluteString.lowercased().contains(query) ?? false
+                (model.url?.absoluteString ?? "").lowercased().contains(query)
             }
         }
 
@@ -648,7 +648,7 @@ class NetworkViewController: UIViewController {
 
         if reloadDataFinish == false { return }
 
-        self.models = (_HttpDatasource.shared().httpModels as NSArray as? [_HttpModel])
+        self.models = (_HttpDatasource.shared.httpModels as NSArray as? [_HttpModel])
         self.cacheModels = self.models
 
         applyFilter()
@@ -792,7 +792,7 @@ class NetworkViewController: UIViewController {
     }
 
     @objc func tapTrashButton(_ sender: UIBarButtonItem) {
-        _HttpDatasource.shared().reset()
+        _HttpDatasource.shared.reset()
         models = []
         cacheModels = []
         filterState.selectedPathFilters.removeAll()

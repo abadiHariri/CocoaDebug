@@ -21,16 +21,14 @@ class CocoaDebugNavigationController: UINavigationController {
                                              .foregroundColor: Color.mainGreen]
         
         //bugfix #issues-158
-        if #available(iOS 13, *) {
-            let appearance = UINavigationBarAppearance()
-            appearance.configureWithOpaqueBackground()
-            appearance.backgroundColor = .black
-            appearance.shadowColor = .clear    //removing navigationbar 1 px bottom border.
-            appearance.titleTextAttributes = [.font: UIFont.boldSystemFont(ofSize: 20),
-                                              .foregroundColor: Color.mainGreen]
-            self.navigationBar.standardAppearance = appearance
-            self.navigationBar.scrollEdgeAppearance = appearance
-        }
+        let appearance = UINavigationBarAppearance()
+        appearance.configureWithOpaqueBackground()
+        appearance.backgroundColor = .black
+        appearance.shadowColor = .clear    //removing navigationbar 1 px bottom border.
+        appearance.titleTextAttributes = [.font: UIFont.boldSystemFont(ofSize: 20),
+                                          .foregroundColor: Color.mainGreen]
+        self.navigationBar.standardAppearance = appearance
+        self.navigationBar.scrollEdgeAppearance = appearance
     }
 }
 

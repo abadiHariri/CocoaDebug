@@ -80,7 +80,7 @@ class AppInfoViewController: UITableViewController {
     // MARK: - Build Data
 
     private func buildInfoItems() {
-        let device = CocoaDebugDeviceInfo.sharedInstance()
+        let device = CocoaDebugDeviceInfo.sharedInstance
 
         infoItems = [
             ("App Name",       device.appBundleName ?? "—"),
@@ -98,7 +98,7 @@ class AppInfoViewController: UITableViewController {
     }
 
     private func reloadURLs() {
-        let onlyURLs = (_NetworkHelper.shared()?.onlyURLs as? [String]) ?? []
+        let onlyURLs = (_NetworkHelper.shared.onlyURLs as? [String]) ?? []
         let serverURL = CocoaDebugSettings.shared.serverURL ?? ""
 
         capturedURLs = onlyURLs.map { urlString in
